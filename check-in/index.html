@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pre-emptive Check-In · Prototype</title>
+<meta name="description" content="Working prototype: spotting a stalled patient from early signals and checking in before they feel it isn't working. Illustrative data only.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#F1ECF2; --surface:#FFFFFF; --surface-2:#FAF5FB; --ink:#1F2A24; --muted:#56605A; --line:#E8E1EA;
+  --brand:#1E3B2C; --brand-soft:#E6EEE8; --accent:#7E52B8; --accent-soft:#EFE6F8;
+  --warn-ink:#7A4E00; --warn-soft:#FFF3D6;
+  --radius:20px; --shadow:0 1px 2px rgba(31,42,36,.05),0 6px 20px rgba(31,42,36,.06);
+  --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+.layout{display:grid;grid-template-columns:minmax(300px,400px) auto;gap:44px;justify-content:center;align-items:start;padding:36px 24px}
+.stage{position:sticky;top:24px}
+.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px;box-shadow:0 30px 60px rgba(31,42,36,.25)}
+.app{position:relative;height:100%;background:var(--surface-2);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
+
+/* ---------- left: the system's view ---------- */
+.side{font-size:14px}
+.side h1{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.12;margin:0 0 6px}
+.side .intro{color:var(--muted);margin:0 0 16px}
+.side summary{display:none}
+fieldset.seg{border:0;padding:0;margin:0 0 14px}
+fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0}
+.seg-row{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg-row label{flex:1;position:relative}
+.seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg-row span{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:9px;font-weight:500;text-align:center;padding:2px 6px;cursor:pointer;line-height:1.2;font-size:13px}
+.seg-row input:checked+span{background:var(--brand);color:#fff}
+.seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.panel h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.panel h2 .tag{letter-spacing:0;text-transform:none;font-size:12px;padding:3px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.panel h2 .tag.fire{background:var(--accent-soft);color:var(--accent)}
+.panel h2 .tag.ok{background:var(--brand-soft);color:var(--brand)}
+.player{display:flex;align-items:center;gap:10px;margin:6px 0 2px}
+.play{width:44px;height:44px;border-radius:50%;border:0;background:var(--brand);color:#fff;cursor:pointer;display:grid;place-items:center;flex:none}
+.player input[type=range]{flex:1;accent-color:var(--brand);min-height:44px}
+.wk{font-weight:600;min-width:62px;text-align:right}
+.signals{list-style:none;margin:8px 0 0;padding:0}
+.signals li{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line);align-items:flex-start;transition:opacity .3s}
+.signals li:first-child{border-top:0}
+.signals li.future{opacity:.28}
+.signals .w{flex:none;width:40px;font-size:12px;font-weight:600;color:var(--muted);padding-top:1px}
+.signals .d{width:10px;height:10px;border-radius:50%;flex:none;margin-top:5px;background:#D9D2DD}
+.signals li.on .d.warn{background:#C98A1B}
+.signals li.on .d.ok{background:var(--brand)}
+.signals .t{font-weight:500;line-height:1.3}
+.signals .s{font-size:12px;color:var(--muted)}
+.status{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:13.5px}
+.status.fire{background:var(--accent-soft)}
+.case table{width:100%;border-collapse:collapse;font-size:13px}
+.case td{padding:6px 0;border-top:1px solid var(--line);vertical-align:top}
+.case tr:first-child td{border-top:0}
+.case td:first-child{color:var(--muted);width:40%;padding-right:8px}
+.case .sugg{margin:8px 0 0;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:13px}
+.case .sugg b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.link-btn{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
+.foot{color:var(--muted);font-size:12px;margin-top:8px}
+
+/* ---------- phone chrome ---------- */
+.screen{flex:1;overflow-y:auto;position:relative;scroll-behavior:smooth}
+.floatbar{display:flex;justify-content:space-between;align-items:center;padding:52px 16px 0}
+.fbtn{min-width:44px;height:44px;border-radius:99px;border:0;background:rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(31,42,36,.08);display:inline-flex;align-items:center;justify-content:center;padding:0 14px;font-weight:600;font-size:14px;cursor:pointer}
+.fbtn.av{padding:0;width:44px;color:var(--accent)}
+.tabbar{flex:none;display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px 22px}
+.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);min-height:48px;cursor:pointer;padding-top:4px}
+.tab[aria-current="page"]{color:var(--brand);font-weight:600}
+.pad{padding:0 16px 24px}
+.hello{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:32px;line-height:1.1;margin:18px 2px 4px}
+.sub{color:var(--muted);margin:0 2px 8px}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:12px 0}
+.card h3{margin:0;font-size:16px;font-weight:600;color:var(--brand)}
+.row{display:flex;align-items:center;gap:12px}
+.tile{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--brand-soft);color:var(--brand)}
+.tile.p{background:var(--accent-soft);color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:8px;background:var(--brand-soft);color:var(--brand)}
+.chip.grey{background:#EFEAF1;color:var(--muted)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:10px;border:0;font-weight:600;font-size:16px;cursor:pointer;padding:0 16px;background:var(--brand);color:#fff;margin-top:12px;text-align:center}
+.btn.soft{background:var(--surface-2);color:var(--brand)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.sm{min-height:44px;font-size:14.5px;width:auto;display:inline-flex;margin-top:8px}
+
+/* lock screen */
+.lock{position:absolute;inset:0;background:linear-gradient(170deg,#2B2440 0%,#4A3B6E 45%,#8C79B9 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:70px 14px 30px}
+.lock .date{font-size:17px;font-weight:500;opacity:.9}
+.lock .time{font-size:84px;font-weight:300;letter-spacing:-2px;line-height:1;margin:2px 0 30px}
+.notif{width:100%;background:rgba(255,255,255,.82);backdrop-filter:blur(20px);color:var(--ink);border-radius:20px;padding:12px 14px;text-align:left;border:0;cursor:pointer;animation:drop .5s ease-out}
+@keyframes drop{from{transform:translateY(-24px);opacity:0}to{transform:none;opacity:1}}
+.notif .top{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#555;margin-bottom:3px}
+.notif .appic{width:22px;height:22px;border-radius:6px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+.notif b{display:block;font-size:15px}
+.notif span.m{font-size:14.5px;line-height:1.35;display:block}
+.lock .hint{margin-top:auto;font-size:13px;opacity:.85}
+
+/* chat */
+.chat{display:flex;flex-direction:column;gap:10px;padding:8px 16px 16px}
+.msg{max-width:86%;padding:11px 14px;border-radius:18px;font-size:15px;line-height:1.4}
+.msg.june{background:var(--surface);box-shadow:var(--shadow);border-bottom-left-radius:6px;align-self:flex-start}
+.msg.me{background:var(--brand);color:#fff;border-bottom-right-radius:6px;align-self:flex-end}
+.june-tag{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:6px 0 -4px}
+.june-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#7E52B8,#1E3B2C);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+.typing{display:inline-flex;gap:4px;padding:14px 16px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#A8B3AF;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+.noticed{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;align-self:stretch}
+.noticed h4{margin:0 0 2px;font-family:var(--serif);font-weight:400;font-size:20px;color:var(--brand)}
+.noticed ul{list-style:none;margin:8px 0 0;padding:0}
+.noticed li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.noticed li:first-child{border-top:0}
+.noticed li .d{width:8px;height:8px;border-radius:50%;background:#C98A1B;flex:none;margin-top:7px}
+.noticed li .d.ok{background:var(--brand)}
+.noticed li small{display:block;color:var(--muted);font-size:12px}
+.reply-bar{flex:none;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px 18px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:500}
+.opt:hover{border-color:var(--accent)}
+.guard{font-size:12px;color:var(--muted);text-align:center;margin:8px 0 0}
+
+/* plan + closed */
+.steps{list-style:none;margin:10px 0 0;padding:0;counter-reset:s}
+.steps li{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps li::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center;flex:none;font-size:13px}
+.steps b{display:block;font-size:15px}
+.steps span{font-size:13.5px;color:var(--muted)}
+.sent{background:var(--brand-soft);border-radius:16px;padding:14px 16px;margin:12px 0;font-size:14.5px}
+.sent b{display:block}
+.inbox{display:flex;gap:12px;align-items:flex-start}
+.inbox .av{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;flex:none}
+.inbox .who{font-weight:600}
+.inbox .when{font-size:12px;color:var(--muted)}
+.inbox p{margin:6px 0 0;font-size:15px}
+.tracker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.tracker div{background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.tracker .k{font-size:12.5px;color:var(--muted)}
+.tracker .v{font-family:var(--serif);font-size:20px;color:var(--brand)}
+.tracker .v.new{color:var(--accent)}
+
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){.notif{animation:none}.typing i{animation:none}.screen{scroll-behavior:auto}.signals li{transition:none}}
+
+@media (max-width:900px){
+  .layout{display:block;padding:0}
+  .side{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .side summary{display:flex;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
+  .side h1{font-size:22px;margin-top:6px}
+  .stage{position:static}
+  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0;box-shadow:none}
+  .app{border-radius:0;height:auto;min-height:100vh;overflow:visible}
+  .screen{overflow:visible}
+  .floatbar{padding-top:12px}
+  .lock{position:relative;min-height:100vh}
+  .tabbar,.reply-bar{position:sticky;bottom:0;z-index:4}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side" aria-label="What the system sees">
+    <details id="sideDetails" open>
+      <summary>What we see behind the scenes</summary>
+      <h1>We know before she does</h1>
+      <p class="intro">Sarah feels fine. Her data says otherwise. Press play to watch small signals build up week by week, and see the check-in reach her before she feels it isn’t working. <strong>All data is illustrative.</strong></p>
+
+      <fieldset class="seg"><legend>Scenario</legend><div class="seg-row">
+        <label><input type="radio" name="scenario" value="dose" checked><span>Stuck on starter dose</span></label>
+        <label><input type="radio" name="scenario" value="drift"><span>Quietly drifting</span></label>
+        <label><input type="radio" name="scenario" value="noresp"><span>Doing it all, not responding</span></label></div></fieldset>
+
+      <div class="panel" id="timeline"></div>
+      <div class="panel case" id="case"></div>
+      <button class="link-btn" data-act="reset">Reset demo</button>
+      <p class="foot">Fictional patient. Signals, ranges and thresholds are illustrative, not clinical data. June’s replies are scripted, not a live model.</p>
+    </details>
+  </aside>
+  <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================== Scenarios (illustrative) ===================== */
+const band = w => { const k = 1 - Math.exp(-w / 22); return { lo: -10 * k, hi: -22 * k }; };
+const SC = {
+  dose: {
+    persona: 'Ready but stuck', weeks: 16, flag: 8, churn: 13, churnTxt: 'says “it’s not working” and cancels at renewal',
+    lastWeigh: 7, dose: 2.5, nextDose: 5,
+    pct: w => w <= 4 ? -0.45 * w : -1.8 - 0.12 * (w - 4),
+    recover: w => -2.3 - 0.55 * (w - 8),
+    signals: [
+      { w: 4, t: 'Step-up to 5mg didn’t happen', s: 'Prescription & orders', k: 'warn' },
+      { w: 5, t: 'Mentioned nausea to June', s: 'June chat, AI-summarised', k: 'warn' },
+      { w: 6, t: 'Refill 3 days late', s: 'Orders', k: 'warn' },
+      { w: 7, t: 'Weight drifting below typical range', s: 'Weigh-ins', k: 'warn' },
+      { w: 8, t: 'Weigh-ins stopped', s: 'App activity', k: 'warn' },
+    ],
+    notif: ['Your step-up hasn’t happened yet', 'That’s often where results pick up. Can we sort it out together? 2 min'],
+    opener: ['Hi Sarah, it’s June from your care team.', 'We spotted something early: your step up to 5mg hasn’t happened yet. That’s usually where results really pick up, so we wanted to check in before it starts to feel stuck.'],
+    qs: [
+      { k: 'why', q: 'What got in the way of stepping up?', o: [['nausea', 'The nausea put me off'], ['unsure', 'Wasn’t sure I should'], ['forgot', 'Forgot, or ran out']],
+        a: { nausea: 'That makes total sense. Nausea is the most common reason people stay on the starter dose.', unsure: 'Good question to have. That’s exactly what your prescriber is for.', forgot: 'That happens. Easy to fix.' } },
+      { k: 'nausea', q: 'How’s the nausea now?', o: [['most', 'Most days'], ['some', 'Some days'], ['rare', 'Rarely']],
+        a: { most: 'Sorry, that sounds rough. There are ways to make the next step gentler.', some: 'Got it. Manageable, but worth planning around.', rare: 'Good, your body has adjusted.' } },
+      { k: 'feel', q: 'Honestly, how do you feel about your progress?', o: [['fine', 'I thought it was fine'], ['stuck', 'A bit stuck'], ['frus', 'Frustrated']],
+        a: { fine: 'That’s exactly why we reached out now. It’s much easier to fix before it feels stuck.', stuck: 'Thanks for saying so. Let’s get you unstuck.', frus: 'Completely fair. Let’s turn that into a plan today.' } },
+    ],
+    route: () => 'prescriber',
+    steps: a => [
+      ['Dr Lee reviews your dose today', 'They already have your answers, so no need to repeat yourself.'],
+      [a.nausea === 'rare' ? 'Step up when your prescriber says go' : 'A gentler plan for nausea', a.nausea === 'rare' ? 'Your next dose could be 5mg.' : 'Smaller meals, slower eating, and options to ease into 5mg.'],
+      ['June checks in again in 2 weeks', 'To make sure the step-up is going smoothly.'],
+    ],
+    caseFlags: ['On 2.5mg for 8 weeks. Step-up due at week 4.', 'Nausea mentioned in chat (week 5)', 'Weight below illustrative range at week 7'],
+    sugg: 'Review titration: consider stepping up to 5mg with a nausea-management plan.',
+    reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah, thanks for the check-in. Let’s step you up to 5mg from your next dose. If nausea flares, try smaller meals and avoid rich food on dose day, and message us. We can adjust.' },
+    tracker: [['Next dose', '5mg', true], ['Next check-in', 'In 2 weeks', false]],
+  },
+  drift: {
+    persona: 'Silent drifter', weeks: 16, flag: 9, churn: 12, churnTxt: 'quietly lapses at renewal, with no reason given',
+    lastWeigh: 5, dose: 5, nextDose: 5,
+    pct: w => -0.62 * w,
+    recover: w => -3.1 - 0.5 * (w - 9),
+    signals: [
+      { w: 5, t: 'App opens down 60%', s: 'App activity', k: 'warn' },
+      { w: 6, t: 'Weigh-ins stopped', s: 'App activity', k: 'warn' },
+      { w: 7, t: 'Didn’t reply to coach message', s: 'Messages', k: 'warn' },
+      { w: 8, t: 'No dose logged for 2 weeks', s: 'Treatment tracker', k: 'warn' },
+      { w: 9, t: 'Refill 5 days late', s: 'Orders', k: 'warn' },
+    ],
+    notif: ['Just checking in, no judgement', 'We haven’t seen you in a little while. Everything okay? 2 min'],
+    opener: ['Hi Sarah, it’s June. No judgement, just checking in.', 'We haven’t seen a dose logged in 2 weeks and your last refill came a bit late. Life gets busy! We’d rather ask now than have you drift off without support.'],
+    qs: [
+      { k: 'why', q: 'What’s been going on?', o: [['busy', 'Life got busy'], ['side', 'Side effects'], ['cost', 'Cost is tight'], ['doubt', 'Not sure it’s working']],
+        a: { busy: 'Totally normal. Let’s make it easier to fit in.', side: 'Thanks for telling me. Side effects are fixable, and you don’t have to push through alone.', cost: 'Thanks for being upfront. Our support team can walk you through your options.', doubt: 'That’s a really common feeling at this point. Let’s look at it properly.' } },
+      { k: 'doses', q: 'Have you been taking your doses?', o: [['yes', 'Yes, just not logging'], ['some', 'Missed a couple'], ['stopped', 'I’ve stopped for now']],
+        a: { yes: 'Great, that’s the most important bit.', some: 'Okay. One or two missed doses is very recoverable.', stopped: 'Thanks for telling me. Please don’t restart on your own. A prescriber will tell you the safest way back in.' } },
+      { k: 'help', q: 'What would help most right now?', o: [['remind', 'A reminder that fits my week'], ['coach', 'A quick chat with a coach'], ['ok', 'Nothing, I’m okay']],
+        a: { remind: 'Easy. Let’s set it up.', coach: 'I’ll line that up.', ok: 'Okay! I’ll still keep an eye out, just in case.' } },
+    ],
+    route: a => (a.doses === 'stopped' || a.why === 'side') ? 'prescriber' : 'coach',
+    steps: a => {
+      const s = [];
+      if (a.doses === 'stopped' || a.why === 'side') s.push(['A prescriber reviews today', 'They’ll tell you the safest way to continue. They already have your answers.']);
+      else s.push(['Priya, your coach, messages you today', 'A 10-minute chat to make treatment fit your week.']);
+      if (a.why === 'cost') s.push(['Support team shares your plan options', 'No pressure. Just so you know what’s possible.']);
+      s.push([a.help === 'remind' ? 'Dose reminder set: Sundays, 7pm' : 'A gentle reminder on dose day', 'You can change it any time.']);
+      s.push(['June checks in again in 2 weeks', 'Just to see how it’s going.']);
+      return s;
+    },
+    caseFlags: ['Engagement down from week 5 (opens, weigh-ins, messages)', 'No dose logged for 2 weeks', 'Refill 5 days late'],
+    sugg: 'Re-engage via coach; prescriber review if doses have stopped or side effects are reported.',
+    reply: { from: 'Priya', role: 'Coach', av: 'P', text: 'Hey Sarah! So glad you replied. I’ve set your dose reminder for Sunday at 7pm and pencilled in a 10-minute chat on Thursday. Small steps, we’ve got this.' },
+    tracker: [['Dose reminder', 'Sun, 7pm', true], ['Coach chat', 'Thursday', true]],
+  },
+  noresp: {
+    persona: 'True non-responder', weeks: 20, flag: 14, churn: 18, churnTxt: 'decides the medicine doesn’t work for her and cancels',
+    lastWeigh: 14, dose: 10, nextDose: 10,
+    pct: w => w <= 7 ? -0.4 * w : -2.8 - 0.03 * (w - 7),
+    recover: w => -3.0 - 0.45 * (w - 14),
+    signals: [
+      { w: 4, t: 'Step-up to 5mg on schedule', s: 'Prescription & orders', k: 'ok' },
+      { w: 8, t: 'Step-up to 7.5mg on schedule', s: 'Prescription & orders', k: 'ok' },
+      { w: 10, t: 'Weight flat for 3 weeks', s: 'Weigh-ins', k: 'warn' },
+      { w: 12, t: 'Food noise unchanged at check-in (8/10)', s: 'Monthly check-in', k: 'warn' },
+      { w: 13, t: 'Below typical range at full dose', s: 'Weigh-ins', k: 'warn' },
+      { w: 14, t: 'Asked June “is this normal?”', s: 'June chat, AI-summarised', k: 'warn' },
+    ],
+    notif: ['You’ve done everything right', 'Your results haven’t matched your effort. Let’s look at why. 2 min'],
+    opener: ['Hi Sarah, it’s June.', 'You’ve done everything right: every dose and every step-up, on schedule. But your weight hasn’t moved the way we’d expect at your dose. You shouldn’t have to wait and wonder, so we’d like a prescriber to take a proper look.'],
+    qs: [
+      { k: 'appetite', q: 'How’s your appetite compared with before you started?', o: [['same', 'About the same'], ['bit', 'A bit smaller'], ['much', 'Much smaller']],
+        a: { same: 'That’s a really useful clue for your prescriber.', bit: 'Got it, some change but not much.', much: 'Good to know. That helps narrow it down.' } },
+      { k: 'meds', q: 'Started or stopped any other medications?', o: [['no', 'No'], ['yes', 'Yes']],
+        a: { no: 'Thanks.', yes: 'Thanks. I’ll flag that, because some medicines can work against this one.' } },
+      { k: 'feel', q: 'How are you feeling about it all?', o: [['fine', 'Mostly fine'], ['stuck', 'A bit stuck'], ['frus', 'Frustrated']],
+        a: { fine: 'Glad to hear it. Let’s make sure your effort pays off.', stuck: 'Totally understandable. Let’s find a way forward.', frus: 'That’s completely fair after this much effort. Let’s get you answers.' } },
+    ],
+    route: () => 'prescriber',
+    steps: a => [
+      ['Dr Lee reviews your whole history', 'Including whether a different medication might suit you better. Some people simply respond better to another option.'],
+      [a.meds === 'yes' ? 'Medication check' : 'A 10-minute call to talk it through', a.meds === 'yes' ? 'Your prescriber will check how your other medicine fits.' : 'So you can ask questions and decide together.'],
+      ['June checks in again in 2 weeks', 'Whatever you decide, you won’t be left waiting.'],
+    ],
+    caseFlags: ['Adherent: all doses and step-ups on schedule', 'At 10mg: weight below illustrative range, flat for 7 wks', 'Food noise unchanged (8/10)'],
+    sugg: 'Review response at full dose. Discuss options, including switching medication. Reconcile other medications.',
+    reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah, I’ve looked at everything, and you’ve been so consistent. Some people respond better to a different medication, and I think it’s worth talking through. I’ve booked us a 10-minute call for Thursday.' },
+    tracker: [['Prescriber call', 'Thursday', true], ['Next check-in', 'In 2 weeks', false]],
+  },
+};
+
+/* ===================== State ===================== */
+const initial = (scenario = 'dose') => ({ scenario, week: 1, stage: 'today', playing: false, chat: null });
+let state = initial();
+const S = () => SC[state.scenario];
+
+/* ===================== Helpers ===================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
+const I = {
+  play: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>',
+  pause: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
+  syringe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 2l4 4M20 4l-9 9M7 13l4 4M14 6l4 4-8 8H6v-4zM6 18l-4 4"/></svg>',
+  scale: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9.5a4 4 0 016 0L12 12" stroke-linecap="round"/></svg>',
+  leaf: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+};
+
+/* ===================== Left panel ===================== */
+function chart(){
+  const s = S(), W = 360, H = 150, L = 30, R = 8, T = 10, B = 22;
+  const minV = band(s.weeks).hi - 0.5;
+  const x = w => L + w / s.weeks * (W - L - R), y = v => T + v / minV * (H - T - B);
+  let up = '', dn = '';
+  for (let w = 0; w <= s.weeks; w += 0.5) up += `${x(w)},${y(band(w).lo)} `;
+  for (let w = s.weeks; w >= 0; w -= 0.5) dn += `${x(w)},${y(band(w).hi)} `;
+  const upto = Math.min(state.week, s.lastWeigh);
+  const pts = []; for (let w = 0; w <= upto; w++) pts.push([w, s.pct(w)]);
+  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ');
+  const closed = state.stage === 'closed';
+  let proj = '';
+  if (closed){ const start = s.lastWeigh; const pp = []; for (let w = start; w <= s.weeks; w++) pp.push([w, w <= s.flag ? s.pct(Math.min(w, s.lastWeigh)) : s.recover(w)]); proj = `<path d="${pp.map((p, i) => `${i ? 'L' : 'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="#1E3B2C" stroke-width="2.4" stroke-dasharray="5 4"/>`; }
+  const ticks = [0, -5, -10].filter(v => v >= minV);
+  const fired = state.week >= s.flag;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:440px;display:block" role="img" aria-label="Sarah's weight change against an illustrative typical range, up to week ${state.week}.">
+    ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#E8E1EA"/><text x="${L - 5}" y="${y(v) + 4}" font-size="10" text-anchor="end" fill="#56605A">${v === 0 ? '0%' : '−' + Math.abs(v) + '%'}</text>`).join('')}
+    <polygon points="${up}${dn}" fill="#DCE8DF" opacity=".9"/>
+    <line x1="${x(s.flag)}" x2="${x(s.flag)}" y1="${T - 4}" y2="${H - B}" stroke="#7E52B8" stroke-width="${fired ? 2 : 1}" stroke-dasharray="${fired ? '0' : '3 3'}"/>
+    <text x="${x(s.flag) - 4}" y="${T + 6}" font-size="10.5" font-weight="700" text-anchor="end" fill="#7E52B8">We act · wk ${s.flag}</text>
+    <line x1="${x(s.churn)}" x2="${x(s.churn)}" y1="${T - 4}" y2="${H - B}" stroke="#9AA19D" stroke-dasharray="3 3"/>
+    <text x="${x(s.churn) - 4}" y="${T + 20}" font-size="10.5" text-anchor="end" fill="#56605A">Without this · wk ${s.churn}</text>
+    ${proj}
+    ${pts.length > 1 ? `<path d="${path}" fill="none" stroke="#C98A1B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>` : ''}
+    ${pts.length ? `<circle cx="${x(pts[pts.length - 1][0])}" cy="${y(pts[pts.length - 1][1])}" r="4.5" fill="#C98A1B" stroke="#fff" stroke-width="2"/>` : ''}
+    <line x1="${x(state.week)}" x2="${x(state.week)}" y1="${H - B}" y2="${H - B + 5}" stroke="#1F2A24" stroke-width="2"/>
+    <text x="${L}" y="${H - 6}" font-size="10" fill="#56605A">Start</text><text x="${W - R}" y="${H - 6}" font-size="10" text-anchor="end" fill="#56605A">Week ${s.weeks}</text>
+  </svg>
+  <div class="small muted" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;font-size:12px"><span><i style="display:inline-block;width:12px;height:8px;background:#DCE8DF;border-radius:2px;margin-right:4px"></i>Typical range (illustrative)</span><span><i style="display:inline-block;width:12px;height:3px;background:#C98A1B;margin-right:4px;vertical-align:3px"></i>Sarah</span>${closed ? '<span><i style="display:inline-block;width:12px;border-top:2px dashed #1E3B2C;margin-right:4px;vertical-align:3px"></i>Expected after acting</span>' : ''}</div>`;
+}
+function renderTimeline(){
+  const s = S(), w = state.week, warnOn = s.signals.filter(x => x.w <= w && x.k === 'warn').length, fired = w >= s.flag;
+  const status = state.stage === 'closed' ? `<div class="status fire"><strong>Acted at week ${s.flag},</strong> ${s.churn - s.flag} weeks before she’d likely have ${s.churnTxt}.</div>`
+    : fired ? `<div class="status fire"><strong>Threshold crossed:</strong> ${warnOn} early signals together. The check-in goes out now, while Sarah still feels fine.</div>`
+    : `<div class="status">${warnOn ? `<strong>Week ${w}:</strong> ${warnOn} early signal${warnOn > 1 ? 's' : ''}. None alarming on ${warnOn > 1 ? 'their' : 'its'} own.` : `<strong>Week ${w}:</strong> nothing unusual yet.`} Sarah’s app looks normal to her.</div>`;
+  $('#timeline').innerHTML = `<h2>Sarah’s weeks, as we see them <span class="tag ${fired ? 'fire' : ''}">${fired ? 'Check-in sent' : 'Watching'}</span></h2>
+    <div class="player"><button class="play" data-act="play" aria-label="${state.playing ? 'Pause' : 'Play the weeks'}">${state.playing ? I.pause : I.play}</button>
+      <label class="sr-only" for="wk">Week</label><input id="wk" type="range" min="1" max="${s.flag}" value="${Math.min(w, s.flag)}" ${state.stage === 'closed' ? 'disabled' : ''}><span class="wk">Week ${w}</span></div>
+    ${chart()}
+    <ul class="signals">${s.signals.map(x => `<li class="${x.w <= w ? 'on' : 'future'}"><span class="w">Wk ${x.w}</span><span class="d ${x.k}"></span><span><span class="t">${x.t}</span><br><span class="s">${x.s}</span></span></li>`).join('')}</ul>
+    ${status}`;
+}
+function renderCase(){
+  const s = S(), st = state.stage, c = state.chat;
+  if (state.week < s.flag){
+    $('#case').innerHTML = `<h2>Prescriber case <span class="tag">Not needed yet</span></h2><p class="small muted" style="margin:0">If the signals add up, a case is drafted automatically, so the prescriber gets what they need before anyone has to ask.</p>`;
+    return;
+  }
+  const a = c ? c.answers : {};
+  const route = c && c.done ? s.route(a) : null;
+  const tag = st === 'closed' ? '<span class="tag ok">Actioned</span>' : c && c.sent ? '<span class="tag fire">In review queue</span>' : '<span class="tag">Drafting</span>';
+  const ans = s.qs.map(q => `<tr><td>${q.q.replace(/\?.*$/, '?')}</td><td>${a[q.k] ? esc(q.o.find(o => o[0] === a[q.k])[1]) : '<span class="muted">Waiting…</span>'}</td></tr>`).join('');
+  $('#case').innerHTML = `<h2>${route === 'coach' ? 'Coach case' : 'Prescriber case'} ${tag}</h2>
+    <table><tr><td>Patient</td><td>Sarah M. · week ${s.flag} · ${s.dose}mg</td></tr><tr><td>Why flagged</td><td>${s.caseFlags.map(esc).join('<br>')}</td></tr>${ans}</table>
+    <div class="sugg"><b>For consideration</b>${esc(s.sugg)}</div>
+    <p class="small muted" style="margin:8px 0 0;font-size:12px">Drafted by June from records and answers. Prompts, not orders. Clinical decisions rest with the prescriber.</p>`;
+}
+
+/* ===================== Phone screens ===================== */
+const TABS = [['Today', 'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6'], ['Explore', 'M4 5h7v14H4zM13 5h7v14h-7z'], ['Progress', 'M4 20V14h5v-4h5V6h6v14z'], ['Care', 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z'], ['Shop', 'M5 6h15l-2 8H7zM5 6L4 3H2M8 20h.01M17 20h.01']];
+const tabbar = active => `<nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === active ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === active ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>`;
+const floatbar = () => `<div class="floatbar"><button class="fbtn av" data-act="todo" aria-label="Profile">S</button><button class="fbtn" data-act="todo">Help</button></div>`;
+
+// Dose shown in Sarah's app for a given week of each scenario.
+function doseAt(w){
+  if (state.scenario === 'dose') return 2.5;          // step-up never happened
+  if (state.scenario === 'drift') return 5;
+  return w < 4 ? 2.5 : w < 8 ? 5 : w < 12 ? 7.5 : 10; // on schedule
+}
+function todayScreen(){
+  const s = S(), w = state.week, sc = state.scenario;
+  // What Sarah sees: an ordinary week. Nothing in her app says anything is wrong.
+  let dose;
+  if (sc === 'drift' && w >= 8) dose = `<span class="chip grey">Not logged</span>`;
+  else dose = `<span class="chip">${I.check} Logged</span>`;
+  const stepCard = sc === 'dose' && w >= 4 ? `<div class="card"><div class="row"><span class="tile p">${I.syringe}</span><div><h3>Ready for 5mg?</h3><div class="small muted">Step up whenever you feel ready.</div></div></div><button class="btn sm soft" data-act="todo">Not yet</button></div>` : '';
+  const weighed = w <= s.lastWeigh;
+  const tips = ['Eat slowly and stop when you’re satisfied, not full.', 'Protein at breakfast helps keep you full until lunch.', 'A 10-minute walk after dinner can ease nausea.', 'Drink water before each meal.'];
+  return `<main class="screen" id="screen">${floatbar()}<div class="pad">
+    <h2 class="hello">Morning, Sarah</h2><p class="sub">Week ${w} of your treatment</p>
+    <div class="card"><div class="row"><span class="tile">${I.syringe}</span><div style="flex:1"><h3>This week’s dose</h3><div class="small muted">Mounjaro ${doseAt(w)}mg</div></div>${dose}</div></div>
+    ${stepCard}
+    <div class="card"><div class="row"><span class="tile">${I.scale}</span><div style="flex:1"><h3>Weigh-in</h3><div class="small muted">${weighed ? 'Logged this week' : 'Log this week’s weight'}</div></div>${weighed ? `<span class="chip">${I.check} Done</span>` : `<span class="chip grey">To do</span>`}</div></div>
+    <div class="card"><div class="row"><span class="tile p">${I.leaf}</span><div><h3>Tip of the week</h3><div class="small">${tips[w % tips.length]}</div></div></div></div>
+    <p class="small muted" style="text-align:center;margin-top:18px">Sarah’s view: an ordinary week. Nothing here tells her anything is off.</p>
+  </div></main>${tabbar('Today')}`;
+}
+
+function lockScreen(){
+  const s = S();
+  return `<div class="lock"><div class="date">Thursday 14 November</div><div class="time">8:12</div>
+    <button class="notif" data-act="open-chat" aria-label="Notification from your care team: ${esc(s.notif[0])}. Open.">
+      <span class="top"><span class="appic">J</span>June · your care team<span style="margin-left:auto">now</span></span>
+      <b>${esc(s.notif[0])}</b><span class="m">${esc(s.notif[1])}</span></button>
+    <p class="hint">Tap the notification to open</p></div>`;
+}
+
+function newChat(){ return { log: S().opener.map(t => ({ who: 'june', t })), step: -1, answers: {}, opts: [['go', 'Okay, let’s chat'], ['later', 'Not right now']], typing: false, done: false, sent: false }; }
+function chatScreen(){
+  const c = state.chat; let out = '', last = null;
+  for (const m of c.log){
+    if (m.who === 'june' && last !== 'june') out += `<div class="june-tag"><span class="june-av" aria-hidden="true">J</span>June</div>`;
+    if (m.who === 'noticed') out += noticedCard();
+    else out += `<div class="msg ${m.who}"><span class="sr-only">${m.who === 'june' ? 'June: ' : 'You: '}</span>${esc(m.t)}</div>`;
+    last = m.who;
+  }
+  if (c.typing) out += `<div class="msg june typing" aria-label="June is typing"><i></i><i></i><i></i></div>`;
+  const bar = c.opts.length
+    ? `<div class="reply-bar"><div class="opts" role="group" aria-label="Reply options">${c.opts.map(o => `<button class="opt" data-act="chat" data-v="${o[0]}" ${c.typing ? 'disabled' : ''}>${esc(o[1])}</button>`).join('')}</div><p class="guard">June is an AI assistant. She never diagnoses. Clinical decisions go to a human.</p></div>`
+    : c.done ? `<div class="reply-bar"><button class="btn" style="margin:0" data-act="to-plan">See the plan</button></div>` : `<div class="reply-bar"><p class="guard" style="margin:0">June is an AI assistant. She never diagnoses.</p></div>`;
+  return `<header class="row" style="padding:52px 12px 6px;gap:6px"><button class="fbtn" style="box-shadow:none;background:none;padding:0;width:44px" data-act="back-lock" aria-label="Back">${I.back}</button><div><div style="font-weight:600">June</div><div class="small muted" style="font-size:12px">Care team assistant</div></div></header>
+    <main class="screen" id="screen"><div class="chat" aria-live="polite">${out}</div></main>${bar}`;
+}
+function noticedCard(){
+  const s = S(), sig = s.signals.filter(x => x.w <= s.flag);
+  return `<div class="noticed"><h4>What we noticed</h4><p class="small muted" style="margin:0">Small things that add up. Here’s exactly what we looked at.</p>
+    <ul>${sig.map(x => `<li><span class="d ${x.k === 'ok' ? 'ok' : ''}"></span><span>${esc(x.t)}<small>Week ${x.w} · ${esc(x.s)}</small></span></li>`).join('')}</ul></div>`;
+}
+function chatAnswer(v){
+  const c = state.chat, s = S(); if (c.typing) return;
+  const label = (c.opts.find(o => o[0] === v) || [, v])[1];
+  c.log.push({ who: 'me', t: label }); c.opts = []; c.typing = true; render();
+  setTimeout(() => {
+    c.typing = false;
+    if (c.step === -1){
+      if (v === 'later'){ c.log.push({ who: 'june', t: 'No problem at all. I’ll check back tomorrow, or tap here whenever suits you.' }); c.opts = [['go', 'Actually, let’s do it now']]; c.step = -2; render(); return; }
+      c.log.push({ who: 'noticed' }); c.step = 0;
+    } else if (c.step === -2){ c.log.push({ who: 'noticed' }); c.step = 0; }
+    else { const q = s.qs[c.step]; c.answers[q.k] = v; c.log.push({ who: 'june', t: q.a[v] }); c.step++; }
+    if (c.step < s.qs.length){ const q = s.qs[c.step]; c.log.push({ who: 'june', t: q.q }); c.opts = q.o; }
+    else { c.done = true; c.log.push({ who: 'june', t: 'Thank you, Sarah. That’s everything I need. Here’s what happens next.' }); }
+    render();
+  }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 150 : 700);
+}
+
+function planScreen(){
+  const s = S(), a = state.chat.answers, route = s.route(a), sent = state.chat.sent;
+  const who = route === 'prescriber' ? 'your prescriber' : 'your coach';
+  return `<main class="screen" id="screen"><div class="row" style="padding:52px 12px 0"><button class="fbtn" style="box-shadow:none;background:none;padding:0;width:44px" data-act="back-chat" aria-label="Back to chat">${I.back}</button></div><div class="pad">
+    <h2 class="hello" style="margin-top:4px">Here’s the plan</h2><p class="sub">Caught early, so this is a small fix, not a setback.</p>
+    <div class="card"><ol class="steps">${s.steps(a).map(x => `<li><span><b>${esc(x[0])}</b><span>${esc(x[1])}</span></span></li>`).join('')}</ol></div>
+    ${sent ? `<div class="sent" role="status"><b>Sent to ${who}</b>They can see your answers and what we noticed. You’ll get a message here.</div>
+      <button class="btn" data-act="skip">Skip ahead: 1 day later →</button>`
+      : `<button class="btn" data-act="send">Send to ${who} · 1 tap</button><p class="small muted" style="text-align:center;margin:8px 0 0">They’ll see your answers, so you won’t have to repeat yourself.</p>`}
+  </div></main>`;
+}
+
+function closedScreen(){
+  const s = S(), r = s.reply;
+  return `<main class="screen" id="screen">${floatbar()}<div class="pad">
+    <h2 class="hello">Care</h2><p class="sub">The next day</p>
+    <div class="card"><div class="inbox"><span class="av">${r.av}</span><div><div class="who">${r.from} · ${r.role}</div><div class="when">Today, 9:40am · re: your check-in</div><p>${esc(r.text)}</p></div></div></div>
+    <div class="card"><h3>Treatment tracker</h3><div class="tracker">${s.tracker.map(t => `<div><div class="k">${t[0]}</div><div class="v ${t[2] ? 'new' : ''}">${t[1]}</div></div>`).join('')}</div></div>
+    <div class="sent"><b>Caught ${s.churn - s.flag} weeks early</b>Sarah never got to the point of feeling it wasn’t working.</div>
+    <button class="btn ghost" data-act="replay">Replay this scenario</button>
+  </div></main>${tabbar('Care')}`;
+}
+
+/* ===================== Render + events ===================== */
+function render(){
+  const st = state.stage;
+  const body = st === 'today' ? todayScreen() : st === 'lock' ? lockScreen() : st === 'chat' ? chatScreen() : st === 'plan' ? planScreen() : closedScreen();
+  $('#app').innerHTML = body;
+  const scr = $('#screen');
+  if (st === 'chat' && scr){ if (matchMedia('(max-width:900px)').matches) window.scrollTo(0, document.body.scrollHeight); else scr.scrollTop = scr.scrollHeight; }
+  renderTimeline(); renderCase();
+}
+function setWeek(w){
+  const s = S(); state.week = Math.max(1, Math.min(s.flag, w));
+  state.stage = state.week >= s.flag ? 'lock' : 'today';
+  if (state.week < s.flag) state.chat = null;
+  render();
+}
+let timer = null;
+function stopPlay(){ clearInterval(timer); timer = null; state.playing = false; }
+function play(){
+  const s = S();
+  if (state.playing){ stopPlay(); render(); return; }
+  if (state.week >= s.flag || state.stage !== 'today'){ state = initial(state.scenario); }
+  state.playing = true; render();
+  timer = setInterval(() => {
+    if (state.week >= s.flag){ stopPlay(); render(); toast('Check-in sent to Sarah'); return; }
+    setWeek(state.week + 1);
+    if (state.week >= s.flag){ stopPlay(); render(); toast('Check-in sent to Sarah'); }
+  }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 800);
+}
+
+document.addEventListener('input', e => { if (e.target.id === 'wk'){ stopPlay(); setWeek(+e.target.value); } });
+document.addEventListener('change', e => {
+  if (e.target.name === 'scenario'){ stopPlay(); state = initial(e.target.value); render(); }
+});
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const a = el.dataset.act, v = el.dataset.v;
+  switch (a){
+    case 'play': play(); break;
+    case 'open-chat': if (!state.chat) state.chat = newChat(); state.stage = 'chat'; render(); break;
+    case 'back-lock': state.stage = 'lock'; render(); break;
+    case 'back-chat': state.stage = 'chat'; render(); break;
+    case 'chat': chatAnswer(v); break;
+    case 'to-plan': state.stage = 'plan'; render(); $('#screen').scrollTop = 0; break;
+    case 'send': state.chat.sent = true; render(); toast('Sent. They’ll see everything.'); break;
+    case 'skip': state.stage = 'closed'; render(); $('#screen').scrollTop = 0; break;
+    case 'replay': stopPlay(); state = initial(state.scenario); render(); break;
+    case 'reset': stopPlay(); state = initial(); document.querySelector('input[name=scenario][value=dose]').checked = true; render(); toast('Demo reset'); break;
+    case 'todo': toast('Not part of this prototype'); break;
+  }
+});
+render();
+</script>
+</body>
+</html>

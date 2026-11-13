@@ -2,6 +2,7 @@
 
 **Live prototypes**
 - Non-Scale Victories: https://amanthif.github.io/juniper-takehome-prototype/nsv/
+- Pre-emptive Check-In: https://amanthif.github.io/juniper-takehome-prototype/check-in/
 - Monthly Progress Report (combined flow, v1): https://amanthif.github.io/juniper-takehome-prototype/
 
 A clickable, adaptive prototype for a GLP-1 weight-loss subscription. It covers three take-home prompts as **one patient journey**, because to the patient they are one journey:
@@ -75,6 +76,18 @@ A standalone redesign of the in-app **Progress tab**. Today the app defines a "w
 - **No data:** the first win is a process win inferred from orders ("10 weeks in, every dose on time").
 
 Demo controls: this week's weigh-in (down / flat / up), stage, data level, overall progress.
+
+## Prototype: Pre-emptive Check-In (`/check-in/`)
+
+**We know something's wrong before the patient does.** Patients who are quietly stalling rarely ask for help. They feel fine until the day they decide "it's not working" and cancel. This prototype acts on early signals instead.
+
+- **The system's view (left):** press play to watch Sarah's weeks. Small signals appear (a skipped dose step-up, nausea mentioned to June, a late refill, weigh-ins stopping, weight drifting below range). None is alarming alone. Together they cross a threshold, and the check-in fires weeks before she'd likely cancel.
+- **Sarah's view (phone):** an ordinary week, nothing looks wrong. Then a gentle, specific notification that names what we noticed, without blame.
+- **The check-in:** June shows *exactly* what we noticed and where it came from, then asks only what data can't tell us (2–3 taps).
+- **Routing:** one tap sends it to a prescriber or coach, who already has the answers. The case is drafted automatically with flags and a suggestion for consideration.
+- **Closing the loop:** the next day the prescriber replies, the treatment tracker updates, and the chart shows the expected recovery.
+
+Scenarios: stuck on the starter dose (→ prescriber, step-up), quietly drifting (→ coach, or prescriber if doses stopped), and doing everything right but not responding (→ prescriber review, including other medication options).
 
 ## Tech
 
