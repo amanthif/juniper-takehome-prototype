@@ -1,6 +1,10 @@
 # Monthly Progress Report: a working prototype
 
-**Live prototype:** _add GitHub Pages link here_ · **Written answers:** _add Notion link here_
+**Live prototypes**
+- Non-Scale Victories: https://amanthif.github.io/juniper-takehome-prototype/nsv/
+- Monthly Progress Report (combined flow, v1): https://amanthif.github.io/juniper-takehome-prototype/
+
+**Versions.** The version I submitted is tagged [`submitted-13-nov`](https://github.com/amanthif/juniper-takehome-prototype/tree/submitted-13-nov). I'm still iterating on `main` in the open, so the live links show the latest work. Compare with the tag to see what changed after submission.
 
 A clickable, adaptive prototype for a GLP-1 weight-loss subscription. It covers three take-home prompts as **one patient journey**, because to the patient they are one journey:
 
