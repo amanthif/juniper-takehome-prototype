@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Non-Scale Victories · Prototype</title>
+<meta name="description" content="Working prototype: a Progress tab that redefines a 'win' beyond kilos, for a GLP-1 weight-loss program. Illustrative data only.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#F1ECF2; --surface:#FFFFFF; --surface-2:#FAF5FB; --ink:#1F2A24; --muted:#56605A; --line:#E8E1EA;
+  --brand:#1E3B2C; --brand-soft:#E6EEE8; --accent:#7E52B8; --accent-soft:#EFE6F8; --lilac:#CFC3F5;
+  --warn-ink:#7A4E00; --warn-soft:#FFF3D6;
+  --radius:22px; --shadow:0 1px 2px rgba(31,42,36,.05),0 6px 20px rgba(31,42,36,.06);
+  --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(280px,360px) auto;gap:48px;justify-content:center;align-items:start;padding:40px 24px}
+.stage{position:sticky;top:24px}
+.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px;box-shadow:0 30px 60px rgba(31,42,36,.25)}
+.app{position:relative;height:100%;background:var(--surface-2);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
+
+/* demo panel */
+.demo{font-size:14px}
+.demo h1{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.15;margin:0 0 6px}
+.demo-intro{color:var(--muted);margin:0 0 20px}
+.demo summary{display:none}
+fieldset.seg{border:0;padding:0;margin:0 0 14px}
+fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0}
+.seg-row{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg-row label{flex:1;position:relative}
+.seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg-row span{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer}
+.seg-row input:checked+span{background:var(--brand);color:#fff}
+.seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
+.explain{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:18px 0 12px}
+.explain .q{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-bottom:6px}
+.explain .q.risk{background:var(--warn-soft);color:var(--warn-ink)}
+.explain p{margin:4px 0}
+.explain .small{color:var(--muted);font-size:13px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.vs div{border-radius:10px;padding:10px;font-size:12.5px;line-height:1.35}
+.vs .before{background:var(--surface-2)}
+.vs .after{background:var(--accent-soft)}
+.vs b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;color:var(--muted)}
+.link-btn{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
+.demo-foot{color:var(--muted);font-size:12px;margin-top:12px}
+
+/* app chrome */
+.screen{flex:1;overflow-y:auto;scroll-behavior:smooth;position:relative}
+.floatbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:52px 16px 0;z-index:3;pointer-events:none}
+.floatbar>*{pointer-events:auto}
+.fbtn{min-width:44px;height:44px;border-radius:99px;border:0;background:rgba(255,255,255,.85);box-shadow:0 2px 10px rgba(31,42,36,.1);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;font-weight:600;font-size:14px;cursor:pointer}
+.fbtn.av{padding:0;width:44px;color:var(--accent)}
+.tabbar{flex:none;display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px 22px}
+.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);min-height:48px;cursor:pointer;padding-top:4px}
+.tab[aria-current="page"]{color:var(--brand);font-weight:600}
+
+/* hero */
+.hero{position:relative;background:linear-gradient(180deg,#C9BCF4 0%,#E4DCFA 48%,var(--surface-2) 100%);padding:112px 22px 26px;text-align:center;overflow:hidden}
+.hero.stall{background:linear-gradient(180deg,#F3DFB5 0%,#FBEFD6 50%,var(--surface-2) 100%)}
+.hero .arc{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:520px;height:520px;border-radius:50%;border:18px solid rgba(255,255,255,.35);pointer-events:none}
+.hero .lbl{position:relative;font-weight:600;font-size:15px;color:var(--brand);margin:0 0 10px}
+.hero h1{position:relative;font-family:var(--serif);font-weight:400;color:var(--brand);font-size:36px;line-height:1.08;margin:0 0 14px;letter-spacing:-.015em}
+.hero p.sub{position:relative;margin:0 auto 20px;max-width:310px;color:#3E4A44;font-size:15.5px}
+.hero .cta{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:600;cursor:pointer}
+.hero .cta2{position:relative;display:block;margin:8px auto 0}
+.hero-nav{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px}
+.hero-nav .dotbtn{width:28px;height:28px;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
+.hero-nav .dotbtn i{width:8px;height:8px;border-radius:50%;background:rgba(30,59,44,.25)}
+.hero-nav .dotbtn[aria-current="true"] i{background:var(--brand);width:20px;border-radius:99px}
+.hero-nav .arrow{width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.6);cursor:pointer;display:grid;place-items:center}
+
+/* sections */
+.sec{padding:0 16px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:26px 2px 10px}
+.sec-h h2{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:24px;margin:0}
+.sec-h span{font-size:13px;color:var(--muted)}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:12px 0}
+.card h3{margin:0;font-size:17px;font-weight:600;color:var(--brand)}
+.muted{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;background:var(--accent-soft);color:var(--accent)}
+.pill.green{background:var(--brand-soft);color:var(--brand)}
+.pill.amber{background:var(--warn-soft);color:var(--warn-ink)}
+.src{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start;margin:10px 0 0}
+.src svg{flex:none;margin-top:2px}
+
+/* since-you-started rail */
+.rail{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:16px;padding:4px 16px 14px;margin:0 -16px}
+.rail::-webkit-scrollbar{display:none}
+.wcard{flex:none;width:168px;scroll-snap-align:start;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);border:0;padding:14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:156px}
+.wcard:hover{box-shadow:0 2px 4px rgba(31,42,36,.06),0 10px 24px rgba(31,42,36,.1)}
+.wcard .t{font-weight:600;font-size:14.5px;line-height:1.25}
+.wcard .tn{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:auto}
+.wcard .then{font-size:13px;color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(86,96,90,.5)}
+.wcard .now{font-family:var(--serif);font-size:22px;color:var(--brand);line-height:1.1}
+.wcard.new{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.wcard.add{background:transparent;box-shadow:none;border:1.5px dashed #CBBFD9;justify-content:center;align-items:flex-start}
+.wcard.add .plus{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:20px;font-weight:600}
+.wcard.add .s{font-size:12.5px;color:var(--muted)}
+.tile{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.tile.g{background:var(--brand-soft);color:var(--brand)}
+.tile.p{background:var(--accent-soft);color:var(--accent)}
+.tile.a{background:var(--warn-soft);color:var(--warn-ink)}
+
+/* weight */
+.wt-top{display:flex;justify-content:space-between;align-items:center}
+.wt-nums{display:flex;gap:28px;margin:12px 0 4px}
+.wt-nums .v{font-family:var(--serif);font-size:30px;color:var(--brand);line-height:1.1}
+.wt-nums .k{font-size:13px;color:var(--muted)}
+.calm{background:var(--surface-2);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14.5px}
+.calm b{color:var(--brand)}
+.mini-toggle{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px}
+.switch{width:48px;height:30px;border-radius:99px;border:0;background:#C9C2CC;position:relative;cursor:pointer;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch[aria-checked="true"]{background:var(--brand)}
+.switch[aria-checked="true"]::after{transform:translateX(18px)}
+
+/* photos */
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.photo{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:3/4;background:linear-gradient(160deg,#E7DFF0,#D6CBE3);border:0;padding:0;cursor:pointer}
+.photo svg{width:100%;height:100%;transition:filter .3s}
+.photo.blur svg{filter:blur(14px)}
+.photo .cap{position:absolute;left:8px;bottom:8px;background:rgba(255,255,255,.92);font-size:12px;font-weight:600;border-radius:99px;padding:3px 9px}
+.photo .lock{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:600}
+.photo .lock span{background:rgba(255,255,255,.92);border-radius:99px;padding:6px 12px}
+.photo-empty{text-align:center;padding:8px 0 0}
+.photo-empty h3{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.1;margin:6px 0 8px}
+
+/* habits */
+.habit{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
+.habit:first-of-type{border-top:0;padding-top:4px}
+.habit .body{flex:1;min-width:0}
+.habit .name{font-weight:600;font-size:15.5px}
+.dots{display:flex;gap:5px;margin:7px 0 6px}
+.dots i{width:22px;height:22px;border-radius:50%;background:#EEEAF0;display:grid;place-items:center}
+.dots i.on{background:var(--brand);color:#fff}
+.link-out{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--accent);font-weight:500}
+.link-out.neutral{color:var(--muted);font-weight:400}
+
+/* check-in */
+.ci{border:2px solid var(--accent);background:var(--surface)}
+.qq{margin-top:16px}
+.qq p{margin:0 0 8px;font-weight:600;font-size:15px}
+.qq .intake{font-weight:400;color:var(--muted);font-size:13px;display:block}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:500}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:10px;border:0;font-weight:600;font-size:16px;cursor:pointer;padding:0 16px;background:var(--brand);color:#fff;margin-top:16px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn.soft{background:var(--surface-2);color:var(--brand)}
+.payback{background:var(--accent-soft)}
+.payback ul{list-style:none;margin:8px 0 0;padding:0}
+.payback li{display:flex;gap:8px;margin:7px 0;font-size:14.5px}
+.payback li svg{flex:none;margin-top:3px;color:var(--accent)}
+
+.fine{font-size:12px;color:var(--muted);text-align:center;margin:22px 24px 28px}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(20,24,22,.4);z-index:5;display:flex;align-items:flex-end}
+.sheet{background:var(--surface);width:100%;border-radius:26px 26px 0 0;padding:10px 20px 28px;max-height:88%;overflow-y:auto;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:40px;height:5px;border-radius:9px;background:#DDD6E0;margin:0 auto 10px}
+.sheet-h{display:flex;align-items:center;gap:12px}
+.sheet-h h2{flex:1;margin:0;font-size:19px;color:var(--brand)}
+.x{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px}
+.big-tn{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px;margin:16px 0}
+.big-tn .col{background:var(--surface-2);border-radius:14px;padding:12px}
+.big-tn .col.now{background:var(--brand-soft)}
+.big-tn .k{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.big-tn .v{font-family:var(--serif);font-size:24px;color:var(--brand);margin-top:2px}
+.helping{background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:14.5px}
+.helping b{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}.screen{scroll-behavior:auto}.switch::after,.photo svg{transition:none}}
+
+@media (max-width:860px){
+  .layout{display:block;padding:0}
+  .demo{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .demo summary{display:flex;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
+  .demo h1{font-size:22px;margin-top:8px}
+  .stage{position:static}
+  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0;box-shadow:none}
+  .app{border-radius:0;height:auto;min-height:100vh;overflow:visible}
+  .screen{overflow:visible}
+  .floatbar{padding-top:12px}
+  .hero{padding-top:76px}
+  .tabbar{position:sticky;bottom:0;z-index:4}
+  .scrim{position:fixed}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="demo" aria-label="Prototype demo controls">
+    <details id="demoDetails" open>
+      <summary>Demo controls</summary>
+      <h1>Non-Scale Victories</h1>
+      <p class="demo-intro">A Progress tab where a “win” isn’t just kilos. Flip the switches to see how it responds to a good week, a flat week and a real stall. <strong>All patient data is illustrative.</strong></p>
+
+      <fieldset class="seg"><legend>This week’s weigh-in</legend><div class="seg-row">
+        <label><input type="radio" name="scale" value="down"><span>Down</span></label>
+        <label><input type="radio" name="scale" value="flat" checked><span>Flat</span></label>
+        <label><input type="radio" name="scale" value="up"><span>Up</span></label></div></fieldset>
+      <fieldset class="seg"><legend>Journey stage</legend><div class="seg-row">
+        <label><input type="radio" name="stage" value="early"><span>Early</span></label>
+        <label><input type="radio" name="stage" value="middle" checked><span>Middle</span></label>
+        <label><input type="radio" name="stage" value="plateau"><span>Plateau</span></label></div></fieldset>
+      <fieldset class="seg"><legend>Data we have</legend><div class="seg-row">
+        <label><input type="radio" name="data" value="rich" checked><span>Rich</span></label>
+        <label><input type="radio" name="data" value="light"><span>Light</span></label>
+        <label><input type="radio" name="data" value="none"><span>None</span></label></div></fieldset>
+      <fieldset class="seg"><legend>Overall progress</legend><div class="seg-row">
+        <label><input type="radio" name="progress" value="on" checked><span>On track</span></label>
+        <label><input type="radio" name="progress" value="below"><span>Below range</span></label></div></fieldset>
+
+      <div class="explain" id="explain" aria-live="polite"></div>
+      <button class="link-btn" data-act="reset">Reset demo</button>
+      <p class="demo-foot">Fictional patient (Sarah, Mounjaro). Values are illustrative, not clinical data.</p>
+    </details>
+  </aside>
+  <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================== Model (illustrative) ===================== */
+const START_KG = 92;
+const STAGES = {
+  early:   { week: 3,  label: 'Month 1', k: 0.3, months: 2 },
+  middle:  { week: 10, label: 'Month 3', k: 1,   months: 4 },
+  plateau: { week: 26, label: 'Month 6', k: 1.5, months: 7 },
+};
+const TOTAL = { early: { on: -1.9, below: -0.4 }, middle: { on: -7.4, below: -2.8 }, plateau: { on: -13.1, below: -5.2 } };
+const TREND4 = { early: { on: -1.2, below: -0.3 }, middle: { on: -1.8, below: -0.2 }, plateau: { on: -0.5, below: 0 } };
+
+const initial = () => ({ scale: 'flat', stage: 'middle', data: 'rich', progress: 'on', slide: 0, hideWeight: false, photosOpen: false, added: {}, ci: {}, ciDone: false, sheet: null, fresh: [] });
+let state = initial();
+
+function sc(){
+  const st = STAGES[state.stage], below = state.progress === 'below', key = below ? 'below' : 'on';
+  const total = TOTAL[state.stage][key];
+  const wk = { down: below ? -0.2 : -0.6, flat: 0, up: 0.4 }[state.scale];
+  const t4 = +(TREND4[state.stage][key] + { down: -0.3, flat: 0, up: 0.3 }[state.scale]).toFixed(1);
+  return { ...st, stage: state.stage, below, total, wk, t4, data: state.data,
+    kg: +(START_KG * -total / 100).toFixed(1),
+    now: +(START_KG * (1 + total / 100)).toFixed(1),
+    // Month 1 is slow by design (starter dose), so it never counts as a stall.
+    stall: below && state.scale !== 'down' && state.stage !== 'early' };
+}
+
+/* ===================== Helpers ===================== */
+const $ = s => document.querySelector(s);
+const sgn = n => (n < 0 ? '−' : n > 0 ? '+' : '±') + Math.abs(n).toFixed(1);
+const I = {
+  info: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>',
+  check: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:2px"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
+  bowl: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 11h18a9 9 0 01-18 0zM8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/></svg>',
+  moon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
+  tape: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 9h18v6H3zM7 9v3M11 9v3M15 9v3M19 9v3"/></svg>',
+  wave: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></svg>',
+  cookie: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 109 9 3 3 0 01-3-3 3 3 0 01-3-3 3 3 0 01-3-3z"/><path d="M9 10h.01M14 15h.01M9 15h.01"/></svg>',
+  bolt: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>',
+  heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+  shirt: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 01-8 0z"/></svg>',
+  pen: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16zM14 6l3 3"/></svg>',
+  cam: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  egg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3c4 0 7 6 7 10a7 7 0 01-14 0c0-4 3-10 7-10z"/></svg>',
+  shoe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h18v-2l-6-2-3-5H8v4l-5 1z"/><path d="M3 20h18"/></svg>',
+  syringe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 2l4 4M20 4l-9 9M7 13l4 4M14 6l4 4-8 8H6v-4zM6 18l-4 4"/></svg>',
+  chevL: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+  chevR: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
+};
+const src = t => `<p class="src">${I.info}<span>${t}</span></p>`;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
+const pick = (o) => o[state.stage];
+
+/* ===================== Wins ===================== */
+function wins(){
+  const s = sc(), b = s.below, d = s.data, add = state.added, ci = state.ciDone ? state.ci : null;
+  const L = [];
+  // Process win: always known from orders. Reward the process, not the outcome.
+  L.push({ id: 'doses', icon: 'syringe', tone: 'g', title: 'Doses on time', then: '—', now: `${s.week} weeks`, nowLbl: `${s.week} of ${s.week} weeks`, good: true, avail: true,
+    hero: `${s.week} weeks in, every dose on time.`, heroSub: 'That consistency is what makes everything else possible. It’s the part you control, and you’re nailing it.',
+    src: 'From your order history', help: 'Your next order ships automatically. Nothing to do.', process: true });
+  // Food noise
+  let fn = b ? pick({ early: 7, middle: 6, plateau: 6 }) : pick({ early: 6, middle: 3, plateau: 2 }), fnSrc = d === 'rich' ? 'From your intake and monthly check-ins' : 'Based on what you told your coach';
+  let fnAvail = d !== 'none';
+  if (ci){ fn = { low: 2, mid: 5, high: 8 }[ci.food]; fnAvail = true; fnSrc = 'From your intake and today’s check-in'; }
+  L.push({ id: 'food', icon: 'bowl', tone: 'p', title: 'Food noise', then: '8/10', now: `${fn}/10`, good: fn < 8, avail: fnAvail, num: [8, fn], unit: '/10', lowerBetter: true,
+    hero: `Food noise is down from 8/10 to ${fn}/10.`, heroSub: 'Less mental chatter about food is one of the clearest signs the medicine is working, often before the scale shows it.',
+    src: fnSrc, help: 'Your dose is doing the heavy lifting here. Regular protein keeps it steady between meals.' });
+  // Evening snacking
+  const cr = b ? pick({ early: 'Most nights', middle: '4–5 a week', plateau: '4–5 a week' }) : pick({ early: '4–5 a week', middle: '1–2 a week', plateau: 'Rarely' });
+  L.push({ id: 'cravings', icon: 'cookie', tone: 'p', title: 'Evening snacking', then: 'Most nights', now: cr, good: cr !== 'Most nights', avail: d !== 'none',
+    hero: `Evening snacking: from most nights to ${cr.toLowerCase()}.`, heroSub: 'Breaking the evening habit is huge. It’s usually where the hardest calories live.',
+    src: d === 'rich' ? 'From your food log' : 'Based on what you told your coach', help: 'Protein at dinner, 5 of the last 7 days, is linked with fewer evening cravings.' });
+  // Nausea
+  const nz = b ? pick({ early: [3, 4, 3], middle: [4, 4, 3], plateau: [4, 3, 3, 3, 2, 3, 3] }) : pick({ early: [2, 3, 2], middle: [4, 3, 2, 1], plateau: [4, 2, 1, 1, 0, 0, 0] });
+  const nzNow = nz[nz.length - 1];
+  L.push({ id: 'nausea', icon: 'wave', tone: 'g', title: 'Nausea days', then: `${nz[0]}/wk`, now: `${nzNow}/wk`, good: nzNow < nz[0], avail: d !== 'none', series: nz, unit: ' days',
+    hero: nzNow === 0 ? 'No nausea days for weeks now.' : `Nausea is down to ${nzNow} day${nzNow === 1 ? '' : 's'} a week.`, heroSub: 'Your body has adjusted to the medicine. The hardest part is behind you.',
+    src: d === 'rich' ? 'From your side-effect log' : 'Based on what you told your coach', help: 'Smaller meals and eating slowly help. Keep going.' });
+  // Waist
+  const wc = b ? pick({ early: 1, middle: 2, plateau: 4 }) : pick({ early: 2, middle: 6, plateau: 11 });
+  L.push({ id: 'waist', icon: 'tape', tone: 'g', title: 'Waist', then: '104 cm', now: `${104 - wc} cm`, good: true, avail: d === 'rich' || add.waist, num: [104, 104 - wc], unit: ' cm', lowerBetter: true,
+    hero: `${wc} cm off your waist.`, heroSub: 'Waist often keeps shrinking even when the scale stalls, because you’re losing fat around your middle.',
+    src: 'From your measurements', addTxt: 'Add your waist (30 sec)', help: 'Measure at your belly button, same time of day, once a month.' });
+  // Sleep
+  const sl = Math.round(40 * s.k * (b ? 0.4 : 1));
+  L.push({ id: 'sleep', icon: 'moon', tone: 'p', title: 'Sleep', then: '6h 05m', now: `6h ${String(5 + sl).padStart(2, '0')}m`, good: sl > 0, avail: d === 'rich' || add.sleep,
+    hero: `${sl} more minutes of sleep a night.`, heroSub: 'Better sleep was one of your reasons for starting. It’s happening.',
+    src: 'Average per night, from your watch', addTxt: 'Connect your watch', help: 'Steps 4 of 7 days this week. More movement in the day tends to mean deeper sleep.' });
+  // Energy
+  let en = Math.min(5, 2 + Math.round(2 * s.k * (b ? 0.4 : 1))), enAvail = d === 'rich', enSrc = 'From your monthly check-ins';
+  if (ci){ en = { better: Math.max(en, 4), same: 2, worse: 1 }[ci.energy]; enAvail = true; enSrc = 'From today’s check-in'; }
+  L.push({ id: 'energy', icon: 'bolt', tone: 'g', title: 'Energy', then: '2/5', now: `${en}/5`, good: en > 2, avail: enAvail, num: [2, en], unit: '/5',
+    hero: `Energy up from 2/5 to ${en}/5.`, heroSub: 'You said you wanted to keep up with the kids. This is what that looks like.', src: enSrc, help: 'Protein and steps both help here.' });
+  // Clothes (check-in only)
+  if (ci) L.push({ id: 'clothes', icon: 'shirt', tone: 'p', title: 'Clothes fit', then: 'At intake', now: { looser: 'Looser', same: 'Same', tighter: 'Tighter' }[ci.clothes], good: ci.clothes === 'looser', avail: true,
+    hero: 'Your clothes are fitting looser.', heroSub: 'That’s real change you can feel every day, whatever the scale says this week.', src: 'From today’s check-in', help: 'Want to make it official? Add a waist measurement.' });
+  // Blood pressure
+  if (s.stage !== 'early') L.push({ id: 'bp', icon: 'heart', tone: 'g', title: 'Blood pressure', then: '138/88', now: b ? '134/86' : s.stage === 'plateau' ? '122/80' : '126/82', good: true, avail: d === 'rich' || add.bp,
+    hero: b ? 'Blood pressure is edging down.' : 'Blood pressure is back in the healthy range.', heroSub: 'Less strain on your heart. A win that matters for decades, not weeks.',
+    src: 'From GP results you shared (illustrative)', addTxt: 'Share a GP result', help: 'Your prescriber can see this too.' });
+  return L;
+}
+function heroWin(L){
+  const ok = L.filter(w => w.avail && w.good && !w.process);
+  const pri = { early: ['nausea', 'clothes', 'food', 'cravings', 'energy'], middle: ['clothes', 'cravings', 'food', 'waist', 'sleep'], plateau: ['waist', 'bp', 'clothes', 'sleep', 'energy', 'food'] }[state.stage];
+  for (const id of pri){ const w = ok.find(x => x.id === id); if (w) return w; }
+  return ok[0] || L.find(w => w.id === 'doses');
+}
+
+/* ===================== Hero ===================== */
+function nextMilestone(s){
+  for (const m of [5, 10, 15, 20]){ const target = START_KG * m / 100; if (s.kg < target) return { m, left: +(target - s.kg).toFixed(1) }; }
+  return null;
+}
+function slides(){
+  const s = sc(), L = wins(), w = heroWin(L), hw = state.hideWeight;
+  if (s.stall){
+    return [{ cls: 'stall', lbl: 'Let’s take a look', h: 'Things have slowed down. Let’s find out why.',
+      sub: s.data === 'none' ? 'We haven’t seen much change, and we’d rather check than guess. It’s often something fixable, like the dose.' : 'Your weight’s been flat for 4 weeks and your appetite hasn’t shifted much. That’s worth a conversation, not more waiting. It’s often the dose, not you.',
+      cta: ['stall', 'Check in with your care team'], cta2: ['scroll', 'See what has changed'] }];
+  }
+  const nsv = { lbl: s.data === 'none' && !state.ciDone ? 'Your first win' : 'Your win this week', h: w.hero, sub: w.heroSub,
+    cta: s.data === 'none' && !state.ciDone ? ['scroll-ci', 'Tell us what’s changed'] : ['scroll', 'See everything that’s changed'] };
+  if (s.data === 'none') return [nsv]; // no weigh-ins, so no weight slide
+  let weight;
+  const ms = nextMilestone(s);
+  if (state.scale === 'down') weight = { lbl: 'This week', h: hw ? 'The scale moved this week.' : `Down ${Math.abs(s.wk)}kg this week.`, sub: ms ? (hw ? 'Your next milestone is in sight.' : `${ms.left}kg to ${ms.m}%, your next milestone.`) : 'Steady progress. Keep going.', cta: ['sheet:weight', 'See your weight'] };
+  else if (state.scale === 'flat') weight = { lbl: 'This week', h: 'The scale’s quiet this week.', sub: `That’s normal. Weight drops in steps, not a straight line.${hw ? '' : ` Your 4-week trend: ${sgn(s.t4)}kg.`}`, cta: ['sheet:weight', 'Why the scale pauses'] };
+  else weight = { lbl: 'This week', h: 'Up a little this week.', sub: hw ? 'Day-to-day changes are mostly water, not fat.' : `${sgn(s.wk)}kg is usually water, salt or timing, not fat. Your 4-week trend: ${sgn(s.t4)}kg.`, cta: ['sheet:weight', 'Why this happens'] };
+  // On a good week weight leads; on a flat or up week a non-scale win leads.
+  return state.scale === 'down' ? [weight, nsv] : [nsv, weight];
+}
+function renderHero(){
+  const sl = slides(); if (state.slide >= sl.length) state.slide = 0;
+  const x = sl[state.slide];
+  const nav = sl.length > 1 ? `<div class="hero-nav"><button class="arrow" data-act="slide" data-v="-1" aria-label="Previous">${I.chevL}</button>${sl.map((_, i) => `<button class="dotbtn" data-act="slide-to" data-v="${i}" aria-label="Slide ${i + 1} of ${sl.length}" aria-current="${i === state.slide}"><i></i></button>`).join('')}<button class="arrow" data-act="slide" data-v="1" aria-label="Next">${I.chevR}</button></div>` : '';
+  return `<section class="hero ${x.cls || ''}" id="hero" aria-roledescription="carousel" aria-label="This week">
+    <span class="arc" aria-hidden="true"></span>
+    <p class="lbl">${x.lbl}</p><h1 id="h1" tabindex="-1">${x.h}</h1><p class="sub">${x.sub}</p>
+    <button class="cta" data-act="${x.cta[0]}">${x.cta[1]}</button>
+    ${x.cta2 ? `<button class="link-btn cta2" data-act="${x.cta2[0]}">${x.cta2[1]}</button>` : ''}
+    ${nav}</section>`;
+}
+
+/* ===================== Sections ===================== */
+function renderRail(){
+  const L = wins(), have = L.filter(w => w.avail), miss = L.filter(w => !w.avail && w.addTxt);
+  const card = w => `<button class="wcard ${state.fresh.includes(w.id) ? 'new' : ''}" data-act="sheet:win:${w.id}" aria-label="${w.title}: ${w.then} then, ${w.nowLbl || w.now} now. Open details.">
+      <span class="tile ${w.good ? w.tone : 'a'}">${I[w.icon]}</span><span class="t">${w.title}</span>
+      <span class="tn">${w.process ? '' : `<span class="then">${w.then}</span>`}<span class="now">${w.now}</span></span>
+      ${state.fresh.includes(w.id) ? '<span class="pill" style="align-self:flex-start">New</span>' : w.good ? '' : '<span class="pill amber" style="align-self:flex-start">Not yet</span>'}</button>`;
+  const addCard = w => `<button class="wcard add" data-act="add:${w.id}"><span class="plus" aria-hidden="true">+</span><span class="t">${w.title}</span><span class="s">${w.addTxt}</span></button>`;
+  const goodN = have.filter(w => w.good).length;
+  return `<div class="sec" id="since"><div class="sec-h"><h2>Since you started</h2><span>${goodN} win${goodN === 1 ? '' : 's'}</span></div>
+    <div class="rail" role="list">${have.map(card).join('')}${miss.map(addCard).join('')}</div></div>`;
+}
+
+function weightSeries(s){
+  const pts = []; pts[7] = s.now; pts[6] = s.now - s.wk;
+  const per = (s.t4 - s.wk) / 3;
+  for (let i = 5; i >= 0; i--) pts[i] = pts[i + 1] - per + Math.sin(i * 7.3) * 0.15;
+  return pts;
+}
+function sparkline(pts, hw){
+  const W = 300, H = 90, min = Math.min(...pts) - 0.4, max = Math.max(...pts) + 0.4;
+  const x = i => 8 + i * (W - 16) / (pts.length - 1), y = v => 8 + (max - v) / (max - min) * (H - 22);
+  const d = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Weight over the last 8 weeks">
+    <path d="${d} L${x(pts.length - 1)},${H - 12} L${x(0)},${H - 12} Z" fill="#EFE6F8"/>
+    <path d="${d}" fill="none" stroke="#7E52B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="${i === pts.length - 1 ? 5 : 3}" fill="${i === pts.length - 1 ? '#7E52B8' : '#fff'}" stroke="#7E52B8" stroke-width="2"/>`).join('')}
+    <text x="8" y="${H - 1}" font-size="11" fill="#56605A">8 weeks ago</text><text x="${W - 8}" y="${H - 1}" font-size="11" fill="#56605A" text-anchor="end">This week</text></svg>`;
+}
+function renderWeight(){
+  const s = sc(), hw = state.hideWeight;
+  if (s.data === 'none') return `<div class="sec"><div class="card"><div class="wt-top"><h3>Weight</h3></div>
+    <p class="muted" style="margin:8px 0 0">No weigh-ins yet. When you add one, we’ll show it here with context, so one number never tells the whole story.</p>
+    <button class="btn soft" data-act="todo">Log a weigh-in</button></div></div>`;
+  const calm = s.stall
+    ? `Your weight has been about the same for 4 weeks, ${s.data === 'rich' ? 'and your wins have slowed too' : 'and that’s below what we’d expect'}. Your care team can help work out why.`
+    : state.scale === 'down' ? `Nice. <b>${hw ? 'Heading the right way.' : sgn(s.t4) + 'kg over 4 weeks.'}</b>`
+    : state.scale === 'flat' ? `No change this week, and that’s normal. <b>${hw ? 'Your 4-week trend is still down.' : `4-week trend: ${sgn(s.t4)}kg.`}</b>`
+    : `A small rise is usually water or salt. <b>${hw ? 'Your 4-week trend is still down.' : `4-week trend: ${sgn(s.t4)}kg.`}</b>`;
+  return `<div class="sec"><div class="sec-h"><h2>Weight</h2><span>${s.data === 'light' ? 'Monthly weigh-ins' : 'Weekly'}</span></div><div class="card">
+    <div class="wt-top"><h3>This week</h3>${hw ? '' : `<span class="pill">${s.total < 0 ? '↓' : ''} ${Math.abs(s.total).toFixed(1)}% since start</span>`}</div>
+    ${hw ? '' : `<div class="wt-nums"><div><div class="v">${s.now} kg</div><div class="k">Current</div></div><div><div class="v">${sgn(s.wk)} kg</div><div class="k">This week</div></div></div>`}
+    ${hw ? '' : sparkline(weightSeries(s))}
+    <div class="calm">${calm}</div>
+    <div class="mini-toggle"><button class="switch" role="switch" aria-checked="${hw}" aria-labelledby="hwl" data-act="hideweight"></button><span id="hwl">Hide weight numbers</span></div>
+    </div></div>`;
+}
+
+function renderPhotos(){
+  const s = sc();
+  if (!(s.data === 'rich' || state.added.photos)) return `<div class="sec"><div class="card photo-empty"><span class="tile p" style="margin:0 auto">${I.cam}</span>
+    <h3>See the change the scale can’t</h3><p class="muted" style="margin:0 0 4px">Photos are private to you and stay blurred until you tap.</p>
+    <button class="btn soft" data-act="add:photos">Add your first photo</button></div></div>`;
+  const blur = !state.photosOpen;
+  const fig = w => `<svg viewBox="0 0 120 160" aria-hidden="true"><circle cx="60" cy="38" r="16" fill="#A898BC"/><path d="M${60 - w} 150 Q${60 - w} 70 60 64 Q${60 + w} 70 ${60 + w} 150 Z" fill="#A898BC"/></svg>`;
+  const nowW = { early: 34, middle: 29, plateau: 25 }[s.stage] + (s.below ? 4 : 0);
+  return `<div class="sec"><div class="sec-h"><h2>Photos</h2><span>Private</span></div><div class="card">
+    <div class="photos">
+      <button class="photo ${blur ? 'blur' : ''}" data-act="photos" aria-label="${blur ? 'Reveal' : 'Hide'} photos">${fig(36)}<span class="cap">Week 0</span>${blur ? '<span class="lock"><span>Tap to reveal</span></span>' : ''}</button>
+      <button class="photo ${blur ? 'blur' : ''}" data-act="photos" aria-label="${blur ? 'Reveal' : 'Hide'} photos">${fig(nowW)}<span class="cap">Week ${s.week}</span>${blur ? '<span class="lock"><span>Tap to reveal</span></span>' : ''}</button>
+    </div>${src('Only you can see these. Illustrative placeholders.')}</div></div>`;
+}
+
+function renderHabits(){
+  const s = sc(), L = wins(), get = id => L.find(w => w.id === id);
+  const dots = (n, on) => `<span class="dots" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}">${i < on ? I.check : ''}</i>`).join('')}</span>`;
+  const row = (icon, tone, name, d, sub, link, neutral) => `<div class="habit"><span class="tile ${tone}">${I[icon]}</span><div class="body"><div class="name">${name}</div>${d || ''}<div class="muted" style="font-size:13px">${sub}</div>${link ? `<div class="link-out ${neutral ? 'neutral' : ''}" style="margin-top:6px">${I.link}<span>${link}</span></div>` : ''}</div></div>`;
+  const doseN = Math.min(s.week, 7);
+  const cr = get('cravings'), en = get('energy');
+  const rows = [
+    row('syringe', 'g', 'Weekly dose', dots(doseN, doseN), `${s.week} weeks in a row`, 'Linked to: steadier appetite control between meals'),
+    s.data === 'none' ? row('egg', 'p', 'Protein', '', 'Not tracked yet', 'Log meals or tell your coach to see how protein links to your wins', true)
+      : row('egg', 'p', 'Protein at most meals', dots(7, s.data === 'rich' ? (s.below ? 2 : 5) : 3), s.data === 'rich' ? 'From your food log' : 'Self-reported',
+          s.below ? 'Protein’s been hard to fit in. Your coach has easy wins for small appetites.' : cr.avail && cr.good ? `Linked to: evening snacking down to ${cr.now.toLowerCase()}` : 'Linked to: fewer cravings', s.below),
+    s.data === 'rich' ? row('shoe', 'g', 'Steps · 4,000 a day', dots(7, s.below ? 2 : 4), 'From your phone', en.good ? `Linked to: energy up from 2/5 to ${en.now}` : 'Linked to: energy and sleep')
+      : row('shoe', 'g', 'Steps', '', 'Not connected', 'Connect your phone to link movement with energy and sleep', true),
+  ];
+  return `<div class="sec"><div class="sec-h"><h2>Habits → wins</h2><span>This week</span></div><div class="card">${rows.join('')}</div></div>`;
+}
+
+function renderCheckin(){
+  if (state.ciDone) return renderPayback();
+  const q = state.ci;
+  const opt = (k, v, l) => `<button class="opt" data-act="ci:${k}:${v}" aria-pressed="${q[k] === v}">${l}</button>`;
+  return `<div class="sec" id="ci"><div class="sec-h"><h2>What’s changed?</h2><span>3 taps</span></div><div class="card ci">
+    <p class="muted" style="margin:0">We’ll compare your answers with what you told us when you started, and turn them into wins.</p>
+    <div class="qq"><p>Where’s your food noise today?<span class="intake">At intake you said 8/10</span></p><div class="opts">${opt('food', 'low', '1–3')}${opt('food', 'mid', '4–6')}${opt('food', 'high', '7–10')}</div></div>
+    <div class="qq"><p>How are your clothes fitting?<span class="intake">Compared with when you started</span></p><div class="opts">${opt('clothes', 'looser', 'Looser')}${opt('clothes', 'same', 'About the same')}${opt('clothes', 'tighter', 'Tighter')}</div></div>
+    <div class="qq"><p>And your energy?<span class="intake">At intake you said 2/5</span></p><div class="opts">${opt('energy', 'better', 'Better')}${opt('energy', 'same', 'Same')}${opt('energy', 'worse', 'Worse')}</div></div>
+    <button class="btn" data-act="ci-done" ${q.food && q.clothes && q.energy ? '' : 'disabled'}>Show my wins</button></div></div>`;
+}
+function renderPayback(){
+  const c = state.ci, items = [];
+  items.push(`Food noise updated: 8/10 → ${{ low: 2, mid: 5, high: 8 }[c.food]}/10`);
+  if (c.clothes === 'looser') items.push('New win: your clothes are fitting looser');
+  if (c.energy === 'better') items.push('Energy added to your wins');
+  const flat = c.food === 'high' && c.clothes !== 'looser' && c.energy !== 'better';
+  if (flat) items.push('Not much has shifted yet. That’s useful to know, and your care team can see it.');
+  items.push('Your coach sees this too, so you won’t have to repeat it');
+  return `<div class="sec" id="ci"><div class="card payback" role="status"><h3>Your answers just became wins</h3><ul>${items.map(i => `<li>${I.check}<span>${i}</span></li>`).join('')}</ul>
+    ${flat ? `<button class="btn" data-act="stall">Talk to my care team</button>` : ''}
+    <button class="link-btn" data-act="ci-redo" style="margin-top:6px">Redo check-in</button></div></div>`;
+}
+
+/* ===================== Sheets ===================== */
+function bars(w){
+  let vals;
+  if (w.series) vals = w.series;
+  else if (w.num){ const n = STAGES[state.stage].months, [a, z] = w.num; vals = Array.from({ length: n }, (_, i) => +(a + (z - a) * (1 - Math.exp(-2 * i / (n - 1))) / (1 - Math.exp(-2))).toFixed(1)); }
+  else return '';
+  const max = Math.max(...vals) * 1.1 || 1, bw = 26, gap = 10, W = vals.length * (bw + gap), H = 110;
+  return `<svg viewBox="0 0 ${W} ${H}" width="${Math.min(W, 320)}" role="img" aria-label="${w.title} by month: ${vals.join(', ')}">
+    ${vals.map((v, i) => { const h = Math.max(3, v / max * (H - 30)); return `<rect x="${i * (bw + gap)}" y="${H - 18 - h}" width="${bw}" height="${h}" rx="6" fill="${i === vals.length - 1 ? '#1E3B2C' : '#CFC3F5'}"/><text x="${i * (bw + gap) + bw / 2}" y="${H - 4}" font-size="10.5" text-anchor="middle" fill="#56605A">M${i + 1}</text>`; }).join('')}</svg>`;
+}
+function renderSheet(){
+  const sh = state.sheet; if (!sh) return '';
+  let title, body;
+  if (sh.startsWith('win:')){
+    const w = wins().find(x => x.id === sh.slice(4));
+    title = w.title;
+    body = `${w.process ? `<p style="font-family:var(--serif);font-size:26px;color:var(--brand);margin:14px 0">${w.nowLbl}</p>` : `<div class="big-tn"><div class="col"><div class="k">Then</div><div class="v">${w.then}</div></div><div aria-hidden="true" style="text-align:center;color:var(--muted)">→</div><div class="col now"><div class="k">Now</div><div class="v">${w.now}</div></div></div>`}
+      ${bars(w)}
+      <p style="margin:12px 0 0">${w.good ? w.heroSub : 'Not much change yet. That’s worth knowing, and your care team can see it.'}</p>
+      <div class="helping"><b>What’s helping</b>${w.help}</div>${src(w.src)}`;
+  } else if (sh === 'weight'){
+    const s = sc();
+    title = 'Why the scale pauses';
+    body = `<p>Weight doesn’t fall in a straight line. Water, salt, hormones and digestion can hide fat loss for a week or two, and sometimes longer.</p>
+      <p>That’s why we look at your <strong>4-week trend</strong>${state.hideWeight ? '' : ` (${sgn(s.t4)}kg)`} and at wins like your waist, appetite and energy.</p>
+      <div class="helping"><b>When to worry</b>If your weight <em>and</em> your wins stay flat for a month, that’s a signal. We’ll flag it and get your care team involved, so you don’t have to wonder.</div>`;
+  } else if (sh === 'stall'){
+    title = 'Check in with your care team';
+    body = `<p>June, your care assistant, will ask a few quick questions (doses, side effects, appetite), then pass your answers to a prescriber or coach.</p>
+      <p class="muted">This hands off to the <strong>Proactive Check-In</strong>, a separate prototype. NSV never covers up a real stall.</p>
+      <button class="btn" data-act="close">Got it</button>`;
+  }
+  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t"><div class="grab" aria-hidden="true"></div>
+    <div class="sheet-h"><h2 id="sheet-t">${title}</h2><button class="x" data-act="close" aria-label="Close">×</button></div>${body}</div></div>`;
+}
+
+/* ===================== Explainer ===================== */
+function explain(){
+  const s = sc();
+  let q, txt, risk = false;
+  if (s.stall){ q = 'True stall · no false reassurance'; risk = true; txt = 'Weight and wins are both flat and below range. The hero stops celebrating and routes to care.'; }
+  else if (s.data === 'none' && !state.ciDone){ q = 'Infer before you ask'; txt = 'No tracking data, but orders show every dose on time, so the first win is a process win. Three taps unlock the rest.'; }
+  else if (state.scale === 'down'){ q = 'Good week'; txt = 'The weight leads, and a non-scale win sits one swipe away to back it up.'; }
+  else { q = 'Perception gap'; risk = s.below; txt = `The scale is ${state.scale === 'flat' ? 'flat' : 'up'} this week, so a non-scale win leads. The weight is still there, with context.`; }
+  $('#explain').innerHTML = `<span class="q ${risk ? 'risk' : ''}">${q}</span><p>${txt}</p>
+    <div class="vs"><div class="before"><b>Today</b>A “win” means kilos: “2.8kg away from your next win.” A plateau means weeks with nothing to celebrate.</div>
+    <div class="after"><b>This prototype</b>A win is anything that changed. Habits link to outcomes, and data you give is paid back straight away.</div></div>`;
+}
+
+/* ===================== Render + events ===================== */
+const TABS = [['Today', 'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6'], ['Explore', 'M4 5h7v14H4zM13 5h7v14h-7z'], ['Progress', 'M4 20V14h5v-4h5V6h6v14z'], ['Care', 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z'], ['Shop', 'M5 6h15l-2 8H7zM5 6L4 3H2M8 20h.01M17 20h.01']];
+let opener = null;
+function render(){
+  const prev = $('#screen'), keep = prev ? prev.scrollTop : 0, winY = window.scrollY;
+  $('#app').innerHTML = `
+    <div class="floatbar"><button class="fbtn av" data-act="todo" aria-label="Profile">S</button><button class="fbtn" data-act="todo">Help</button></div>
+    <main class="screen" id="screen">${renderHero()}${renderRail()}${renderWeight()}${renderCheckin()}${renderPhotos()}${renderHabits()}
+      <p class="fine">Prototype · Sarah is a fictional patient and all data is illustrative.</p></main>
+    <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === 'Progress' ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === 'Progress' ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>
+    ${renderSheet()}`;
+  $('#screen').scrollTop = keep;
+  if (matchMedia('(max-width:860px)').matches) window.scrollTo(0, winY);
+  if (state.sheet){ const x = document.querySelector('.sheet .x'); x && x.focus(); }
+  explain();
+}
+function syncRadios(){ for (const k of ['scale', 'stage', 'data', 'progress']) document.querySelectorAll(`input[name="${k}"]`).forEach(r => r.checked = r.value === state[k]); }
+function scrollToId(id){ const el = document.getElementById(id); if (!el) return; if (matchMedia('(max-width:860px)').matches) el.scrollIntoView({ behavior: 'smooth' }); else $('#screen').scrollTo({ top: el.offsetTop - 70, behavior: 'smooth' }); }
+function closeSheet(){
+  state.sheet = null; render();
+  // The DOM is re-rendered, so find the opener again by its action.
+  const back = opener && document.querySelector(`[data-act="${opener.dataset.act}"]`);
+  if (back) back.focus({ preventScroll: true });
+}
+
+document.addEventListener('change', e => {
+  const r = e.target; if (!r.matches('.seg input')) return;
+  state[r.name] = r.value; state.slide = 0; state.sheet = null; render();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sheet) closeSheet(); });
+document.addEventListener('click', e => {
+  if (e.target.classList && e.target.classList.contains('scrim')) { closeSheet(); return; }
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const a = el.dataset.act, v = el.dataset.v;
+  if (a.startsWith('sheet:')){ opener = el; state.sheet = a.slice(6); render(); return; }
+  if (a.startsWith('add:')){
+    const id = a.slice(4); state.added[id] = true; state.fresh = [...state.fresh, id]; render();
+    toast(id === 'photos' ? 'Photo added. Only you can see it.' : 'Added. A new win just unlocked.'); return;
+  }
+  if (a.startsWith('ci:')){ const [, k, val] = a.split(':'); state.ci[k] = val; render(); return; }
+  switch (a){
+    case 'slide': { const n = slides().length; state.slide = (state.slide + +v + n) % n; render(); break; }
+    case 'slide-to': state.slide = +v; render(); break;
+    case 'scroll': scrollToId('since'); break;
+    case 'scroll-ci': scrollToId('ci'); break;
+    case 'stall': opener = el; state.sheet = 'stall'; render(); break;
+    case 'close': case 'scrim': closeSheet(); break;
+    case 'ci-done': {
+      state.ciDone = true; const f = ['food'];
+      if (state.ci.clothes) f.push('clothes'); if (state.ci.energy === 'better') f.push('energy');
+      state.fresh = [...state.fresh, ...f]; state.slide = 0; render(); $('#screen').scrollTo({ top: 0 }); window.scrollTo(0, 0); toast('Your wins are updated'); break;
+    }
+    case 'ci-redo': state.ciDone = false; state.ci = {}; state.fresh = state.fresh.filter(x => !['food', 'clothes', 'energy'].includes(x)); render(); break;
+    case 'photos': state.photosOpen = !state.photosOpen; render(); break;
+    case 'hideweight': state.hideWeight = !state.hideWeight; render(); break;
+    case 'todo': toast('Only the Progress tab is part of this prototype'); break;
+    case 'reset': state = initial(); syncRadios(); render(); toast('Demo reset'); break;
+  }
+});
+// Swipe the hero on touch screens.
+let sx = null;
+document.addEventListener('touchstart', e => { if (e.target.closest('#hero')) sx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
+  const n = slides().length; if (Math.abs(dx) > 40 && n > 1){ state.slide = (state.slide + (dx < 0 ? 1 : -1) + n) % n; render(); }
+});
+if (matchMedia('(max-width:860px)').matches) $('#demoDetails').open = false;
+render();
+</script>
+</body>
+</html>
