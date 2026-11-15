@@ -50,18 +50,7 @@ A monthly moment, a few days before renewal. It opens from a notification into a
 
 ## Prototype: Non-Scale Victories (`/nsv/`)
 
-**Not more tracking. The same data, used differently.** The current app already collects appetite, side effects, waist, steps and protein, but none of it comes back as progress, and a "win" means a weight milestone ("2.8kg away from your next win"). This prototype targets the **perception gap**: users who are on track for their dose and week but don't see it.
-
-It makes three changes: it **redefines a win** as any credible sign of progress, it **closes the loop** so existing logs become visible trends, and it **adds a yardstick** so every number sits next to what's expected for that dose and week.
-
-- **Today tab:** a greeting that sums up her real wins ("Hey Sarah, your appetite has settled, your nausea is easing and you haven't missed a dose in 6 weeks"), a dose-step strip with "you are here", her top wins, then the existing tasks and daily goals. The greeting reaches users who would never open a progress page.
-- **Progress tab:** "This week's wins" replaces the milestone gauge. Weight is shown as % of body weight on a chart with the expected-range band, with kilograms on tap. Appetite and side-effect logs appear as trends.
-- **Driven by data, not fixed screens.** The control panel sets the stage of treatment, this week's scale, weight overall, and what she already logs. Presets A to D jump to the main cases.
-- **One quick question, using the app's own inputs:** the five-point appetite slider or the side-effect chips. Answering adds a win straight away and starts a trend. Or she can say it in a sentence and confirm what was heard (scripted).
-- **Greeting rules:** specific and true, never generic praise, and never about what the scale didn't do. A down week leads with weight. If nothing is new, it falls back to the phase message.
-- **Plateau vs stall:** flat *after* reaching the expected range is reframed as maintenance. Flat while still *below* it on a steady dose is a stall: the greeting doesn't praise, nothing is reframed, and the main action is **Talk to your care team** (where the Pre-emptive Check-In takes over).
-- **A walkable journey:** notification → Today → look closer → give one thing → outcome. The control panel can jump to any step.
-- **What we'd measure:** Today opened (and which greeting was shown), win tapped, weight expanded, check-in answered, care team tapped. Counted live in the control panel.
+The same data the app already collects, shown back as progress. The Today screen leads with one real win at a time, and weight sits in context, one tap away. Use the toggles on the left to change the case, the stage and what she logs.
 
 ## Prototype: Pre-emptive Check-In (`/check-in/`)
 

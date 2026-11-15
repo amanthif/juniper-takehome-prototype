@@ -4,259 +4,155 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Non-Scale Victories · Prototype</title>
-<meta name="description" content="Working prototype: a home screen that greets the user with credible progress beyond the scale, next to what's normal for each stage of GLP-1 treatment. Illustrative data only.">
+<meta name="description" content="Working prototype: a home screen that shows credible progress beyond the scale, next to what's normal for each stage of GLP-1 treatment. Illustrative data only.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* Design rules: one thing leads each screen · one accent (lilac), amber only for a stall · dots for data ·
+   three text sizes (22 serif, 15 body, 13 quiet) · plain words · the source is always one tap away. */
 :root{
-  --page:#F1ECF2; --surface:#FFFFFF; --surface-2:#FAF5FB; --ink:#1F2A24; --muted:#56605A; --line:#E8E1EA;
-  --brand:#1E3B2C; --brand-soft:#E6EEE8; --accent:#7E52B8; --accent-soft:#EFE6F8; --band:#DCD2F2;
-  --warn-ink:#7A4E00; --warn-soft:#FFF3D6;
-  --radius:20px; --shadow:0 1px 2px rgba(31,42,36,.05),0 6px 20px rgba(31,42,36,.06);
+  --page:#F1ECF2; --bg:#FAF5FB; --card:#FFFFFF; --ink:#1F2A24; --quiet:#5B655F; --line:#ECE5EE;
+  --green:#1E3B2C; --lilac:#EFE6F8; --lilac-ink:#7E52B8; --berry:#CFC3F5; --amber:#FFF3D6; --amber-ink:#7A4E00; --amber-dot:#C98A1B;
   --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+:focus-visible{outline:3px solid var(--lilac-ink);outline-offset:2px;border-radius:8px}
+p{margin:0}
 
 /* layout */
-.layout{display:grid;grid-template-columns:minmax(280px,360px) auto;gap:48px;justify-content:center;align-items:start;padding:40px 24px}
+.layout{display:grid;grid-template-columns:300px auto;gap:56px;justify-content:center;align-items:start;padding:40px 24px}
 .stage{position:sticky;top:24px}
-.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px;box-shadow:0 30px 60px rgba(31,42,36,.25)}
-.app{position:relative;height:100%;background:var(--surface-2);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
+.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px}
+.app{position:relative;height:100%;background:var(--bg);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
 
-/* control panel */
-.demo{font-size:14px}
-.demo h1{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.15;margin:0 0 6px}
-.demo-intro{color:var(--muted);margin:0 0 18px}
+/* controls: toggles only */
+.demo{font-size:13.5px}
+.demo h1{font-family:var(--serif);font-weight:400;color:var(--green);font-size:24px;margin:0 0 18px}
 .demo summary{display:none}
-fieldset.seg{border:0;padding:0;margin:0 0 12px}
-fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0}
-.scen{display:grid;gap:6px}
-.scen label{position:relative;display:block}
-.scen input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
-.scen span{display:flex;gap:10px;align-items:center;min-height:44px;border-radius:12px;background:var(--surface);border:1px solid var(--line);padding:8px 12px;cursor:pointer}
-.scen b{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--surface-2);color:var(--brand);font-size:13px}
-.scen input:checked+span{background:var(--brand);border-color:var(--brand);color:#fff}
-.scen input:checked+span b{background:rgba(255,255,255,.18);color:#fff}
-.scen input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0}
-.toggle-row small{display:block;color:var(--muted)}
-.switch{width:48px;height:30px;border-radius:99px;border:0;background:#C9C2CC;position:relative;cursor:pointer;flex:none}
-.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.switch[aria-checked="true"]{background:var(--brand)}
-.switch[aria-checked="true"]::after{transform:translateX(18px)}
-.explain{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px}
-.explain .q{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-bottom:6px}
-.explain .q.risk{background:var(--warn-soft);color:var(--warn-ink)}
-.explain p{margin:4px 0}
-.explain a{color:var(--brand);font-weight:600}
-.measure{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
-.measure h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-.measure ul{list-style:none;margin:0;padding:0}
-.measure li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:13px}
-.measure li:first-child{border-top:0}
-.measure code{font-size:12px;color:var(--muted)}
-.measure .n{align-self:center;min-width:24px;text-align:center;border-radius:99px;background:var(--surface-2);font-weight:600;transition:background .3s}
-.measure .n.hit{background:var(--accent);color:#fff}
-.link-btn{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
-.demo-foot{color:var(--muted);font-size:12px;margin-top:8px}
-
-.seg-row{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
-.seg-row label{flex:1;position:relative}
+fieldset{border:0;padding:0;margin:0 0 14px}
+legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--quiet);margin-bottom:6px;padding:0}
+.seg-row{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg-row.wrap{flex-wrap:wrap}
+.seg-row label{flex:1;position:relative;min-width:0}
 .seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
-.seg-row span{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer;font-size:13.5px}
-.seg-row input:checked+span{background:var(--brand);color:#fff}
+.seg-row span,.seg-row button{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer;border:0;background:none;font-size:13px}
+.seg-row>button{flex:1}
+.seg-row.wrap>button{flex:1 1 30%}
+.seg-row input:checked+span,.seg-row button[aria-pressed="true"],.seg-row button[aria-current="step"]{background:var(--green);color:#fff}
+.seg-row input:focus-visible+span{outline:3px solid var(--lilac-ink);outline-offset:1px}
 .seg-row label.off span{opacity:.35;cursor:not-allowed}
-.seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
-.presets{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.preset{min-width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer}
-.preset[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
-.preset-l{color:var(--muted);font-size:13px;margin-left:4px}
 .tg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.tgb{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;padding:0 12px;text-align:left}
-.tgb::before{content:"";width:18px;height:18px;border-radius:6px;border:1.5px solid #B9B1BD;flex:none}
-.tgb[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.tgb[aria-checked="true"]::before{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 3px var(--accent-soft)}
-.fewer{font-size:13px;color:var(--muted);margin:8px 4px 0}
+.tgb{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;padding:0 10px;text-align:left}
+.tgb::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid #B9B1BD;flex:none}
+.tgb[aria-checked="true"]::before{background:var(--green);border-color:var(--green)}
+.reset{background:none;border:0;color:var(--quiet);cursor:pointer;min-height:44px;padding:0;text-decoration:underline;text-underline-offset:3px}
+.foot{color:var(--quiet);font-size:12px}
 
-.try{background:var(--accent-soft);border-radius:14px;padding:12px 16px;margin:0 0 16px}
-.try b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
-.try ol{margin:0;padding-left:18px}
-.try li{margin:3px 0}
-.more{margin:0 0 12px}
-.more>summary{display:flex!important;align-items:center;min-height:44px;font-weight:600;color:var(--brand);cursor:pointer}
+/* phone: shared */
+.screen{flex:1;overflow-y:auto;padding:44px 18px 24px}
+.hello{font-family:var(--serif);font-weight:400;color:var(--green);font-size:22px;line-height:1.2;margin:0 0 14px}
+.quiet{color:var(--quiet);font-size:13px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-top:10px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.kv+.kv{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.kv span:last-child{color:var(--quiet);font-size:13px;text-align:right}
+.tap{display:block;width:100%;text-align:left;border:0;background:none;padding:0;cursor:pointer}
+.card.tap{background:var(--card);padding:16px}
+.tabbar{flex:none;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px 20px}
+.tab{flex:1;border:0;background:none;font-size:12px;color:var(--quiet);min-height:48px;cursor:pointer}
+.tab[aria-current="page"]{color:var(--green);font-weight:600}
 
-/* app chrome */
-.screen{flex:1;overflow-y:auto;position:relative}
-.tabbar{flex:none;display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px 22px}
-.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);min-height:48px;cursor:pointer;padding-top:4px}
-.tab[aria-current="page"]{color:var(--brand);font-weight:600}
-
-/* header */
-.head{background:linear-gradient(180deg,#C9BCF4 0%,#E4DCFA 60%,var(--surface-2) 100%);padding:40px 20px 18px}
-.head.amber{background:linear-gradient(180deg,#F3DFB5 0%,#FBEFD6 60%,var(--surface-2) 100%)}
-.head .title{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
-.head .sub{font-size:14px;color:#3E4A44}
-.head .meta{display:inline-flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.chip{font-size:13px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.75);color:var(--brand)}
-.head p{margin:0;color:#3E4A44;font-size:15.5px}
-
-/* trigger (notification) */
-.lock{position:absolute;inset:0;background:linear-gradient(170deg,#2B2440 0%,#4A3B6E 45%,#8C79B9 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:70px 14px 30px}
-.lock .when{font-size:17px;font-weight:500;opacity:.9;margin:0}
-.lock .time{font-size:84px;font-weight:300;letter-spacing:-2px;line-height:1;margin:4px 0 30px}
-.notif{width:100%;background:rgba(255,255,255,.86);color:var(--ink);border-radius:20px;padding:12px 14px;text-align:left;border:0;cursor:pointer;animation:drop .5s ease-out;min-height:64px}
-@keyframes drop{from{transform:translateY(-24px);opacity:0}to{transform:none;opacity:1}}
-.notif .top{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:4px}
-.notif .appic{width:22px;height:22px;border-radius:6px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
-.notif b{display:block;font-size:15.5px;line-height:1.3}
-.lock .hint{margin-top:auto;font-size:13px;opacity:.8}
-
-/* journey steps */
-.steps{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
-.step{flex:1;border:0;background:none;border-radius:9px;min-height:44px;font-size:12.5px;font-weight:500;cursor:pointer;padding:0 2px}
-.step[aria-current="step"]{background:var(--brand);color:#fff}
-
-/* outcome + rest of home */
-.out{background:var(--brand-soft);box-shadow:none}
-.out .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--brand)}
-.out p{margin:4px 0 0;font-size:15px}
-.row .val{font-size:13.5px;color:var(--muted);flex:none}
-
-
-/* today / progress additions */
-.head.plain{background:none;padding-bottom:4px}
-.head.plain .title{font-size:30px;margin-bottom:4px}
-.greet{display:block;width:100%;text-align:left;border:0;background:none;padding:0;cursor:pointer}
-.strip{list-style:none;display:flex;margin:16px 0 0;padding:0}
-.strip li{flex:1;position:relative;font-size:12px;color:#3E4A44;padding-top:16px;text-align:center}
-.strip li::before{content:"";position:absolute;top:5px;left:0;right:0;height:3px;background:rgba(255,255,255,.7)}
-.strip li.done::before,.strip li.here::before{background:var(--brand)}
-.strip li i{position:absolute;top:0;left:50%;margin-left:-6px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #B9B1BD}
-.strip li.done i{background:var(--brand);border-color:var(--brand)}
-.strip li.here i{background:#fff;border:4px solid var(--brand);width:14px;height:14px;margin-left:-7px;top:-1px}
-.strip li b{display:block;font-size:11px;color:var(--brand)}
-.wline{margin:0;font-weight:600;font-size:15px;color:var(--brand)}
-.kgline{margin:0;font-size:14px;color:#3E4A44}
-.trend+.trend{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
-.trend h3{margin:0 0 4px;font-size:15px;color:var(--brand)}
-.cap{font-size:12.5px;color:var(--muted);margin:6px 0 0}
-.slider{width:100%;min-height:44px;accent-color:var(--brand)}
-.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:-4px}
-.lv{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px;margin:10px 0 0}
-.opt[aria-pressed="true"],.opt.on{background:var(--brand);border-color:var(--brand);color:#fff}
-.sayb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;margin-top:6px}
-.said{font-family:var(--serif);font-size:19px;color:var(--brand);margin:0;line-height:1.3}
-.step[disabled]{opacity:.35;cursor:not-allowed}
-
-/* sections */
-.sec{padding:0 16px}
-.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 8px}
-.sec-h h2{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:22px;margin:0}
-.sec-h span{font-size:13px;color:var(--muted)}
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:0 0 10px}
-
-/* headline win */
-.hl{display:block;width:100%;text-align:left;border:0;cursor:pointer;margin-top:4px}
-.hl .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
-.hl .big{font-family:var(--serif);font-size:26px;line-height:1.15;color:var(--brand);margin:6px 0 10px}
-.normal{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px;color:#3E4A44}
-.normal b{color:var(--brand)}
-.note{display:flex;gap:8px;font-size:13.5px;color:var(--muted);margin-top:10px}
-.note svg{flex:none;margin-top:2px}
-.more{display:block;font-size:13.5px;font-weight:600;color:var(--brand);margin-top:10px}
-
-/* win rows */
-.list{padding:4px 0}
-.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:12px 16px;min-height:64px;cursor:pointer;border-top:1px solid var(--line)}
-.row:first-child{border-top:0}
-.row .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--brand-soft);color:var(--brand)}
-.row .ic.p{background:var(--accent-soft);color:var(--accent)}
-.row .ic.n{background:var(--surface-2);color:var(--muted)}
-.row .tx{flex:1;min-width:0}
-.row .t{display:block;font-weight:600;font-size:15px;line-height:1.3}
-.row .s{display:block;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
-.row .chev{color:#A9A2AD;flex:none}
-.row.new{background:var(--accent-soft);animation:pop .5s ease-out}
-@keyframes pop{from{background:#D9C8F0}to{background:var(--accent-soft)}}
-.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);margin-left:6px;vertical-align:1px}
-.tag.new{background:var(--accent);color:#fff}
-.empty{padding:14px 16px;font-size:14px;color:var(--muted)}
-
-/* flat card (stall) */
-.flat{border-left:4px solid #C98A1B}
-.flat .big{font-family:var(--serif);font-size:24px;line-height:1.15;color:var(--brand);margin:6px 0 10px}
-.flat .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--warn-ink)}
-.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;border-radius:10px;border:0;font-weight:600;font-size:16px;cursor:pointer;padding:0 16px;background:var(--brand);color:#fff;margin-top:14px}
-.btn.soft{background:var(--surface-2);color:var(--brand)}
+/* hero: the one thing that leads */
+.hero{background:var(--lilac);border-radius:22px;padding:20px 18px 12px}
+.hero.stall{background:var(--amber);padding-bottom:18px}
+.hero .k{font-size:13px;font-weight:500;color:var(--lilac-ink)}
+.hero.stall .k{color:var(--amber-ink)}
+.hero .big{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:6px 0 8px}
+.hero .sub{color:#3E4A44}
+.hero.new{animation:fade .5s ease-out}
+@keyframes fade{from{opacity:.3}to{opacity:1}}
+.herofoot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.dots{display:flex;align-items:center;margin-left:-10px;min-height:44px}
+.dots button{width:28px;height:44px;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
+.dots i{width:6px;height:6px;border-radius:50%;background:#B9B1BD;transition:width .2s}
+.dots [aria-current="true"] i{width:18px;border-radius:3px;background:var(--green)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border-radius:12px;border:0;font-weight:600;cursor:pointer;padding:0 16px;background:var(--green);color:#fff;margin-top:16px}
+.btn.soft{background:var(--lilac);color:var(--green)}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
-.sent{display:flex;gap:8px;align-items:flex-start;margin-top:12px;background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:14.5px;color:var(--brand)}
+.link{background:none;border:0;color:var(--lilac-ink);font-weight:500;cursor:pointer;min-height:44px;padding:0}
 
-/* weight */
-.wbtn{display:flex;width:100%;gap:12px;align-items:center;justify-content:space-between;border:0;background:none;text-align:left;cursor:pointer;padding:0;min-height:44px}
-.wbtn .t{display:block;font-weight:600;font-size:15px;color:var(--brand)}
-.wbtn .s{font-size:14px;color:#3E4A44;margin-top:2px}
-.wbtn .chev{transition:transform .2s;color:var(--muted);flex:none}
-.wbtn[aria-expanded="true"] .chev{transform:rotate(180deg)}
-.status{display:table;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-top:6px}
-.status.amber{background:var(--warn-soft);color:var(--warn-ink)}
-.chart{margin-top:12px}
-.chart svg{width:100%;height:auto;display:block}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:6px}
-.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.reassure{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px}
-.reassure .il{display:block;font-size:12px;color:var(--accent);font-weight:600;margin-top:6px}
+/* berries: a dot shows where she is */
+.range{position:relative;height:8px;border-radius:4px;background:var(--line);margin-top:12px;display:block}
+.range s{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--berry)}
+.range u{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--green);border:3px solid var(--card)}
+.range.stall u{background:var(--amber-dot)}
+.steps{display:flex;margin-top:14px}
+.steps li{flex:1;list-style:none;text-align:center;font-size:13px;color:var(--quiet);position:relative;padding-top:20px}
+.steps li::before{content:"";position:absolute;top:0;left:50%;margin-left:-6px;width:12px;height:12px;border-radius:50%;border:2px solid #B9B1BD;background:var(--card)}
+.steps li.done::before{background:var(--berry);border-color:var(--berry)}
+.steps li.here::before{background:var(--green);border-color:var(--green)}
+.steps li.here{color:var(--green);font-weight:500}
+.plot{display:flex;gap:6px;height:56px;margin-top:10px}
+.plot span{flex:1;position:relative}
+.plot i{position:absolute;left:50%;margin-left:-5px;width:10px;height:10px;border-radius:50%;background:var(--berry)}
+.plot span:last-child i{background:var(--green)}
 
-/* check-in */
-.ci{border:2px solid var(--accent)}
-.ci p.q{margin:0 0 10px;font-weight:600;font-size:15.5px}
-.ci p.why{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+/* lists */
+.win{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;padding:14px 0;min-height:52px;cursor:pointer;border-top:1px solid var(--line)}
+.win:first-child{border-top:0;padding-top:0}
+.win:last-child{padding-bottom:0}
+.win::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}
+.win.noted::before{background:#B9B1BD}
+.win.noted{color:var(--quiet)}
+.h2{font-family:var(--serif);font-weight:400;color:var(--green);font-size:22px;margin:26px 0 0}
+
+/* question */
+.q{font-weight:500;margin-bottom:12px}
+.slider{width:100%;min-height:44px;accent-color:var(--green)}
+.ends{display:flex;justify-content:space-between;margin-top:-4px}
 .opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:500}
-.opt:hover{border-color:var(--accent)}
-.done{display:flex;gap:8px;align-items:flex-start;font-size:14.5px;color:var(--brand)}
-.done svg{flex:none;margin-top:3px;color:var(--accent)}
+.opt{border:1.5px solid var(--line);background:var(--card);border-radius:99px;min-height:44px;padding:0 14px;cursor:pointer}
+.opt[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.said{font-family:var(--serif);font-size:22px;color:var(--green);line-height:1.25}
 
-.fine{font-size:12px;color:var(--muted);text-align:center;margin:20px 24px 26px}
+/* lock screen */
+.lock{position:absolute;inset:0;background:#2F2845;color:#fff;display:flex;flex-direction:column;align-items:center;padding:76px 16px}
+.lock .time{font-size:80px;font-weight:300;letter-spacing:-2px;line-height:1.1;margin-bottom:32px}
+.notif{width:100%;background:rgba(255,255,255,.9);color:var(--ink);border-radius:20px;padding:14px 16px;text-align:left;border:0;cursor:pointer;min-height:64px;animation:fade .5s ease-out}
+.notif .who{display:flex;align-items:center;gap:8px;color:var(--quiet);font-size:13px;margin-bottom:6px}
+.notif .who i{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600}
+.notif .who span{margin-left:auto}
+.notif b{display:block;font-weight:600;font-size:16px}
 
 /* sheet */
-.scrim{position:absolute;inset:0;background:rgba(20,24,22,.4);z-index:5;display:flex;align-items:flex-end}
-.sheet{background:var(--surface);width:100%;border-radius:26px 26px 0 0;padding:10px 20px 28px;max-height:88%;overflow-y:auto;animation:up .25s ease-out}
-@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.grab{width:40px;height:5px;border-radius:9px;background:#DDD6E0;margin:0 auto 10px}
-.sheet-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
-.sheet-h h2{flex:1;margin:0;font-size:19px;color:var(--brand)}
-.x{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px}
-.kv{margin:14px 0 0}
-.kv dt{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.kv dd{margin:2px 0 12px;font-size:15px}
-.bars{display:flex;gap:6px;align-items:flex-end;height:64px;margin:8px 0 4px}
-.bars i{flex:1;background:var(--accent-soft);border-radius:6px 6px 2px 2px;position:relative}
-.bars i.last{background:var(--accent)}
-.bars-l{display:flex;gap:6px;font-size:11px;color:var(--muted)}
-.bars-l span{flex:1;text-align:center}
-.checks{list-style:none;padding:0;margin:10px 0 0}
-.checks li{display:flex;gap:8px;margin:8px 0;font-size:14.5px}
-.checks svg{flex:none;margin-top:3px;color:var(--brand)}
+.scrim{position:absolute;inset:0;background:rgba(20,24,22,.35);z-index:5;display:flex;align-items:flex-end}
+.sheet{background:var(--card);width:100%;border-radius:26px 26px 0 0;padding:22px 20px 28px;max-height:86%;overflow-y:auto;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.sheet .big{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:0 44px 12px 0}
+.sheet p+p{margin-top:12px}
+.x{position:absolute;right:-6px;top:-8px;width:44px;height:44px;border-radius:50%;border:0;background:var(--bg);cursor:pointer;font-size:20px}
+.sheet-in{position:relative}
+.checks{list-style:none;padding:0;margin:14px 0 0}
+.checks li{display:flex;gap:10px;align-items:baseline;margin:8px 0}
+.checks li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);flex:none;transform:translateY(-1px)}
 
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media (prefers-reduced-motion:reduce){.sheet,.row.new,.notif{animation:none}.switch::after,.wbtn .chev{transition:none}}
+@media (prefers-reduced-motion:reduce){.sheet,.notif,.hero.new{animation:none}.dots i{transition:none}}
 
 @media (max-width:860px){
   .layout{display:block;padding:0}
-  .demo{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .demo{padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line)}
   .demo summary{display:flex;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
-  .demo h1{font-size:22px;margin-top:8px}
+  .demo h1{font-size:20px;margin:8px 0 14px}
   .stage{position:static}
-  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0;box-shadow:none}
+  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0}
   .app{border-radius:0;height:auto;min-height:100vh;overflow:visible}
-  .screen{overflow:visible}
-  .head{padding-top:24px}
+  .screen{overflow:visible;padding-top:24px}
   .lock{position:relative;min-height:100vh}
   .tabbar{position:sticky;bottom:0;z-index:4}
   .scrim{position:fixed}
@@ -267,24 +163,17 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 <div class="layout">
   <aside class="demo" aria-label="Prototype controls">
     <details id="demoDetails" open>
-      <summary>Demo controls</summary>
+      <summary>Controls</summary>
       <h1>Non-Scale Victories</h1>
-      <p class="demo-intro">Not more tracking. The same data the app already collects, used differently: a win is redefined, logging is paid back, and every number sits next to what’s normal. <strong>Sarah is fictional and all data is illustrative.</strong></p>
-      <div class="try"><b>Try this</b><ol><li>Tap the notification on the phone.</li><li>Switch off both log boxes below. A question appears under the greeting: answer it.</li><li>Press preset <strong>D</strong> to see a real stall, where nothing is dressed up as a win.</li></ol></div>
-
-      <fieldset class="seg"><legend>Quick presets</legend><div class="presets" id="presets"></div></fieldset>
-      <fieldset class="seg"><legend>Stage of treatment</legend><div class="seg-row" data-k="stage"></div></fieldset>
-      <fieldset class="seg"><legend>Scale this week</legend><div class="seg-row" data-k="scale"></div></fieldset>
-      <fieldset class="seg"><legend>Total weight lost so far</legend><div class="seg-row" data-k="range"></div></fieldset>
-      <fieldset class="seg"><legend>What she already logs in the app</legend><div class="tg" id="have"></div></fieldset>
-      <details class="more"><summary>More controls and what we’d measure</summary>
-      <div class="toggle-row"><span><strong>Nothing new since last visit</strong><small>The greeting falls back to the phase message.</small></span><button class="switch" role="switch" aria-checked="false" aria-label="Nothing new since last visit" data-act="stale"></button></div>
-      <fieldset class="seg"><legend>Step in the journey</legend><div class="steps" id="steps"></div></fieldset>
-      <div class="measure"><h2>What we’d measure</h2><ul id="events"></ul></div>
-      </details>
-      <div class="explain" id="explain" aria-live="polite"></div>
-      <button class="link-btn" data-act="reset">Reset demo</button>
-      <p class="demo-foot">Expected ranges are illustrative curves, not clinical data.</p>
+      <fieldset><legend>Case</legend><div class="seg-row wrap" id="presets"></div></fieldset>
+      <fieldset><legend>Stage of treatment</legend><div class="seg-row" data-k="stage"></div></fieldset>
+      <fieldset><legend>Scale this week</legend><div class="seg-row" data-k="scale"></div></fieldset>
+      <fieldset><legend>Total weight lost so far</legend><div class="seg-row" data-k="range"></div></fieldset>
+      <fieldset><legend>What she already logs</legend><div class="tg" id="have"></div></fieldset>
+      <fieldset><legend>Since her last visit</legend><div class="seg-row" data-k="stale"></div></fieldset>
+      <fieldset><legend>Step</legend><div class="seg-row" id="steps"></div></fieldset>
+      <button class="reset" data-act="reset">Reset</button>
+      <p class="foot">Sarah is fictional. All data and ranges are illustrative.</p>
     </details>
   </aside>
   <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
@@ -293,7 +182,7 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 
 <script>
 /* ===================== Sample data (illustrative) ===================== */
-// Expected % of body weight lost by week of treatment: [week, low, high]. Illustrative, to be replaced with Juniper's own data.
+// Expected % of body weight lost by week of treatment: [week, low, high]. To be replaced with Juniper's own data.
 const RANGE = [[0, 0, 0], [4, 0.5, 2.5], [6, 1, 4], [12, 3, 7], [14, 3.8, 7.8], [20, 6, 10], [22, 7, 11], [30, 9, 14], [40, 11, 17], [58, 12, 20], [80, 12, 20]];
 function range(w){
   for (let i = 1; i < RANGE.length; i++){
@@ -304,46 +193,37 @@ function range(w){
 }
 const mid = w => { const r = range(w); return (r.lo + r.hi) / 2; };
 const START_KG = 92, DOSES = ['2.5', '5', '7.5', '10'];
-
-/* What Juniper already holds at each stage. `lost` and `waist` have a value for in range / below range. */
 const STAGES = {
-  w6:  { lbl: 'Week 6',  week: 6,  dose: '5 mg',   doseIdx: 1, phase: 'inc',    lost: { in: 2.1, below: 0.6 },  waist: { in: 2, below: 1 },
-         out: 'Next dose increase in 4 weeks. Side effects may return for a few days. That’s expected, and it passes.', next: 'Thursday · 5 mg' },
-  w12: { lbl: 'Week 12', week: 12, dose: '7.5 mg', doseIdx: 2, phase: 'inc',    lost: { in: 4.2, below: 1.8 },  waist: { in: 3, below: 1 },
-         out: 'Your next dose review is next week. If you step up, side effects may return for a few days. That’s expected.', next: 'Thursday · 7.5 mg' },
-  w22: { lbl: 'Week 22', week: 22, dose: '10 mg',  doseIdx: 3, phase: 'steady', lost: { in: 9.4, below: 2.6 },  waist: { in: 7, below: 2 },
-         out: 'Your next weigh-in is Monday, and this updates then.', next: 'Thursday · 10 mg' },
-  w58: { lbl: 'Week 58', week: 58, dose: '10 mg',  doseIdx: 3, phase: 'steady', lost: { in: 14.0, below: 6.5 }, waist: { in: 11, below: 4 },
-         out: 'Your next weigh-in is Monday, and this updates then.', next: 'Thursday · 10 mg' },
+  w6:  { lbl: 'Week 6',  week: 6,  dose: '5 mg',   doseIdx: 1, phase: 'inc',    lost: { in: 2.1, below: 0.6 },  waist: { in: 2, below: 1 },   next: 'Your next dose step is in 4 weeks. Nausea can return for a few days, then it passes.' },
+  w12: { lbl: 'Week 12', week: 12, dose: '7.5 mg', doseIdx: 2, phase: 'inc',    lost: { in: 4.2, below: 1.8 },  waist: { in: 3, below: 1 },   next: 'Your dose review is next week. If you step up, nausea can return for a few days.' },
+  w22: { lbl: 'Week 22', week: 22, dose: '10 mg',  doseIdx: 3, phase: 'steady', lost: { in: 9.4, below: 2.6 },  waist: { in: 7, below: 2 },   next: 'Your next weigh-in is Monday.' },
+  w58: { lbl: 'Week 58', week: 58, dose: '10 mg',  doseIdx: 3, phase: 'steady', lost: { in: 14.0, below: 6.5 }, waist: { in: 11, below: 4 },  next: 'Your next weigh-in is Monday.' },
 };
 const CONTROLS = {
   stage: Object.entries(STAGES).map(([k, v]) => [k, v.lbl]),
   scale: [['down', 'Down'], ['flat', 'Flat']],
   range: [['in', 'As expected'], ['below', 'Less than expected']],
+  stale: [['new', 'Something new'], ['same', 'Nothing new']],
 };
-// Data the current app already collects. Switch off to see fewer wins (nothing is invented).
-const LOGS = [['appetite', 'Appetite logs'], ['side', 'Side-effect logs'], ['waist', 'Waist'], ['habits', 'Protein and steps']];
-// The app's existing inputs, reused: a five-point appetite slider and side-effect chips.
-const APPETITE = ['Very low: rarely hungry, easy to forget meals', 'Low: less hungry than usual, full quickly', 'Balanced: hungry when expected, able to stop eating when comfortably full', 'High: hungry between meals', 'Very high: hungry most of the time'];
-const SIDE_CHIPS = ['Nausea', 'Vomiting', 'Diarrhoea', 'Constipation', 'Headaches', 'Fatigue', 'Reflux', 'Hair loss', 'Other'];
-const PRESETS = {
-  A: ['Dose increasing, flat week', { stage: 'w6', scale: 'flat', range: 'in', have: ['appetite', 'side'] }],
-  B: ['Steady dose, good week', { stage: 'w22', scale: 'down', range: 'in', have: ['waist', 'habits'] }],
-  C: ['Plateau after loss', { stage: 'w58', scale: 'flat', range: 'in', have: ['waist', 'habits'] }],
-  D: ['Real stall', { stage: 'w22', scale: 'flat', range: 'below', have: ['side'] }],
-};
+// Data the current app already collects. Switch off to see fewer wins: nothing is invented.
+const LOGS = [['appetite', 'Appetite'], ['side', 'Side effects'], ['waist', 'Waist'], ['habits', 'Protein']];
+const APPETITE = ['Very low. Rarely hungry.', 'Low. Full quickly.', 'Balanced. Hungry when expected, full when you’ve had enough.', 'High. Hungry between meals.', 'Very high. Hungry most of the time.'];
+const SIDE_CHIPS = ['Nausea', 'Constipation', 'Headaches', 'Fatigue', 'Reflux', 'Other'];
+const PRESETS = [
+  ['Start', { stage: 'w6', scale: 'flat', range: 'in', have: ['side'] }],
+  ['Slow week', { stage: 'w6', scale: 'flat', range: 'in', have: ['appetite', 'side'] }],
+  ['Good week', { stage: 'w22', scale: 'down', range: 'in', have: ['waist', 'habits'] }],
+  ['Plateau', { stage: 'w58', scale: 'flat', range: 'in', have: ['waist', 'habits'] }],
+  ['Stall', { stage: 'w22', scale: 'flat', range: 'below', have: ['side'] }],
+];
 // Which wins lead in each phase. A down week always leads with weight.
-const PRIORITY = {
-  inc: ['weight', 'appetite', 'side', 'course', 'habits', 'waist'],
-  steady: ['weight', 'waist', 'habits', 'appetite', 'course', 'side'],
-  plateau: ['kept', 'waist', 'habits', 'course', 'appetite', 'side'],
-};
-const TREND = { appetite: [2, 3, 3, 4, 4, 5, 5, 5], sideInc: [2, 3, 3, 2, 4, 3, 2, 1], sideSteady: [3, 2, 2, 1, 1, 0, 1, 0] };
+const PRIORITY = { inc: ['weight', 'appetite', 'side', 'course', 'habits', 'waist'], steady: ['weight', 'waist', 'habits', 'appetite', 'course', 'side'], plateau: ['kept', 'waist', 'habits', 'course', 'appetite', 'side'] };
+const TREND = { appetite: [2, 3, 3, 4, 4, 5, 5, 5], sideInc: [2, 3, 3, 2, 4, 3, 2, 1], sideSteady: [3, 2, 2, 1, 1, 0, 1, 0], protein: [2, 3, 3, 4, 4, 5, 4, 5] };
 
 /* ===================== State ===================== */
-const initial = () => ({ tab: 'today', stage: 'w6', scale: 'flat', range: 'in', have: { appetite: true, side: true, waist: false, habits: false }, ans: {}, just: [],
-  apl: 3, chips: [], say: null, sayChips: [], kg: false, stale: false, step: 'trigger', weightOpen: null, sheet: null, sent: false, events: {}, lastGreet: '' });
-const STEPS = [['trigger', 'Trigger'], ['home', 'Today'], ['detail', 'Detail'], ['checkin', 'Check-in'], ['outcome', 'Outcome']];
+const initial = () => ({ tab: 'today', stage: 'w6', scale: 'flat', range: 'in', stale: 'new', have: { appetite: true, side: true, waist: false, habits: false },
+  ans: {}, just: [], slide: 0, apl: 3, chips: [], say: null, sayChips: [], kg: false, step: 'trigger', sheet: null, sent: false });
+const STEPS = [['trigger', 'Trigger'], ['home', 'Today'], ['detail', 'Detail'], ['checkin', 'Question'], ['outcome', 'Outcome']];
 let state = initial();
 const fmt = n => n.toFixed(1).replace(/\.0$/, '');
 
@@ -353,278 +233,177 @@ function model(){
   const r = range(st.week), lo = Math.round(r.lo), hi = Math.round(r.hi), steady = st.phase === 'steady';
   // Plateau = flat AFTER reaching the expected range. Stall = flat while still BELOW it, on a steady dose.
   const stall = below && flat && steady, plateau = !below && flat && st.week >= 58;
-  const flatWeeks = stall ? 6 : plateau ? 8 : flat ? 1 : 0;
-  const phase = plateau ? 'plateau' : st.phase;
+  const flatWeeks = stall ? 6 : plateau ? 8 : flat ? 1 : 0, phase = plateau ? 'plateau' : st.phase, wk = Math.min(8, st.week);
   const pts = []; for (let w = 0; w <= st.week; w++) pts.push(+(lost * mid(Math.min(w, st.week - flatWeeks)) / mid(st.week - flatWeeks)).toFixed(2));
-  const weekChg = pts[pts.length - 1] - pts[pts.length - 2], chg = +weekChg.toFixed(1) > 0 ? fmt(weekChg) : '';
-  const wk = Math.min(8, st.week), today = k => state.ans[k] !== undefined ? 'Your log just now' : null;
-  const all = [];
+  const all = [], now = k => state.ans[k] !== undefined;
+  const expect = `We’d expect ${lo} to ${hi}% by week ${st.week}.`;
 
-  all.push({ id: 'course', type: 'Your doses', icon: 'syringe', title: `${st.week} doses in a row, on time.`, short: `you haven’t missed a dose in ${st.week} weeks`,
-    normal: st.phase === 'inc' ? `You’re on ${st.dose}, right on schedule. Reaching your full dose is what drives results.` : `You’ve settled into ${st.dose}. A steady dose is when most progress happens.`, source: 'Your treatment tracker' });
+  all.push(st.phase === 'inc'
+    ? { id: 'course', title: `You’ve stepped up to ${st.dose}.`, sub: 'Right on schedule. Each step brings you closer to your full dose.', more: `You haven’t missed a dose in ${st.week} weeks.`, from: 'your treatment tracker' }
+    : { id: 'course', title: `You haven’t missed a dose in ${st.week} weeks.`, sub: `You’ve settled into ${st.dose}.`, from: 'your treatment tracker' });
 
-  // Appetite: from her existing appetite logs, or from the slider just now.
   const al = state.ans.appetite;
-  if (state.have.appetite) all.push({ id: 'appetite', type: 'Appetite', icon: 'bowl', title: 'Your appetite has been Balanced or lower on 5 of the last 7 days.', short: 'your appetite has settled',
-    normal: 'A steadier appetite is usually the first change people notice, often weeks before the scale moves much.', source: 'Your appetite logs', bars: TREND.appetite.slice(-wk), barsL: 'Days at Balanced or lower, per week' });
-  else if (al !== undefined) all.push(al <= 3
-    ? { id: 'appetite', type: 'Appetite', icon: 'bowl', title: `Your appetite is ${al === 3 ? 'Balanced' : 'lower'} today.`, short: al === 3 ? 'your appetite is balanced' : 'your appetite is lower', normal: 'A steadier appetite is usually the first change people notice, often weeks before the scale moves much. Your trend starts today.', source: today('appetite') }
-    : { id: 'appetite', type: 'Appetite', icon: 'bowl', win: false, title: 'Appetite high today.', normal: `Thanks for telling us. That’s common at ${st.dose}, and it often settles after the next dose step. Your trend starts today.`, source: today('appetite') });
+  if (state.have.appetite) all.push({ id: 'appetite', title: 'Your appetite has settled.', sub: 'This is often the first change. The scale tends to follow.', more: 'Balanced or lower on 5 of the last 7 days.', from: 'your appetite logs', plot: TREND.appetite.slice(-wk), plotL: 'Days at balanced or lower, each week' });
+  else if (now('appetite')) all.push(al <= 3
+    ? { id: 'appetite', title: `Your appetite is ${al === 3 ? 'balanced' : 'lower'} today.`, sub: 'This is often the first change. The scale tends to follow.', from: 'your answer today' }
+    : { id: 'appetite', noted: true, title: 'Your appetite is high today.', sub: `That’s common at ${st.dose}. It often settles after the next dose step.`, from: 'your answer today' });
 
-  // Side effects: from her existing side-effect logs, or from the chips just now.
-  const sl = state.ans.side, sideBars = (st.phase === 'inc' ? TREND.sideInc : TREND.sideSteady).slice(-wk);
+  const sl = state.ans.side, sidePlot = (st.phase === 'inc' ? TREND.sideInc : TREND.sideSteady).slice(-wk);
   if (state.have.side) all.push(st.phase === 'inc'
-    ? { id: 'side', type: 'Side effects', icon: 'wave', title: 'Your nausea is easing.', short: 'your nausea is easing', normal: 'Just 1 day this week. Your body is adjusting to the medicine, which is common in the first weeks on a new dose.',
-        note: 'It can come back for a few days after your next dose increase. That’s expected.', source: 'Your side-effect logs', bars: sideBars, barsL: 'Days with nausea, per week' }
-    : { id: 'side', type: 'Side effects', icon: 'wave', title: 'Your side effects have settled.', short: 'your side effects have settled', normal: 'None this week. Your body has adjusted to this dose.', source: 'Your side-effect logs', bars: sideBars, barsL: 'Days with side effects, per week' });
-  else if (sl !== undefined) all.push(sl.length === 0
-    ? { id: 'side', type: 'Side effects', icon: 'wave', title: 'No side effects this week.', short: 'you’ve had no side effects this week', normal: 'Your body is adjusting well to this dose. Your trend starts today.', source: today('side') }
-    : { id: 'side', type: 'Side effects', icon: 'wave', win: false, title: `${sl.join(', ')} this week.`, normal: 'Thanks for telling us. This is common on a new dose and usually eases. Your care team can see it, and your trend starts today.', source: today('side') });
+    ? { id: 'side', title: 'Your nausea is easing.', sub: 'One day this week. Your body is getting used to the medicine.', more: 'It can return for a few days after a dose step, then it passes.', from: 'your side-effect logs', plot: sidePlot, plotL: 'Days with nausea, each week' }
+    : { id: 'side', title: 'Your side effects have settled.', sub: 'None this week.', from: 'your side-effect logs', plot: sidePlot, plotL: 'Days with side effects, each week' });
+  else if (now('side')) all.push(sl.length === 0
+    ? { id: 'side', title: 'No side effects this week.', sub: 'Your body is getting used to this dose.', from: 'your answer today' }
+    : { id: 'side', noted: true, title: `${sl.join(', ')} this week.`, sub: 'This is common on a new dose and usually eases. Your care team can see it.', from: 'your answer today' });
 
-  if (state.have.habits) all.push({ id: 'habits', type: 'Habits', icon: 'bolt', title: 'You hit your protein target 5 days this week.', short: 'you hit your protein target 5 days this week',
-    normal: 'Enough protein helps you keep muscle while you lose weight. Five days in seven is a strong week.', source: 'Your daily goals', bars: [2, 3, 3, 4, 4, 5, 4, 5].slice(-wk), barsL: 'Days on protein target, per week' });
-  if (state.have.waist){ const cm = st.waist[state.range]; all.push({ id: 'waist', type: 'Waist', icon: 'tape', title: `Waist down ${cm} cm since you started.`, short: `your waist is down ${cm} cm`,
-    normal: 'Waist shows fat lost around your middle, which matters most for health. It often changes before the scale does.', source: 'Your waist measurements' }); }
+  if (state.have.habits) all.push({ id: 'habits', title: 'You reached your protein goal on 5 days.', sub: 'Protein helps you keep muscle while you lose weight.', from: 'your daily goals', plot: TREND.protein.slice(-wk), plotL: 'Days on your protein goal, each week' });
+  if (state.have.waist) all.push({ id: 'waist', title: `Your waist is down ${st.waist[state.range]} cm.`, sub: 'Waist often changes before the scale does.', from: 'your waist measurements' });
 
-  const wType = `Weight · expected ${lo} to ${hi}% at week ${st.week}`;
-  if (!below && !flat) all.push({ id: 'weight', type: wType, icon: 'scale', title: `${fmt(lost)}% of your body weight lost.`, short: `you’ve lost ${fmt(lost)}% of your body weight`, shortAlone: `you’ve lost ${fmt(lost)}% of your body weight, right where we’d expect at week ${st.week}`,
-    normal: `Expected range for week ${st.week}: <b>${lo} to ${hi}%</b>. You’re right in it${chg ? `, and down another ${chg}% this week` : ''}.`, source: 'Your weigh-ins' });
+  if (!below && !flat) all.push({ id: 'weight', title: `You’ve lost ${fmt(lost)}% of your body weight.`, sub: `That’s where we’d expect you to be at week ${st.week}.`, more: expect, from: 'your weigh-ins' });
   // Down this week but still under the range: a real win, shown honestly and never as the lead.
-  if (below && !flat) all.push({ id: 'weight', late: true, type: wType, icon: 'scale', title: 'The scale is down this week.', short: 'the scale is down this week',
-    normal: `You’re at ${fmt(lost)}%. Expected range for week ${st.week}: <b>${lo} to ${hi}%</b>. You’re under it for now, and moving in the right direction.`, source: 'Your weigh-ins' });
-  if (plateau) all.push({ id: 'kept', type: wType, icon: 'shield', title: `You’ve kept off ${fmt(lost)}% of your body weight for 8 weeks.`, short: 'you’ve kept the weight off for 8 weeks',
-    normal: `Expected range for week ${st.week}: <b>${lo} to ${hi}%</b>. You reached it and you’re holding it. That’s what maintenance looks like.`, source: 'Your weigh-ins' });
+  if (below && !flat) all.push({ id: 'weight', late: true, title: 'The scale is down this week.', sub: 'You’re a little under where we’d expect, and moving the right way.', more: `You’re at ${fmt(lost)}%. ${expect}`, from: 'your weigh-ins' });
+  if (plateau) all.push({ id: 'kept', title: 'You’ve held your weight for 8 weeks.', sub: 'You reached your range, and you’re staying in it.', more: `You’re at ${fmt(lost)}%. ${expect}`, from: 'your weigh-ins' });
 
   const order = PRIORITY[phase], rank = w => { const i = order.indexOf(w.id); return w.late ? 50 : i < 0 ? 99 : i; };
   all.sort((x, y) => rank(x) - rank(y));
-  const wins = all.filter(w => w.win !== false), noted = all.filter(w => w.win === false);
+  const wins = all.filter(w => !w.noted), noted = all.filter(w => w.noted);
   const noLogs = !state.have.appetite && !state.have.side;
-  // The one question: the first input she hasn't logged (side effects first in a stall, for the care team).
-  const missing = (stall ? ['side', 'appetite'] : ['appetite', 'side']).filter(k => !state.have[k] && state.ans[k] === undefined);
-  const qKey = missing[0] || null;
-  const normalNow = stall ? `Below the expected range for week ${st.week}.` : plateau ? 'Holding your weight is the goal now.' : st.phase === 'inc' ? 'Loss is usually slow while your dose is increasing.' : below ? 'Slower than we’d expect, and still moving.' : 'You’re in the phase where most progress happens.';
-  const phaseMsg = plateau ? 'holding your weight is the goal now.' : st.phase === 'inc' ? 'a slow start is normal while your dose is increasing.' : 'you’re in the phase where most progress happens.';
-  const out = plateau ? ['What this means', 'Holding your weight for 8 weeks means the change has lasted. Staying steady is the result now.'] : ['Next up', st.out];
+  const qKey = (stall ? ['side', 'appetite'] : ['appetite', 'side']).find(k => !state.have[k] && !now(k)) || null;
+  const status = stall ? 'Below where we’d expect' : plateau ? 'Holding steady' : below ? (st.phase === 'inc' ? 'A little under, common early on' : 'A little under, and moving') : st.phase === 'inc' ? `On track for week ${st.week}` : 'Where we’d expect';
+  const phaseMsg = plateau ? 'Holding your weight is the goal now.' : st.phase === 'inc' ? 'A slow start is normal while your dose is increasing.' : 'This is the phase where most progress happens.';
+  const next = plateau ? 'Eight weeks at this weight means the change has lasted.' : st.next;
   const kgLost = START_KG * lost / 100;
-  return { ...st, below, flat, lost, lo, hi, stall, plateau, flatWeeks, phase, pts, wins, noted, noLogs, missing, qKey, normalNow, phaseMsg, out, sideBars,
-    kgLost, kgNow: START_KG - kgLost, reassure: state.stage === 'w12' && lost < 5 };
+  return { ...st, below, flat, lost, lo, hi, stall, plateau, flatWeeks, phase, pts, wins, noted, noLogs, qKey, status, phaseMsg, next, sidePlot, kgLost, kgNow: START_KG - kgLost, expect, slow: state.stage === 'w12' && lost < 5 };
 }
-const joinAnd = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
-// Greeting rules: a summary of real wins, never generic praise; no praise in a stall; phase message when nothing is new.
-function greeting(d){
-  if (d.stall) return ['stall_honest', 'your progress has slowed more than we’d expect. Let’s look at it together.'];
-  if (state.stale) return ['phase_message', d.phaseMsg];
-  const top = d.wins.slice(0, 3);
-  if (top.length === 1) return [top[0].id, `${top[0].shortAlone || top[0].short}.${top[0].id === 'course' ? ' Change often starts before the scale shows it.' : ''}`];
-  return [top.map(w => w.id).join('+'), joinAnd(top.map(w => w.short)) + '.'];
-}
-function trigger(d){
+// The notification comes from June. A specific number opens a gap ("which 3?"); the line under it carries the message.
+function notification(d){
+  if (d.stall) return ['Can we look at this together?', 'Your last few weeks have been slower than we’d expect.'];
   const n = d.wins.length;
-  if (d.stall) return ['after 6 flat weeks', 'Your progress has slowed. Let’s look at it together.'];
-  if (d.plateau) return ['a few days before renewal', '8 weeks at your new weight.'];
-  if (!d.flat && !d.below) return ['weekly summary', `Your week ${d.week} progress is ready.`];
-  return ['after this week’s weigh-in', n > 1 ? `${n} things went well this week. Take a look.` : 'Here’s what went well this week.'];
+  if (d.plateau) return ['8 weeks at your new weight', 'You’re holding your progress. Come and see what’s changed!'];
+  return [n > 1 ? `${n} things have changed this week` : 'Something good this week', 'You’re making progress. Come and see what’s changed!'];
 }
-
-/* Instrumentation (no real analytics): these are the events we'd send. */
-const EVENTS = [['today_opened', 'Today opened'], ['win_tapped', 'Win tapped'], ['weight_expanded', 'Weight expanded'], ['checkin_answered', 'Check-in answered'], ['care_team_tapped', '“Talk to your care team” tapped']];
-function track(e){ state.events[e] = (state.events[e] || 0) + 1; renderEvents(e); }
-function renderEvents(hit){
-  $('#events').innerHTML = EVENTS.map(([k, l]) => `<li><span>${l}<br><code>${k}${k === 'today_opened' && state.lastGreet ? ` · greeting: ${state.lastGreet}` : ''}</code></span><span class="n ${k === hit ? 'hit' : ''}">${state.events[k] || 0}</span></li>`).join('');
-  if (hit) setTimeout(() => { const n = document.querySelector('.measure .n.hit'); n && n.classList.remove('hit'); }, 700);
-}
+/* What we'd measure (no real analytics): today_opened + which win led · win_tapped · weight_opened · question_answered · care_team_tapped */
+function track(){}
 
 /* ===================== Helpers ===================== */
 const $ = q => document.querySelector(q);
-function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
-const I = {
-  wave: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
-  bowl: '<path d="M3 11h18a9 9 0 01-18 0zM8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/>',
-  syringe: '<path d="M18 2l4 4M20 4l-9 9M7 13l4 4M14 6l4 4-8 8H6v-4zM6 18l-4 4"/>',
-  tape: '<path d="M3 9h18v6H3zM7 9v3M11 9v3M15 9v3M19 9v3"/>',
-  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
-  scale: '<path d="M5 4h14l1 16H4zM9 9a3 3 0 016 0"/>',
-  shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
-  cal: '<path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/>',
-  bolt: '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
-  shoe: '<path d="M3 17h18v-2l-6-2-3-5H8v4l-5 1z"/><path d="M3 20h18"/>',
-  drop: '<path d="M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z"/>',
-  cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
-  mic: '<path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM6 11a6 6 0 0012 0M12 17v4"/>',
-  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
-  chevR: '<path d="M9 18l6-6-6-6"/>', chevD: '<path d="M6 9l6 6 6-6"/>',
-};
-const ic = (n, sz = 20, sw = 2) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
-const weightLine = d => `${fmt(d.lost)}% lost. Expected range for week ${d.week}: ${d.lo} to ${d.hi}%.`;
-const weightStatus = d => d.stall ? ['amber', `Below the expected range · flat for ${d.flatWeeks} weeks`] : d.plateau ? ['', `In range · stable for ${d.flatWeeks} weeks`]
-  : d.below ? ['amber', d.phase === 'inc' ? 'Under the range · common while your dose is increasing' : 'Below the expected range · still moving'] : ['', d.phase === 'inc' ? 'You’re on track' : 'In range'];
-const plain = (icon, t, v, act = 'todo') => `<button class="row" data-act="${act}"><span class="ic n">${ic(icon)}</span><span class="tx"><span class="t">${t}</span></span><span class="val">${v}</span></button>`;
-const sec = (title, right, body, id = '') => `<div class="sec" ${id ? `id="${id}"` : ''}><div class="sec-h"><h2>${title}</h2><span>${right}</span></div>${body}</div>`;
-const bars = (a, lbl) => `<div class="bars">${a.map((b, i) => `<i class="${i === a.length - 1 ? 'last' : ''}" style="height:${Math.max(6, b / Math.max(1, ...a) * 100)}%"></i>`).join('')}</div><div class="bars-l">${a.map(b => `<span>${b}</span>`).join('')}</div><p class="cap">${lbl}</p>`;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2400); }
+const plot = a => { const max = Math.max(1, ...a); return `<div class="plot" aria-hidden="true">${a.map(v => `<span><i style="bottom:${Math.round(v / max * 46)}px"></i></span>`).join('')}</div>`; };
+// A dot on a bar: where she is against where we'd expect her to be.
+function rangeBar(d){
+  const max = Math.max(d.hi * 1.35, d.lost * 1.1), p = v => (v / max * 100).toFixed(1);
+  return `<span class="range ${d.stall ? 'stall' : ''}" role="img" aria-label="${fmt(d.lost)}% lost. ${d.expect}"><s style="left:${p(d.lo)}%;width:${p(d.hi - d.lo)}%"></s><u style="left:${p(d.lost)}%"></u></span>`;
+}
 
-/* ===================== Shared sections ===================== */
-function lock(d){
-  const [, msg] = trigger(d);
-  return `<div class="lock"><p class="when">Monday 16 November</p><div class="time">7:42</div>
-    <button class="notif" data-act="enter" aria-label="Notification: ${msg} Open."><span class="top"><span class="appic">J</span>Your care team<span style="margin-left:auto">now</span></span><b>${msg}</b></button></div>`;
+/* ===================== Today ===================== */
+function hero(d){
+  if (d.stall) return `<div class="hero stall"><p class="k">Worth a look</p><p class="big" id="lead" tabindex="-1">Things have slowed more than we’d expect.</p>
+    <p class="sub">There’s usually a reason, and it’s often simple to fix.</p>
+    ${state.sent ? `<p class="sub" style="margin-top:14px;font-weight:500">Sent. Dr Lee usually replies within a day.</p>` : `<button class="btn" data-act="care">Talk to your care team</button>`}</div>`;
+  if (state.stale === 'same') return `<div class="hero" style="padding-bottom:20px"><p class="k">Week ${d.week}</p><p class="big" id="lead" tabindex="-1">${d.phaseMsg}</p><p class="sub">Nothing new since your last visit. Your wins are in Progress.</p></div>`;
+  const i = Math.min(state.slide, d.wins.length - 1), w = d.wins[i], fresh = state.just.includes(w.id);
+  return `<div class="hero ${fresh ? 'new' : ''}" id="hero"><button class="tap" data-act="next" aria-label="${w.title} ${d.wins.length > 1 ? 'Show the next one.' : ''}">
+      <span class="k" style="display:block">${fresh ? 'Just added' : 'This week'}</span><span class="big" style="display:block" id="lead">${w.title}</span><span class="sub" style="display:block">${d.noLogs && w.id === 'course' ? 'Change often starts before the scale shows it.' : w.sub}</span></button>
+    <div class="herofoot"><div class="dots" role="group" aria-label="Your wins">${d.wins.length > 1 ? d.wins.map((x, j) => `<button data-act="slide" data-i="${j}" aria-current="${j === i}" aria-label="Win ${j + 1} of ${d.wins.length}"><i></i></button>`).join('') : ''}</div><button class="link" data-act="win" data-id="${w.id}">See more</button></div></div>`;
 }
-// The existing Today content, kept in both views.
-function existingToday(d){
-  return sec('Tasks', '', `<div class="card list" style="padding:0">${plain('scale', 'Weekly weigh-in', 'Due Monday')}${plain('syringe', 'Next dose', d.next)}</div>`)
-    + sec('Daily goals', '', `<div class="card list" style="padding:0">${plain('shoe', 'Steps', '4,312 / 4,000')}${plain('bowl', 'Protein', '0 / 88 g · Log a meal')}${plain('drop', 'Hydration', '0 / 2,100 mL · Log water')}</div>`);
+function question(d){
+  if (state.just.length){ const any = d.wins.some(w => state.just.includes(w.id)); return `<div class="card" id="ci" role="status"><p>${any ? 'Thanks. That’s added to your wins.' : d.stall ? 'Thanks. Your care team will see this.' : 'Thanks. We’ll ask again next week.'}</p></div>`; }
+  if (!d.qKey) return '';
+  let body;
+  if (state.say === 'listening') body = `<p class="quiet">Listening</p><p class="said" aria-live="polite">“I’m getting full a lot faster, and I haven’t felt sick at all this week.”</p>`;
+  else if (state.say === 'confirm') body = `<p class="q">Here’s what we heard.</p><div class="opts">${state.sayChips.map(k => `<button class="opt" aria-pressed="true" data-act="say-x" data-k="${k}" aria-label="Remove">${k === 'appetite' ? 'Appetite: low' : 'No side effects'} ×</button>`).join('')}</div>
+      <button class="btn" data-act="say-ok" ${state.sayChips.length ? '' : 'disabled'}>That’s right</button>`;
+  else if (d.qKey === 'appetite') body = `<p class="q">How has your appetite been?</p><input class="slider" id="apl" type="range" min="1" max="5" step="1" value="${state.apl}" aria-label="Appetite, from very low to very high">
+      <div class="ends quiet"><span>Very low</span><span>Very high</span></div><p style="margin-top:12px" id="aplv">${APPETITE[state.apl - 1]}</p><button class="btn" data-act="ci-app">Save</button>`;
+  else body = `<p class="q">Any side effects this week?</p><div class="opts"><button class="opt" data-act="chip" data-v="none" aria-pressed="${state.chips.includes('none')}">None</button>${SIDE_CHIPS.map(c => `<button class="opt" data-act="chip" data-v="${c}" aria-pressed="${state.chips.includes(c)}">${c}</button>`).join('')}</div>
+      <button class="btn" data-act="ci-side" ${state.chips.length ? '' : 'disabled'}>Save</button>`;
+  return `<div class="card" id="ci">${body}${state.say ? '' : `<button class="link" data-act="say" style="display:block;margin:6px auto 0">Or just say it</button>`}</div>`;
 }
-const existingProgress = d => sec('More', '', `<div class="card list" style="padding:0">${plain('tape', 'Waist', state.have.waist ? `${104 - d.waist[state.range]} cm` : 'Add')}${plain('cam', 'Progress photos', 'Add')}${plain('bolt', 'Habit streaks', state.have.habits ? '5 days' : 'Start')}</div>`);
+function today(d){
+  const q = question(d);
+  return `<h1 class="hello">Hey Sarah</h1>${hero(d)}${d.noLogs && !d.stall ? q : ''}
+    <button class="card tap" data-act="weight"><span class="kv"><span>Weight</span><span>${d.status}</span></span>${rangeBar(d)}</button>
+    ${d.noLogs && !d.stall ? '' : q}
+    <div class="card" id="outcome"><div class="kv"><span>Next dose</span><span>Thursday · ${d.dose}</span></div>${d.stall ? '' : `<p class="quiet" style="margin-top:10px">${d.next}</p>`}</div>
+    <div class="card"><div class="kv"><span>Steps</span><span>4,312 of 4,000</span></div><div class="kv"><span>Protein</span><span>Log a meal</span></div><div class="kv"><span>Water</span><span>Log water</span></div></div>`;
+}
 
-/* ===================== Today and Progress ===================== */
-function header(d){
-  const [, g] = greeting(d), top = d.stall ? null : d.wins[0];
-  return `<header class="head ${d.stall ? 'amber' : ''}">${top ? `<button class="greet" data-act="win" data-id="${top.id}" aria-label="Open the detail behind this">` : '<div>'}<h1 class="title" id="h1" tabindex="-1">Hey Sarah, ${g}</h1>${top ? '</button>' : '</div>'}
-    <p class="sub">Week ${d.week} · ${d.phase === 'inc' ? d.dose : 'steady dose'} · ${state.stale && !d.stall ? 'Nothing new since your last visit.' : d.normalNow}</p>
-    <ol class="strip" aria-label="Your dose steps">${DOSES.map((x, i) => `<li class="${i < d.doseIdx ? 'done' : i === d.doseIdx ? 'here' : ''}"><i></i><span>${x} mg</span>${i === d.doseIdx ? '<b>You are here</b>' : ''}</li>`).join('')}</ol></header>`;
-}
-function flatCard(d){
-  return `<div class="sec"><div class="card flat" style="margin-top:14px"><span class="k">Your weight</span>
-    <p class="big">Your weight has been flat for ${d.flatWeeks} weeks.</p>
-    <div class="normal">${weightLine(d)} You’re <b>below</b> where we’d expect at this point.</div>
-    <p class="note">${ic('info', 16)}<span>This usually has a reason, and it’s often fixable: the dose, side effects or injection technique.</span></p>
-    ${state.sent ? `<p class="sent">${ic('check', 18, 2.6)}<span><strong>Sent to your care team.</strong> Dr Lee will reply within 1 business day.</span></p>`
-      : `<button class="btn" data-act="care">Talk to your care team</button>`}</div></div>`;
-}
-function row(w){
-  const isNew = state.just.includes(w.id), cls = w.win === false ? 'n' : ['appetite', 'side', 'habits', 'waist'].includes(w.id) ? 'p' : '';
-  return `<button class="row ${isNew ? 'new' : ''}" data-act="win" data-id="${w.id}"><span class="ic ${cls}">${ic(w.icon)}</span>
-    <span class="tx"><span class="t">${w.title}${isNew ? `<span class="tag new">${w.win === false ? 'Noted' : 'New'}</span>` : ''}</span><span class="s">${w.type}</span></span><span class="chev">${ic('chevR', 18)}</span></button>`;
-}
-function winsList(d, title){
-  const n = d.wins.length;
-  return sec(d.stall ? 'What’s going well' : title, d.stall ? '' : `${n} win${n === 1 ? '' : 's'}`, `<div class="card list" style="padding:0">${d.wins.concat(d.noted).map(row).join('')}</div>`);
-}
+/* ===================== Progress ===================== */
 function chart(d){
-  const W = 320, H = 150, pl = 30, pr = 10, pt = 10, pb = 24, xs = d.week, ymax = Math.ceil((range(xs).hi + 2) / 5) * 5;
+  const W = 320, H = 140, pl = 28, pr = 10, pt = 10, pb = 22, xs = d.week, ymax = Math.ceil((range(xs).hi + 2) / 5) * 5;
   const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax);
   const steps = []; for (let w = 0; w <= xs; w += Math.max(1, Math.round(xs / 30))) steps.push(w); if (steps[steps.length - 1] !== xs) steps.push(xs);
   const band = steps.map(w => `${X(w).toFixed(1)},${Y(range(w).hi).toFixed(1)}`).concat(steps.slice().reverse().map(w => `${X(w).toFixed(1)},${Y(range(w).lo).toFixed(1)}`)).join(' ');
-  const line = d.pts.map((v, w) => `${w ? 'L' : 'M'}${X(w).toFixed(1)},${Y(v).toFixed(1)}`).join('');
-  const grid = []; for (let v = 0; v <= ymax; v += 5) grid.push(`<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ECE6EE"/><text x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="10" fill="#56605A">${v}%</text>`);
-  const col = d.stall ? '#C98A1B' : 'var(--brand)';
-  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart: ${weightLine(d)}">
-    ${grid.join('')}<polygon points="${band}" fill="var(--band)" opacity=".75"/>
-    <path d="${line}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${X(xs)}" cy="${Y(d.pts[d.pts.length - 1])}" r="4.5" fill="${col}" stroke="#fff" stroke-width="2"/>
-    <text x="${pl}" y="${H - 6}" font-size="10" fill="#56605A">Week 0</text><text x="${W - pr}" y="${H - 6}" font-size="10" fill="#56605A" text-anchor="end">Week ${xs}</text></svg>
-    <div class="legend"><span><i style="background:var(--band)"></i>Expected range</span><span><i style="background:${col};height:3px;vertical-align:3px"></i>You, % of body weight lost</span></div></div>`;
+  const col = d.stall ? 'var(--amber-dot)' : 'var(--green)';
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${fmt(d.lost)}% lost. ${d.expect}" style="width:100%;display:block;margin-top:14px">
+    <polygon points="${band}" fill="var(--berry)" opacity=".6"/>
+    <path d="${d.pts.map((v, w) => `${w ? 'L' : 'M'}${X(w).toFixed(1)},${Y(v).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(xs)}" cy="${Y(d.pts[d.pts.length - 1])}" r="6" fill="${col}" stroke="#fff" stroke-width="3"/>
+    <text x="${pl}" y="${H - 4}" font-size="11" fill="#5B655F">Start</text><text x="${W - pr}" y="${H - 4}" font-size="11" fill="#5B655F" text-anchor="end">Week ${xs}</text>
+    <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
+    <p class="quiet" style="margin-top:6px">The shaded band is where we’d expect you to be.</p>`;
 }
-// Today: weight is one tap away. Progress: the full chart, with kilograms on tap.
-function weightRow(d){
-  const [cls, st] = weightStatus(d);
-  return sec('Weight', '% of body weight', `<div class="card"><button class="wbtn" data-act="weight"><span><span class="t">${weightLine(d)}</span><span class="status ${cls}">${st}</span></span><span class="chev" style="transform:rotate(-90deg)">${ic('chevD', 20)}</span></button></div>`);
-}
-function weightFull(d){
-  const [cls, st] = weightStatus(d);
-  return sec('Weight', '% of body weight', `<div class="card"><p class="wline">${weightLine(d)}</p><span class="status ${cls}">${st}</span>${chart(d)}
-    ${d.reassure ? `<div class="reassure">Under 5% at week 12 is common. In a large trial, 9 in 10 people with a slow start still went on to lose 5% or more.<span class="il">Source: SURMOUNT-1 trial analysis, 2024.</span></div>` : ''}
-    <button class="link-btn" data-act="kg" aria-expanded="${state.kg}">${state.kg ? 'Hide kilograms' : 'Show in kilograms'}</button>${state.kg ? `<p class="kgline">${d.kgNow.toFixed(1)} kg now, ${d.kgLost.toFixed(1)} kg less than when you started (${START_KG} kg).</p>` : ''}</div>`, 'wsec');
-}
-function trends(d){
-  const t = (k, name, data, lbl) => `<div class="trend"><h3>${name}</h3>${state.have[k] ? bars(data, lbl) : state.ans[k] !== undefined ? '<p class="cap">First log today. Your trend starts here.</p>' : '<p class="cap">No logs yet. One log a week is enough to see your trend.</p>'}</div>`;
-  return sec('Your logs, as trends', `Last ${Math.min(8, d.week)} weeks`, `<div class="card">${t('appetite', 'Appetite', TREND.appetite.slice(-Math.min(8, d.week)), 'Days at Balanced or lower, per week')}${t('side', 'Side effects', d.sideBars, 'Days with side effects, per week')}</div>`);
-}
-// One question, reusing the app's own inputs. Optional: say it in a sentence (scripted).
-function checkin(d){
-  if (state.just.length){ const any = d.wins.some(w => state.just.includes(w.id)); return `<div class="sec" id="ci"><div class="card ci" role="status"><p class="done">${ic('check', 18, 2.6)}<span>${any ? 'Added to your wins.' : d.stall ? 'Added to what your care team will see.' : 'Thanks. We’ll ask again next week.'} Your trend is on the Progress tab.</span></p></div></div>`; }
-  if (!d.qKey) return '';
-  let body;
-  if (state.say === 'listening') body = `<p class="q">Listening</p><p class="said" aria-live="polite">“I’m getting full a lot faster, and I haven’t felt sick at all this week.”</p>`;
-  else if (state.say === 'confirm') body = `<p class="q">Here’s what we heard. Is this right?</p><div class="opts">${state.sayChips.map(k => `<button class="opt on" data-act="say-x" data-k="${k}" aria-label="Remove ${k}">${k === 'appetite' ? 'Appetite: Low' : 'Side effects: none'} ×</button>`).join('')}</div>
-      <button class="btn" data-act="say-ok" ${state.sayChips.length ? '' : 'disabled'}>Log this</button><button class="link-btn" data-act="say-cancel">Cancel</button>`;
-  else if (d.qKey === 'appetite') body = `<p class="q">How’s your appetite today?</p><input class="slider" id="apl" type="range" min="1" max="5" step="1" value="${state.apl}" aria-label="Appetite, from very low to very high">
-      <div class="ends"><span>Very low</span><span>Very high</span></div><p class="lv" id="aplv">${APPETITE[state.apl - 1]}</p><button class="btn" data-act="ci-app">Log appetite</button>`;
-  else body = `<p class="q">Any side effects this week?</p><div class="opts"><button class="opt" data-act="chip" data-v="none" aria-pressed="${state.chips.includes('none')}">None</button>${SIDE_CHIPS.map(c => `<button class="opt" data-act="chip" data-v="${c}" aria-pressed="${state.chips.includes(c)}">${c}</button>`).join('')}</div>
-      <button class="btn" data-act="ci-side" ${state.chips.length ? '' : 'disabled'}>Log side effects</button>`;
-  return sec('One quick question', 'Takes 2 seconds', `<div class="card ci">${body}${state.say ? '' : `<button class="sayb" data-act="say">${ic('mic', 18)}Or just say it</button>`}</div>`, 'ci');
-}
-const outcome = d => d.stall ? '' : `<div class="sec" id="outcome"><div class="card out"><span class="k">${d.out[0]}</span><p>${d.out[1]}</p></div></div>`;
-function afterToday(d){
-  const short = { ...d, wins: d.wins.filter((w, i) => i < 3 || state.just.includes(w.id)), noted: d.noted.filter(w => state.just.includes(w.id)) }, more = d.wins.length - short.wins.length;
-  return `${header(d)}${d.noLogs && !d.stall ? checkin(d) : ''}${d.stall ? flatCard(d) : ''}${winsList(short, 'Your wins this week').replace(`${short.wins.length} win${short.wins.length === 1 ? '' : 's'}`, `${d.wins.length} win${d.wins.length === 1 ? '' : 's'}`)}
-    ${more > 0 ? `<div class="sec"><button class="link-btn" data-act="tab" data-t="progress">See all ${d.wins.length} wins in Progress</button></div>` : ''}
-    ${weightRow(d)}${d.noLogs && !d.stall ? '' : checkin(d)}${outcome(d)}${existingToday(d)}`;
-}
-function afterProgress(d){
-  return `<header class="head plain"><h1 class="title" id="h1" tabindex="-1">Progress</h1><p class="sub">Week ${d.week} · ${d.phase === 'inc' ? d.dose : 'steady dose'} · ${d.normalNow}</p></header>
-    ${d.stall ? flatCard(d) : ''}${winsList(d, 'This week’s wins')}${weightFull(d)}${trends(d)}${existingProgress(d)}`;
+function progress(d){
+  const rows = d.wins.map(w => `<button class="win" data-act="win" data-id="${w.id}">${w.title}</button>`).concat(d.noted.map(w => `<button class="win noted" data-act="win" data-id="${w.id}">${w.title}</button>`));
+  const trend = (k, name, data, lbl) => `<div class="card"><p>${name}</p>${state.have[k] ? plot(data) + `<p class="quiet" style="margin-top:6px">${lbl}</p>` : `<p class="quiet" style="margin-top:4px">${state.ans[k] !== undefined ? 'Your first log is in. Your trend starts here.' : 'No logs yet. One a week is enough to see a trend.'}</p>`}</div>`;
+  return `<h1 class="hello" id="lead" tabindex="-1">Progress</h1>
+    <div class="card"><div class="kv"><span>Week ${d.week}</span><span>${d.phase === 'inc' ? 'Dose increasing' : 'Steady dose'}</span></div>
+      <ol class="steps" style="padding:0;margin-bottom:0" aria-label="Your dose steps">${DOSES.map((x, i) => `<li class="${i < d.doseIdx ? 'done' : i === d.doseIdx ? 'here' : ''}">${x} mg</li>`).join('')}</ol></div>
+    <h2 class="h2">${d.stall ? 'What’s going well' : 'This week'}</h2><div class="card">${rows.join('')}</div>
+    <h2 class="h2" id="wsec">Weight</h2><div class="card"><p>${fmt(d.lost)}% of your body weight lost.</p><p class="quiet">${d.expect} ${d.status}.</p>${chart(d)}
+      ${d.slow ? `<p style="margin-top:12px">Under 5% at week 12 is common. In a large trial, 9 in 10 people with a slow start went on to lose 5% or more.</p><p class="quiet">SURMOUNT-1 trial analysis, 2024.</p>` : ''}
+      <button class="link" data-act="kg" aria-expanded="${state.kg}">${state.kg ? 'Hide kilograms' : 'Show in kilograms'}</button>${state.kg ? `<p class="quiet">${d.kgNow.toFixed(1)} kg now. ${d.kgLost.toFixed(1)} kg less than when you started.</p>` : ''}</div>
+    <h2 class="h2">Your logs</h2>${trend('appetite', 'Appetite', TREND.appetite.slice(-Math.min(8, d.week)), 'Days at balanced or lower, each week')}${trend('side', 'Side effects', d.sidePlot, 'Days with side effects, each week')}`;
 }
 
-/* ===================== Sheets ===================== */
+/* ===================== Sheets and lock screen ===================== */
 function sheet(d){
   const sh = state.sheet; if (!sh) return '';
-  let title, body;
+  let body;
   if (sh.type === 'care'){
-    title = 'Talk to your care team';
-    const notes = [`Weight: ${fmt(d.lost)}% lost, flat for ${d.flatWeeks} weeks (expected ${d.lo} to ${d.hi}% at week ${d.week})`, `Dose: ${d.dose}, ${d.week} of ${d.week} doses on time`]
-      .concat(d.wins.concat(d.noted).filter(w => ['side', 'appetite'].includes(w.id)).map(w => w.title.replace(/\.$/, '')));
-    body = state.sent
-      ? `<p class="sent">${ic('check', 18, 2.6)}<span><strong>Sent.</strong> Dr Lee has this and will reply within 1 business day. You’ll get a notification.</span></p><button class="btn soft" data-act="close">Done</button>`
-      : `<p style="margin:4px 0 0">We’ll review your dose, side effects and injection technique.</p>
-        <dl class="kv"><dt>What we’ll share with them</dt><dd><ul class="checks">${notes.map(n => `<li>${ic('check', 16, 2.6)}<span>${n}</span></li>`).join('')}</ul></dd>
-        <dt>Who</dt><dd>Your prescriber, Dr Lee. Usually replies within 1 business day.</dd></dl>
-        <button class="btn" data-act="send">Send to my care team</button>`;
+    const notes = [`Weight: ${fmt(d.lost)}% lost, unchanged for ${d.flatWeeks} weeks`, `Dose: ${d.dose}, ${d.week} of ${d.week} on time`].concat(d.wins.concat(d.noted).filter(w => ['side', 'appetite'].includes(w.id)).map(w => w.title.replace(/\.$/, '')));
+    body = state.sent ? `<p class="big" id="sh-t">Sent to your care team.</p><p>Dr Lee usually replies within a day. You’ll get a notification.</p><button class="btn soft" data-act="close">Done</button>`
+      : `<p class="big" id="sh-t">Talk to your care team</p><p>We’ll look at your dose, side effects and injection technique.</p><p class="quiet">What we’ll share, so you don’t have to explain it:</p>
+        <ul class="checks">${notes.map(n => `<li>${n}</li>`).join('')}</ul><button class="btn" data-act="send">Send to Dr Lee</button>`;
   } else {
-    const w = d.wins.concat(d.noted).find(x => x.id === sh.id);
-    if (!w){ state.sheet = null; return ''; }
-    title = w.type;
-    body = `<p style="font-family:var(--serif);font-size:22px;color:var(--brand);margin:6px 0 0;line-height:1.2">${w.title}</p>
-      <dl class="kv"><dt>What’s typical at this stage</dt><dd>${w.normal}</dd>${w.note ? `<dt>Good to know</dt><dd>${w.note}</dd>` : ''}${w.bars ? `<dt>Your last ${w.bars.length} weeks</dt><dd>${bars(w.bars, w.barsL)}</dd>` : ''}<dt>Where this comes from</dt><dd>${w.source}</dd></dl>`;
+    const w = d.wins.concat(d.noted).find(x => x.id === sh.id); if (!w){ state.sheet = null; return ''; }
+    body = `<p class="big" id="sh-t">${w.title}</p><p>${w.sub}</p>${w.more ? `<p>${w.more}</p>` : ''}${w.plot ? plot(w.plot) + `<p class="quiet" style="margin-top:6px">${w.plotL}</p>` : ''}<p class="quiet">From ${w.from}.</p>`;
   }
-  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="grab"></div>
-    <div class="sheet-h"><h2 id="sh-t">${title}</h2><button class="x" data-act="close" aria-label="Close">×</button></div>${body}</div></div>`;
+  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="sheet-in"><button class="x" data-act="close" aria-label="Close">×</button>${body}</div></div></div>`;
 }
+const lock = d => `<div class="lock"><p>Monday 16 November</p><div class="time">7:42</div><button class="notif" data-act="enter"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>${notification(d)[0]}</b>${notification(d)[1]}</button></div>`;
 
 /* ===================== Render ===================== */
-const TABS = [['Today', 'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6'], ['Explore', 'M4 5h7v14H4zM13 5h7v14h-7z'], ['Progress', 'M4 20V14h5v-4h5V6h6v14z'], ['Care', 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z'], ['Shop', 'M5 6h15l-2 8H7zM5 6L4 3H2M8 20h.01M17 20h.01']];
-function caption(d){
-  if (d.stall) return ['Real stall', 'Flat while still below the expected range, on a steady dose, is a stall. The greeting doesn’t praise, nothing is reframed, and the main action is talking to the care team. From here the Pre-emptive Check-In takes over.', true];
-  if (d.plateau) return ['Plateau after loss', 'Flat after reaching the expected range is a plateau, not a stall. It’s reframed as maintenance. No language about regain.'];
-  if (d.noLogs) return ['No appetite or side-effect logs', 'The greeting uses only what Juniper already holds, and one question sits right under it, using the app’s own slider and chips. Answer it and the greeting, the wins and the trend all update.'];
-  if (d.wins[0] && d.wins[0].id === 'weight') return ['Good week on the scale', 'When the scale is down, weight leads the summary, always as a % next to the expected range.'];
-  return ['Slow week on the scale', 'The greeting never mentions what the scale didn’t do. It sums up the real changes her own logs show, and weight stays one tap away, in context.' + (d.below ? ' She’s under the range, which is common while the dose is still increasing.' : '')];
-}
 function render(){
   const d = model(), prev = $('#screen'), keep = prev ? prev.scrollTop : 0;
-  if (state.step === 'trigger') $('#app').innerHTML = lock(d);
-  else $('#app').innerHTML = `<main class="screen" id="screen">${state.tab === 'today' ? afterToday(d) : afterProgress(d)}<div style="height:24px"></div></main>
-    <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, p]) => { const k = n.toLowerCase(), live = k === 'today' || k === 'progress', on = k === state.tab; return `<button class="tab" ${on ? 'aria-current="page"' : ''} ${live ? `data-act="tab" data-t="${k}"` : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${on ? 2.4 : 1.8}" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>${n}</button>`; }).join('')}</nav>${sheet(d)}`;
+  $('#app').innerHTML = state.step === 'trigger' ? lock(d) : `<main class="screen" id="screen">${state.tab === 'today' ? today(d) : progress(d)}</main>
+    <nav class="tabbar" aria-label="App tabs">${['Today', 'Explore', 'Progress', 'Care', 'Shop'].map(n => { const k = n.toLowerCase(), live = k === 'today' || k === 'progress'; return `<button class="tab" ${k === state.tab ? 'aria-current="page"' : ''} ${live ? `data-act="tab" data-t="${k}"` : 'data-act="todo"'}>${n}</button>`; }).join('')}</nav>${sheet(d)}`;
   const scr = $('#screen'); if (scr) scr.scrollTop = keep;
-  // control panel
-  const [t, x, risk] = caption(d);
-  $('#explain').innerHTML = `<span class="q ${risk ? 'risk' : ''}">${t}</span><p>${x}</p>${d.stall ? '<p><a href="../check-in/">Open the Pre-emptive Check-In →</a></p>' : ''}<p style="color:var(--muted)">Notification: ${trigger(d)[0]}.${d.reassure ? ' The week 12 trial line in the weight card is illustrative, to be replaced with Juniper’s own data.' : ''}</p>`;
-  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; el.innerHTML = CONTROLS[k].map(([v, l]) => { const off = k === 'range' && v === 'below' && state.stage === 'w58'; return `<label ${off ? 'class="off" title="Not offered at week 58"' : ''}><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${l}</span></label>`; }).join(''); });
+  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; el.innerHTML = CONTROLS[k].map(([v, l]) => { const off = k === 'range' && v === 'below' && state.stage === 'w58'; return `<label ${off ? 'class="off"' : ''}><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${l}</span></label>`; }).join(''); });
   $('#have').innerHTML = LOGS.map(([k, l]) => `<button class="tgb" role="switch" aria-checked="${!!state.have[k]}" data-act="have" data-k="${k}">${l}</button>`).join('');
-  const cur = Object.entries(PRESETS).find(([, [, p]]) => p.stage === state.stage && p.scale === state.scale && p.range === state.range && LOGS.every(([k]) => !!state.have[k] === p.have.includes(k)));
-  $('#presets').innerHTML = Object.entries(PRESETS).map(([k, [l]]) => `<button class="preset" data-act="preset" data-k="${k}" aria-pressed="${!!cur && cur[0] === k}" title="${l}">${k}</button>`).join('') + `<span class="preset-l">${cur ? cur[1][0] : t}</span>`;
-  $('[data-act="stale"]').setAttribute('aria-checked', state.stale);
-  $('#steps').innerHTML = STEPS.map(([k, l], i) => `<button class="step" data-act="step" data-k="${k}" aria-current="${state.step === k ? 'step' : 'false'}">${l}</button>`).join('');
+  const cur = PRESETS.findIndex(([, p]) => p.stage === state.stage && p.scale === state.scale && p.range === state.range && LOGS.every(([k]) => !!state.have[k] === p.have.includes(k)));
+  $('#presets').innerHTML = PRESETS.map(([l], i) => `<button data-act="preset" data-i="${i}" aria-pressed="${i === cur}">${l}</button>`).join('');
+  $('#steps').innerHTML = STEPS.map(([k, l]) => `<button data-act="step" data-k="${k}" aria-current="${state.step === k ? 'step' : 'false'}">${l}</button>`).join('');
 }
 
 /* ===================== Flow ===================== */
-function freshVisit(){ state.ans = {}; state.just = []; state.chips = []; state.apl = 3; state.say = null; state.sheet = null; state.sent = false; state.kg = false; }
-// Any change to the data starts a fresh visit, but stays on the screen you're looking at.
-function dataChanged(){ freshVisit(); if (state.step !== 'trigger') state.step = 'home'; render(); if (state.step === 'home') todayOpened(); }
-function todayOpened(){ state.lastGreet = greeting(model())[0]; track('today_opened'); }
+function freshVisit(){ state.ans = {}; state.just = []; state.slide = 0; state.chips = []; state.apl = 3; state.say = null; state.sheet = null; state.sent = false; state.kg = false; }
+function dataChanged(){ freshVisit(); if (state.step !== 'trigger') state.step = 'home'; render(); }
 const into = id => { const el = document.getElementById(id); el && el.scrollIntoView({ block: 'center' }); };
-function logged(keys){ state.just = keys; state.say = null; state.step = model().stall ? 'checkin' : 'outcome'; track('checkin_answered'); render();
-  const d = model(); toast(d.wins.some(w => keys.includes(w.id)) ? 'New win added' : 'Thanks, noted');
-  const n = document.querySelector('.row.new'); n && n.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' }); }
-// Jump to any step of the journey: Trigger → Today → Detail → Check-in → Outcome.
+// A new answer is paid back straight away: it becomes the card she's looking at.
+function logged(keys){
+  state.just = keys; state.say = null; const d = model(); state.step = d.stall ? 'checkin' : 'outcome'; track('question_answered');
+  const i = d.wins.findIndex(w => keys.includes(w.id)); if (i >= 0) state.slide = i;
+  render(); toast(i >= 0 ? 'Added to your wins' : 'Thanks, noted');
+  if (!d.stall && i >= 0){ $('#screen').scrollTop = 0; window.scrollTo(0, 0); }
+}
+// Jump to any step of the journey: Trigger → Today → Detail → Question → Outcome.
 function goStep(k){
-  const wasOut = state.step === 'trigger';
   if (k === 'trigger'){ freshVisit(); state.step = 'trigger'; state.tab = 'today'; return render(); }
   state.sheet = null; state.step = k; state.tab = 'today';
   const d = model();
-  if (wasOut) todayOpened();
-  if (k === 'detail'){ if (d.stall) state.tab = 'progress'; else state.sheet = { type: 'win', id: d.wins[0].id }; }
-  if (k === 'outcome'){ if (d.stall) state.sheet = { type: 'care' }; else if (d.qKey && !state.just.length){ state.ans[d.qKey] = d.qKey === 'appetite' ? 2 : []; state.just = [d.qKey]; track('checkin_answered'); } }
+  if (k === 'detail'){ if (d.stall) state.tab = 'progress'; else state.sheet = { type: 'win', id: d.wins[Math.min(state.slide, d.wins.length - 1)].id }; }
+  if (k === 'outcome'){ if (d.stall) state.sheet = { type: 'care' }; else if (d.qKey && !state.just.length){ state.ans[d.qKey] = d.qKey === 'appetite' ? 2 : []; logged([d.qKey]); return into('outcome'); } }
   render();
   if (k === 'home'){ $('#screen').scrollTop = 0; window.scrollTo(0, 0); }
   if (k === 'detail' && d.stall) into('wsec');
@@ -632,40 +411,44 @@ function goStep(k){
   if (k === 'outcome' && !d.stall) into('outcome');
 }
 let opener = null;
-function closeSheet(){ state.sheet = null; state.step = 'home'; render(); const b = opener && document.querySelector(opener); (b || $('#h1')).focus({ preventScroll: true }); }
+function closeSheet(){ state.sheet = null; state.step = 'home'; render(); const b = opener && document.querySelector(opener); b && b.focus({ preventScroll: true }); }
 document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; if (state.stage === 'w58') state.range = 'in'; dataChanged(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
 document.addEventListener('input', e => { if (e.target.id === 'apl'){ state.apl = +e.target.value; $('#aplv').textContent = APPETITE[state.apl - 1]; } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sheet) closeSheet(); });
+// Swipe the lead card to see the next win.
+let sx = null;
+document.addEventListener('touchstart', e => { sx = e.target.closest('#hero') ? e.touches[0].clientX : null; }, { passive: true });
+document.addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx, n = model().wins.length; sx = null; if (Math.abs(dx) < 40) return; state.slide = Math.max(0, Math.min(n - 1, state.slide + (dx < 0 ? 1 : -1))); render(); });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
   const a = el.dataset.act;
   if (a === 'scrim' && e.target !== el) return;
   switch (a){
-    case 'enter': goStep('home'); $('#h1').focus({ preventScroll: true }); break;
+    case 'enter': goStep('home'); track('today_opened'); break;
     case 'step': goStep(el.dataset.k); break;
-    case 'tab': state.tab = el.dataset.t; state.sheet = null; render(); $('#screen').scrollTop = 0; window.scrollTo(0, 0); if (state.tab === 'progress') track('weight_expanded'); break;
-    case 'preset': { const p = PRESETS[el.dataset.k][1]; state.stage = p.stage; state.scale = p.scale; state.range = p.range; LOGS.forEach(([k]) => state.have[k] = p.have.includes(k)); dataChanged(); break; }
+    case 'tab': state.tab = el.dataset.t; state.sheet = null; render(); $('#screen').scrollTop = 0; window.scrollTo(0, 0); break;
+    case 'preset': { const p = PRESETS[+el.dataset.i][1]; state.stage = p.stage; state.scale = p.scale; state.range = p.range; LOGS.forEach(([k]) => state.have[k] = p.have.includes(k)); dataChanged(); break; }
     case 'have': state.have[el.dataset.k] = !state.have[el.dataset.k]; dataChanged(); { const b = document.querySelector(`[data-act="have"][data-k="${el.dataset.k}"]`); b && b.focus(); } break;
-    case 'stale': state.stale = !state.stale; dataChanged(); break;
+    case 'next': { const n = model().wins.length; if (n > 1){ state.slide = (Math.min(state.slide, n - 1) + 1) % n; render(); const b = document.querySelector('[data-act="next"]'); b && b.focus({ preventScroll: true }); } break; }
+    case 'slide': state.slide = +el.dataset.i; render(); { const b = document.querySelector(`[data-act="slide"][data-i="${state.slide}"]`); b && b.focus({ preventScroll: true }); } break;
     case 'win': opener = `[data-act="win"][data-id="${el.dataset.id}"]`; state.sheet = { type: 'win', id: el.dataset.id }; state.step = 'detail'; render(); $('.x').focus(); track('win_tapped'); break;
-    case 'weight': state.tab = 'progress'; render(); into('wsec'); track('weight_expanded'); break;
+    case 'weight': state.tab = 'progress'; render(); into('wsec'); track('weight_opened'); break;
     case 'kg': state.kg = !state.kg; render(); $('[data-act="kg"]').focus({ preventScroll: true }); break;
     case 'chip': { const v = el.dataset.v; state.chips = v === 'none' ? (state.chips.includes('none') ? [] : ['none']) : state.chips.filter(c => c !== 'none' && c !== v).concat(state.chips.includes(v) ? [] : [v]); render(); const b = document.querySelector(`[data-act="chip"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); break; }
     case 'ci-app': state.ans.appetite = state.apl; logged(['appetite']); break;
     case 'ci-side': state.ans.side = state.chips.filter(c => c !== 'none'); logged(['side']); break;
-    case 'say': state.say = 'listening'; state.sayChips = model().missing.slice(); render(); setTimeout(() => { if (state.say === 'listening'){ state.say = 'confirm'; render(); const b = $('[data-act="say-ok"]'); b && b.focus({ preventScroll: true }); } }, 1500); break;
+    case 'say': state.say = 'listening'; state.sayChips = ['appetite', 'side'].filter(k => !state.have[k] && state.ans[k] === undefined); render(); setTimeout(() => { if (state.say === 'listening'){ state.say = 'confirm'; render(); const b = $('[data-act="say-ok"]'); b && b.focus({ preventScroll: true }); } }, 1500); break;
     case 'say-x': state.sayChips = state.sayChips.filter(k => k !== el.dataset.k); render(); break;
-    case 'say-cancel': state.say = null; render(); break;
     case 'say-ok': { const ks = state.sayChips.slice(); if (ks.includes('appetite')) state.ans.appetite = 2; if (ks.includes('side')) state.ans.side = []; logged(ks); break; }
     case 'care': opener = '[data-act="care"]'; state.sheet = { type: 'care' }; state.step = 'outcome'; render(); $('.x').focus(); track('care_team_tapped'); break;
-    case 'send': state.sent = true; render(); $('.x').focus(); toast('Sent to your care team'); break;
+    case 'send': state.sent = true; render(); $('.x').focus(); break;
     case 'close': case 'scrim': closeSheet(); break;
     case 'todo': toast('Not part of this prototype'); break;
-    case 'reset': state = initial(); renderEvents(); render(); toast('Demo reset'); break;
+    case 'reset': state = initial(); render(); break;
   }
 });
 if (matchMedia('(max-width:860px)').matches) $('#demoDetails').open = false;
-renderEvents(); render();
+render();
 </script>
 </body>
 </html>
