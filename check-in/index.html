@@ -190,6 +190,51 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
   .lock{position:relative;min-height:100vh}
   .tabbar,.reply-bar{position:sticky;bottom:0;z-index:4}
 }
+
+/* calm style: flat cards, one accent, dots for data, three text sizes */
+body{font-size:15px;line-height:1.5}
+.card,.noticed,.heard,.msg.june,.phone,.talk,.fbtn{box-shadow:none}
+.card{border-radius:18px;margin:10px 0}
+.card p{margin:0}
+.side h1{font-size:24px;margin-bottom:18px}
+.panel{border-radius:14px}
+.hello{font-size:22px;line-height:1.2;margin:0 2px 10px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.kv+.kv{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.kv span:last-child{color:var(--muted);font-size:13px;text-align:right}
+.tab{font-size:12px;justify-content:center}
+.lock{background:#2F2845}
+.lock .time{font-size:80px;margin:2px 0 32px}
+.notif{background:rgba(255,255,255,.9);backdrop-filter:none;padding:14px 16px}
+.notif .appic{border-radius:50%}
+.notif b{font-size:16px;font-weight:600}
+.notif span.m{font-size:15px}
+.msg{font-size:15px;border-radius:18px}
+.noticed h4,.heard h4{font-size:22px}
+.noticed li .d,.noticed li .d.ok{background:var(--brand)}
+.hchip{border:0;border-radius:99px;padding:6px 14px}
+.hchip.win{background:var(--brand);color:#fff}
+.hchip.win small{color:rgba(255,255,255,.8)}
+.opt{border-radius:99px}
+.btn{border-radius:12px;min-height:50px}
+.btn.soft{background:var(--accent-soft);color:var(--brand)}
+.steps li::before{content:"";width:8px;height:8px;margin:7px 4px 0;background:var(--brand)}
+.sent{border-radius:18px;background:var(--accent-soft)}
+.inbox .av{background:var(--brand);color:#fff}
+.hero{background:var(--accent-soft);border-radius:22px;padding:20px 18px}
+.hero p{margin:0;color:#3E4A44}
+.hero .k{font-size:13px;font-weight:500;color:var(--accent)}
+.hero .big{font-family:var(--serif);color:var(--brand);font-size:22px;line-height:1.2;margin:6px 0 8px}
+.range{position:relative;height:8px;border-radius:4px;background:var(--line);margin-top:12px}
+.range s{position:absolute;top:0;bottom:0;border-radius:4px;background:#CFC3F5}
+.range u{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--brand);border:3px solid var(--surface)}
+.scrim{position:absolute;inset:0;background:rgba(20,24,22,.35);z-index:6;display:flex;align-items:flex-end}
+.sheet{position:relative;background:var(--surface);width:100%;border-radius:26px 26px 0 0;padding:22px 20px 28px}
+.sheet-t{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:22px;line-height:1.2;margin:0 44px 8px 0}
+.sheet .x{position:absolute;right:14px;top:14px;width:44px;height:44px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px}
+.said{font-family:var(--serif);font-size:20px;color:var(--brand);line-height:1.3;margin:10px 0 0}
+.btn svg{flex:none}
+@media (max-width:900px){.scrim{position:fixed}}
 .try{background:var(--accent-soft);border-radius:14px;padding:12px 16px;margin:0 0 16px}
 .try b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
 .try ol{margin:0;padding-left:18px}
@@ -203,9 +248,7 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
   <aside class="side" aria-label="What the system sees">
     <details id="sideDetails" open>
       <summary>What we see behind the scenes</summary>
-      <h1>We know before she does</h1>
-      <p class="intro">Press play to watch small signals build up week by week, and see June reach out before Sarah feels it isn’t working. In the chat she can tap to answer, or hold the button and just say it. <strong>All data is illustrative.</strong></p>
-      <div class="try"><b>Try this</b><ol><li>Press play to watch the signals build, or <button class="link-btn" data-act="skip-to" style="min-height:0;padding:0">skip to the check-in</button>.</li><li>Tap the notification, then <strong>hold</strong> the round button to answer in her own words.</li><li>Switch to <strong>Gone quiet</strong> and pick a different reply for Sarah.</li></ol></div>
+      <h1>Pre-emptive Check-In</h1>
 
       <fieldset class="seg"><legend>Scenario</legend><div class="seg-row">
         <label><input type="radio" name="scenario" value="dose" checked><span>Stalled, feels fine</span></label>
@@ -219,7 +262,7 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
       <div class="panel" id="timeline"></div>
       <div class="panel case" id="case"></div>
       <button class="link-btn" data-act="reset">Reset demo</button>
-      <p class="foot">Fictional user. Signals, ranges and thresholds are illustrative, not clinical data. June’s replies are scripted, not a live model.</p>
+      <p class="foot">Sarah is fictional. Data is illustrative and June is scripted.</p>
     </details>
   </aside>
   <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
@@ -242,17 +285,17 @@ const SC = {
       { w: 7, t: 'Told June “feeling good, no complaints”', s: 'June chat, AI-summarised', k: 'ok' },
       { w: 8, t: 'Below range for 3 weeks, still on the starter dose', s: 'Weigh-ins & prescription', k: 'warn' },
     ],
-    notif: ['A quick check-in on your progress', 'You’ve been really consistent. Can I ask a few quick things? 2 min'],
-    opener: ['Hi Sarah, it’s June from your care team.', 'You’ve been really consistent: every dose and every weigh-in. Your results are a bit behind where we’d expect at week 8, and there’s usually a simple reason. Can I ask a few quick things?'],
+    notif: ['A quick check-in', 'You’ve been really consistent. Can I ask a few things?'],
+    opener: ['Hi Sarah, it’s June.', 'You’ve been really consistent. Every dose, every weigh-in.', 'Your results are a little behind where we’d expect at week 8. There’s usually a simple reason. Can I ask a few things?'],
     say: { def: { t: 'Honestly the nausea put me off stepping up. It’s better now, only some days. I thought I was doing fine.', answers: { why: 'nausea', nausea: 'some', feel: 'fine' },
-      reply: 'Thank you. That’s really clear, and it’s exactly why we reached out now. This is much easier to fix before it feels stuck.' } },
+      reply: 'Thank you. That’s really clear. It’s easier to fix this early.' } },
     qs: [
       { k: 'why', q: 'What got in the way of stepping up?', o: [['nausea', 'The nausea put me off'], ['unsure', 'Wasn’t sure I should'], ['forgot', 'Forgot, or ran out']],
-        a: { nausea: 'That makes total sense. Nausea is the most common reason people stay on the starter dose.', unsure: 'Good question to have. That’s exactly what your prescriber is for.', forgot: 'That happens. Easy to fix.' } },
+        a: { nausea: 'That makes sense. It’s the most common reason people stay on the starter dose.', unsure: 'That’s a fair question. It’s what your prescriber is for.', forgot: 'That happens. It’s easy to fix.' } },
       { k: 'nausea', q: 'How’s the nausea now?', o: [['most', 'Most days'], ['some', 'Some days'], ['rare', 'Rarely']],
-        a: { most: 'Sorry, that sounds rough. There are ways to make the next step gentler.', some: 'Got it. Manageable, but worth planning around.', rare: 'Good, your body has adjusted.' } },
+        a: { most: 'I’m sorry, that sounds hard. There are ways to make the next step gentler.', some: 'Okay. Manageable, and worth planning around.', rare: 'Good. Your body has adjusted.' } },
       { k: 'feel', q: 'Honestly, how do you feel about your progress?', o: [['fine', 'I thought it was fine'], ['stuck', 'A bit stuck'], ['frus', 'Frustrated']],
-        a: { fine: 'That’s exactly why we reached out now. It’s much easier to fix before it feels stuck.', stuck: 'Thanks for saying so. Let’s get you unstuck.', frus: 'Completely fair. Let’s turn that into a plan today.' } },
+        a: { fine: 'That’s why we’re checking now. It’s easier to fix early.', stuck: 'Thanks for saying so. Let’s get you moving again.', frus: 'That’s fair. Let’s turn it into a plan today.' } },
     ],
     route: () => 'prescriber',
     steps: a => [
@@ -262,7 +305,7 @@ const SC = {
     ],
     caseFlags: ['On 2.5mg for 8 weeks. Step-up due at week 4.', 'Fully adherent: doses and weigh-ins logged', 'Weight below illustrative range since week 6', 'Reports feeling fine'],
     sugg: 'Review titration: consider stepping up to 5mg with a nausea-management plan.',
-    reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah, thanks for the check-in. Let’s step you up to 5mg from your next dose. If nausea flares, try smaller meals and avoid rich food on dose day, and message us. We can adjust.' },
+    reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah, thanks for checking in. Let’s step you up to 5mg from your next dose. If nausea returns, try smaller meals and avoid rich food on dose day. Message us and we can adjust.' },
     tracker: [['Next dose', '5mg', true], ['Next check-in', 'In 2 weeks', false]],
   },
   drift: {
@@ -277,23 +320,23 @@ const SC = {
       { w: 8, t: 'No dose logged for 2 weeks', s: 'Treatment tracker', k: 'warn' },
       { w: 9, t: 'Refill 5 days late', s: 'Orders', k: 'warn' },
     ],
-    notif: ['Hi Sarah, how’s it going?', 'No need to log anything. Just checking in.'],
+    notif: ['How’s it going?', 'No need to log anything. Just checking in.'],
     opener: ['Hi Sarah, it’s June.', 'I haven’t heard from you in a few weeks. No need to log anything. How’s it going?'],
     say: {
       busy: { t: 'I’m fine, just flat out with work. I’m still taking it every week, I just don’t log it. My jeans are looser, actually.', answers: { why: 'busy', doses: 'yes', help: 'remind' }, extra: [['win', 'New win', 'Clothes fitting looser']],
-        reply: 'That’s great to hear, and looser jeans is a real sign of progress. I’ve added it to your wins. No need to log every dose; your refills tell us enough.' },
+        reply: 'That’s good to hear. Looser jeans is real progress, so I’ve added it to your wins. You don’t need to log every dose.' },
       scale: { t: 'Honestly I stopped weighing in because it wasn’t moving and it was getting me down. I’m still taking my doses.', answers: { why: 'doubt', doses: 'yes', help: 'coach' }, extra: [['scale', 'Noted', 'Avoiding the scale']],
-        reply: 'Thank you for telling me. Lots of people step off the scale when it slows down, and you don’t need to weigh in for us to help. A slow stretch at 5mg is common.' },
+        reply: 'Thank you for telling me. Lots of people step off the scale when it slows down. You don’t need to weigh in for us to help.' },
       side: { t: 'I’ve felt sick most days, so I skipped the last two. I didn’t know who to tell.', answers: { why: 'side', doses: 'some', help: 'coach' }, extra: [['side', 'Noted', 'Nausea most days']],
-        reply: 'I’m sorry, that sounds rough, and I’m glad you told me. You don’t have to push through this alone. Two missed doses is very recoverable.' },
+        reply: 'I’m sorry, that sounds hard. I’m glad you told me. Two missed doses is easy to recover from.' },
     },
     qs: [
       { k: 'why', q: 'What’s been going on?', o: [['busy', 'Life got busy'], ['side', 'Side effects'], ['cost', 'Cost is tight'], ['doubt', 'Not sure it’s working']],
-        a: { busy: 'Totally normal. Let’s make it easier to fit in.', side: 'Thanks for telling me. Side effects are fixable, and you don’t have to push through alone.', cost: 'Thanks for being upfront. Our support team can walk you through your options.', doubt: 'That’s a really common feeling at this point. Let’s look at it properly.' } },
+        a: { busy: 'That’s normal. Let’s make it easier to fit in.', side: 'Thanks for telling me. Side effects can be fixed, and you don’t have to push through alone.', cost: 'Thanks for being upfront. Our support team can walk you through your options.', doubt: 'That’s a common feeling at this point. Let’s look at it properly.' } },
       { k: 'doses', q: 'Have you been taking your doses?', o: [['yes', 'Yes, just not logging'], ['some', 'Missed a couple'], ['stopped', 'I’ve stopped for now']],
-        a: { yes: 'Great, that’s the most important bit.', some: 'Okay. One or two missed doses is very recoverable.', stopped: 'Thanks for telling me. Please don’t restart on your own. A prescriber will tell you the safest way back in.' } },
+        a: { yes: 'Good. That’s the part that matters most.', some: 'Okay. One or two missed doses is easy to recover from.', stopped: 'Thanks for telling me. Please don’t restart on your own. A prescriber will tell you the safest way back in.' } },
       { k: 'help', q: 'What would help most right now?', o: [['remind', 'A reminder that fits my week'], ['coach', 'A quick chat with a coach'], ['ok', 'Nothing, I’m okay']],
-        a: { remind: 'Easy. Let’s set it up.', coach: 'I’ll line that up.', ok: 'Okay! I’ll still keep an eye out, just in case.' } },
+        a: { remind: 'Easy. Let’s set it up.', coach: 'I’ll line that up.', ok: 'Okay. I’ll keep an eye out, just in case.' } },
     ],
     route: a => (a.doses === 'stopped' || a.why === 'side') ? 'prescriber' : 'coach',
     steps: a => {
@@ -309,7 +352,7 @@ const SC = {
     },
     caseFlags: ['Quiet since week 5 (opens, weigh-ins, messages)', 'No dose logged for 2 weeks', 'Refill 5 days late'],
     sugg: 'Re-engage via coach; prescriber review if doses have stopped or side effects are reported.',
-    reply: { from: 'Priya', role: 'Coach', av: 'P', text: 'Hey Sarah! So glad you replied. I’ve set your dose reminder for Sunday at 7pm and pencilled in a 10-minute chat on Thursday. Small steps, we’ve got this.' },
+    reply: { from: 'Priya', role: 'Coach', av: 'P', text: 'Hi Sarah. I’m glad you replied. I’ve set your dose reminder for Sunday at 7pm, and we have a 10-minute chat on Thursday. Small steps.' },
     tracker: [['Dose reminder', 'Sun, 7pm', true], ['Coach chat', 'Thursday', true]],
   },
   noresp: {
@@ -325,17 +368,17 @@ const SC = {
       { w: 13, t: 'Below expected range at full dose', s: 'Weigh-ins', k: 'warn' },
       { w: 14, t: 'Asked June “is this normal?”', s: 'June chat, AI-summarised', k: 'warn' },
     ],
-    notif: ['You’ve done everything right', 'Your results haven’t matched your effort. Let’s look at why. 2 min'],
+    notif: ['You’ve done everything right', 'Your results haven’t matched your effort. Let’s look at why.'],
     say: { def: { t: 'My appetite’s about the same as before. No new medications. I’m a bit stuck, to be honest.', answers: { appetite: 'same', meds: 'no', feel: 'stuck' },
-      reply: 'Thank you, that’s really useful for your prescriber. Feeling stuck is completely understandable after this much effort.' } },
-    opener: ['Hi Sarah, it’s June.', 'You’ve done everything right: every dose and every step-up, on schedule. But your weight hasn’t moved the way we’d expect at your dose. You shouldn’t have to wait and wonder, so we’d like a prescriber to take a proper look.'],
+      reply: 'Thank you. That’s useful for your prescriber. Feeling stuck is understandable after this much effort.' } },
+    opener: ['Hi Sarah, it’s June.', 'You’ve done everything right. Every dose and every step up, on schedule.', 'Your weight hasn’t moved the way we’d expect at your dose. You shouldn’t have to wait and wonder, so I’d like a prescriber to take a proper look.'],
     qs: [
       { k: 'appetite', q: 'How’s your appetite compared with before you started?', o: [['same', 'About the same'], ['bit', 'A bit smaller'], ['much', 'Much smaller']],
-        a: { same: 'That’s a really useful clue for your prescriber.', bit: 'Got it, some change but not much.', much: 'Good to know. That helps narrow it down.' } },
+        a: { same: 'That’s useful for your prescriber.', bit: 'Okay. Some change, but not much.', much: 'Good to know. That helps narrow it down.' } },
       { k: 'meds', q: 'Started or stopped any other medications?', o: [['no', 'No'], ['yes', 'Yes']],
         a: { no: 'Thanks.', yes: 'Thanks. I’ll flag that, because some medicines can work against this one.' } },
       { k: 'feel', q: 'How are you feeling about it all?', o: [['fine', 'Mostly fine'], ['stuck', 'A bit stuck'], ['frus', 'Frustrated']],
-        a: { fine: 'Glad to hear it. Let’s make sure your effort pays off.', stuck: 'Totally understandable. Let’s find a way forward.', frus: 'That’s completely fair after this much effort. Let’s get you answers.' } },
+        a: { fine: 'Glad to hear it. Let’s make sure your effort pays off.', stuck: 'That’s understandable. Let’s find a way forward.', frus: 'That’s fair, after this much effort. Let’s get you answers.' } },
     ],
     route: () => 'prescriber',
     steps: a => [
@@ -345,13 +388,13 @@ const SC = {
     ],
     caseFlags: ['Adherent: all doses and step-ups on schedule', 'At 10mg: weight below illustrative range, flat for 7 wks', 'Food noise unchanged (8/10)'],
     sugg: 'Review response at full dose. Discuss options, including switching medication. Reconcile other medications.',
-    reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah, I’ve looked at everything, and you’ve been so consistent. Some people respond better to a different medication, and I think it’s worth talking through. I’ve booked us a 10-minute call for Thursday.' },
+    reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah. I’ve looked at everything, and you’ve been very consistent. Some people respond better to a different medication. I think it’s worth talking through, so I’ve booked us a 10-minute call for Thursday.' },
     tracker: [['Prescriber call', 'Thursday', true], ['Next check-in', 'In 2 weeks', false]],
   },
 };
 
 /* ===================== State ===================== */
-const initial = (scenario = 'dose', say = 'busy') => ({ scenario, say, week: 1, stage: 'today', playing: false, chat: null });
+const initial = (scenario = 'dose', say = 'busy') => ({ scenario, say, week: 1, stage: 'today', playing: false, chat: null, quick: null, logged: null });
 let state = initial();
 const S = () => SC[state.scenario];
 
@@ -409,8 +452,9 @@ function renderTimeline(){
   $('#timeline').innerHTML = `<h2>Sarah’s weeks, as we see them <span class="tag ${fired ? 'fire' : ''}">${fired ? 'Check-in sent' : 'Watching'}</span></h2>
     <div class="player"><button class="play" data-act="play" aria-label="${state.playing ? 'Pause' : 'Play the weeks'}">${state.playing ? I.pause : I.play}</button>
       <label class="sr-only" for="wk">Week</label><input id="wk" type="range" min="1" max="${s.flag}" value="${Math.min(w, s.flag)}" ${state.stage === 'closed' ? 'disabled' : ''}><span class="wk">Week ${w}</span></div>
+    ${fired ? '' : '<button class="link-btn" data-act="skip-to" style="padding:0;min-height:36px">Skip to the check-in</button>'}
     ${chart()}
-    <ul class="signals">${s.signals.map(x => `<li class="${x.w <= w ? 'on' : 'future'}"><span class="w">Wk ${x.w}</span><span class="d ${x.k}"></span><span><span class="t">${x.t}</span><br><span class="s">${x.s}</span></span></li>`).join('')}</ul>
+    <ul class="signals">${s.signals.map(x => { const cleared = state.logged && ((state.logged.weight && x.t === 'Weigh-ins stopped') || (state.logged.doses && x.t.startsWith('No dose logged'))); return `<li class="${x.w <= w ? 'on' : 'future'}"><span class="w">Wk ${x.w}</span><span class="d ${cleared ? 'ok' : x.k}"></span><span><span class="t">${cleared ? `<s>${x.t}</s>` : x.t}</span><br><span class="s">${cleared ? 'Cleared: she told June, and June logged it' : x.s}</span></span></li>`; }).join('')}</ul>
     ${status}`;
 }
 function renderCase(){
@@ -431,8 +475,8 @@ function renderCase(){
 
 /* ===================== Phone screens ===================== */
 const TABS = [['Today', 'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6'], ['Explore', 'M4 5h7v14H4zM13 5h7v14h-7z'], ['Progress', 'M4 20V14h5v-4h5V6h6v14z'], ['Care', 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z'], ['Shop', 'M5 6h15l-2 8H7zM5 6L4 3H2M8 20h.01M17 20h.01']];
-const tabbar = active => `<nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === active ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === active ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>`;
-const floatbar = () => `<div class="floatbar"><button class="fbtn av" data-act="todo" aria-label="Profile">S</button><button class="fbtn" data-act="todo">Help</button></div>`;
+const tabbar = active => `<nav class="tabbar" aria-label="App tabs">${TABS.map(([n]) => `<button class="tab" ${n === active ? 'aria-current="page"' : 'data-act="todo"'}>${n}</button>`).join('')}</nav>`;
+const floatbar = () => '<div style="height:44px"></div>';
 
 // Dose shown in Sarah's app for a given week of each scenario.
 function doseAt(w){
@@ -441,37 +485,51 @@ function doseAt(w){
   return w < 4 ? 2.5 : w < 8 ? 5 : w < 12 ? 7.5 : 10; // on schedule
 }
 function todayScreen(){
-  const s = S(), w = state.week, sc = state.scenario;
-  // What Sarah sees: an ordinary week. Nothing in her app says anything is wrong.
-  let dose;
-  if (sc === 'drift' && w >= 8) dose = `<span class="chip grey">Not logged</span>`;
-  else dose = `<span class="chip">${I.check} Logged</span>`;
-  const stepCard = sc === 'dose' && w >= 4 ? `<div class="card"><div class="row"><span class="tile p">${I.syringe}</span><div><h3>Ready for 5mg?</h3><div class="small muted">Step up whenever you feel ready.</div></div></div><button class="btn sm soft" data-act="todo">Not yet</button></div>` : '';
-  const weighed = w <= s.lastWeigh;
-  const tips = ['Eat slowly and stop when you’re satisfied, not full.', 'Protein at breakfast helps keep you full until lunch.', 'A 10-minute walk after dinner can ease nausea.', 'Drink water before each meal.'];
+  const s = S(), w = state.week, sc = state.scenario, dose = doseAt(w);
+  // The same home screen as Non-Scale Victories. Nothing on it tells her anything is off.
+  const lg = state.logged || {}, quiet = sc === 'drift' && w >= 8 && !state.logged;
+  const lead = state.logged ? ['Thanks. That’s logged.', 'June saved it for you, so there’s nothing to fill in.'] : quiet ? ['A slow start is normal while your dose is increasing.', 'Nothing new since your last visit.']
+    : sc === 'noresp' && w >= 4 ? [`You’ve stepped up to ${dose}mg.`, 'Right on schedule. Each step brings you closer to your full dose.']
+    : [w > 1 ? `You haven’t missed a dose in ${w} weeks.` : 'You’ve taken your first dose.', `You’re on ${dose}mg, right on schedule.`];
+  const weighed = w <= s.lastWeigh || !!lg.weight, b = band(w), lost = lg.weight ? (92 - QUICK.kg) / 92 * 100 : -s.pct(w), lo = -b.lo, hi = -b.hi, max = Math.max(hi * 1.35, 1), pc = v => Math.max(0, Math.min(100, v / max * 100)).toFixed(1);
+  const status = !weighed ? 'No weigh-in this week' : lost >= lo || w <= 2 ? `On track for week ${w}` : w < 9 ? 'A little under, common early on' : 'A little under where we’d expect';
   return `<main class="screen" id="screen">${floatbar()}<div class="pad">
-    <h2 class="hello">Morning, Sarah</h2><p class="sub">Week ${w} of your treatment</p>
-    <div class="card"><div class="row"><span class="tile">${I.syringe}</span><div style="flex:1"><h3>This week’s dose</h3><div class="small muted">Mounjaro ${doseAt(w)}mg</div></div>${dose}</div></div>
-    ${stepCard}
-    <div class="card"><div class="row"><span class="tile">${I.scale}</span><div style="flex:1"><h3>Weigh-in</h3><div class="small muted">${weighed ? 'Logged this week' : 'Log this week’s weight'}</div></div>${weighed ? `<span class="chip">${I.check} Done</span>` : `<span class="chip grey">To do</span>`}</div></div>
-    <div class="card"><div class="row"><span class="tile p">${I.leaf}</span><div><h3>Tip of the week</h3><div class="small">${tips[w % tips.length]}</div></div></div></div>
+    <h2 class="hello">Hey Sarah</h2>
+    <div class="hero"><p class="k">Week ${w}</p><p class="big">${lead[0]}</p><p>${lead[1]}</p></div>
+    <div class="card"><div class="kv"><span>Weight</span><span>${status}</span></div>${weighed ? `<div class="range" role="img" aria-label="${status}"><s style="left:${pc(lo)}%;width:${pc(hi - lo)}%"></s><u style="left:${pc(lost)}%"></u></div>` : `<button class="btn soft" data-act="quick" style="margin-top:14px">${I.mic}<span style="margin-left:8px">Tell June instead</span></button>`}</div>
+    ${sc === 'dose' && w >= 4 ? `<div class="card"><p>Ready for 5mg?</p><p class="small muted">Step up whenever you feel ready.</p><button class="btn sm soft" data-act="todo">Not yet</button></div>` : ''}
+    <div class="card"><div class="kv"><span>Next dose</span><span>Thursday · ${dose}mg</span></div></div>
+    <div class="card"><div class="kv"><span>Steps</span><span>4,312 of 4,000</span></div><div class="kv"><span>Protein</span><span>Log a meal</span></div><div class="kv"><span>Water</span><span>Log water</span></div></div>
   </div></main>${tabbar('Today')}`;
 }
 
+// Quick logging by voice: she says it in a sentence, June turns it into logs, she confirms. Scripted, no microphone.
+const QUICK = { kg: 88.4, t: 'I’m 88.4 kilos this morning. I’ve taken every dose, I just haven’t logged them. The nausea has gone.',
+  chips: { weight: ['Weight', '88.4 kg'], doses: ['Doses', 'Taken every week'], side: ['Side effects', 'No nausea'] } };
+function quickSheet(){
+  const q = state.quick; if (!q) return '';
+  let body;
+  if (q.listening) body = `<div class="listening" role="status" style="margin-top:14px"><span class="pulse">${I.mic}</span><span><b>Listening</b><span>Let go to send</span></span></div>`;
+  else if (q.heard) body = `<p class="said">“${QUICK.t}”</p><p class="small muted" style="margin:14px 0 8px">Here’s what I heard. Tap anything that’s wrong to remove it.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">${q.heard.map(k => `<button class="hchip" data-act="q-x" data-k="${k}" aria-label="Remove ${QUICK.chips[k][1]}"><small>${QUICK.chips[k][0]}</small>${QUICK.chips[k][1]} ×</button>`).join('')}</div>
+    <button class="btn" data-act="q-ok" ${q.heard.length ? '' : 'disabled'}>Log it</button>`;
+  else body = `<p class="small muted">No forms. Say it in a sentence and I’ll log it for you.</p>
+    <div class="talkrow" style="margin-top:16px">${talkBtn()}<span class="lbl"><b>Hold to talk</b><span>Your weight, your doses, how you’ve felt</span></span></div>`;
+  return `<div class="scrim" data-act="q-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="q-t"><button class="x" data-act="q-close" aria-label="Close">×</button><h3 class="sheet-t" id="q-t">Tell June how your week went</h3>${body}</div></div>`;
+}
 function lockScreen(){
   const s = S();
-  return `<div class="lock"><div class="date">Thursday 14 November</div><div class="time">8:12</div>
+  return `<div class="lock"><div class="date">Monday 16 November</div><div class="time">7:42</div>
     <button class="notif" data-act="open-chat" aria-label="Notification from your care team: ${esc(s.notif[0])}. Open.">
-      <span class="top"><span class="appic">J</span>June · your care team<span style="margin-left:auto">now</span></span>
-      <b>${esc(s.notif[0])}</b><span class="m">${esc(s.notif[1])}</span></button>
-    <p class="hint">Tap the notification to open</p></div>`;
+      <span class="top"><span class="appic">J</span>June<span style="margin-left:auto">now</span></span>
+      <b>${esc(s.notif[0])}</b><span class="m">${esc(s.notif[1])}</span></button></div>`;
 }
 
 function newChat(){ return { log: S().opener.map(t => ({ who: 'june', t })), step: -1, answers: {}, opts: [], typing: false, listening: false, heard: null, said: null, done: false, sent: false }; }
 const script = () => { const s = S(); return s.say[state.say] || s.say.def; };
 const talkBtn = small => `<button class="talk ${small ? 'sm' : ''}" data-talk aria-label="Tap to answer with buttons. Hold to talk to June.">${I.mic}</button>`;
 function replyBar(c){
-  const guard = '<p class="guard">June is an AI assistant. She never diagnoses. Clinical decisions go to a human.</p>';
+  const guard = '<p class="guard">June is an AI assistant. Clinical decisions are made by your care team.</p>';
   if (c.listening) return `<div class="reply-bar"><div class="listening" role="status"><span class="pulse">${I.mic}</span><span><b>Listening</b><span>Let go to send</span></span></div></div>`;
   if (c.done) return `<div class="reply-bar"><button class="btn" style="margin:0" data-act="to-plan">See the plan</button></div>`;
   if (c.typing || c.heard) return `<div class="reply-bar">${guard.replace('margin:8px 0 0', '')}</div>`;
@@ -523,8 +581,9 @@ function chatAnswer(v){
   }, pause());
 }
 // Hold to talk: one sentence in her own words answers everything still open (scripted, not a live model).
-function startTalk(){ const c = state.chat; if (!c || c.typing || c.heard || c.done || c.listening) return; c.listening = true; render(); }
+function startTalk(){ if (state.quick){ if (!state.quick.listening && !state.quick.heard){ state.quick.listening = true; render(); } return; } const c = state.chat; if (!c || c.typing || c.heard || c.done || c.listening) return; c.listening = true; render(); }
 function endTalk(){
+  if (state.quick){ if (state.quick.listening){ state.quick.listening = false; state.quick.heard = Object.keys(QUICK.chips); render(); } return; }
   const c = state.chat, s = S(); if (!c || !c.listening) return;
   const sc = script(), keys = s.qs.map(q => q.k).filter(k => c.answers[k] === undefined && sc.answers[k] !== undefined);
   c.listening = false; c.said = sc.t; c.opts = []; c.log.push({ who: 'me', t: sc.t, voice: true }); c.typing = true; render();
@@ -538,28 +597,27 @@ function heardOk(){
 }
 function noticedCard(){
   const s = S(), sig = s.signals.filter(x => x.w <= s.flag);
-  return `<div class="noticed"><h4>What we noticed</h4><p class="small muted" style="margin:0">Small things that add up. Here’s exactly what we looked at.</p>
+  return `<div class="noticed"><h4>What we noticed</h4><p class="small muted" style="margin:0">Here’s what we looked at.</p>
     <ul>${sig.map(x => `<li><span class="d ${x.k === 'ok' ? 'ok' : ''}"></span><span>${esc(x.t)}<small>Week ${x.w} · ${esc(x.s)}</small></span></li>`).join('')}</ul></div>`;
 }
 function planScreen(){
   const s = S(), a = state.chat.answers, route = s.route(a), sent = state.chat.sent;
   const who = route === 'prescriber' ? 'your prescriber' : 'your coach';
   return `<main class="screen" id="screen"><div class="row" style="padding:52px 12px 0"><button class="fbtn" style="box-shadow:none;background:none;padding:0;width:44px" data-act="back-chat" aria-label="Back to chat">${I.back}</button></div><div class="pad">
-    <h2 class="hello" style="margin-top:4px">Here’s the plan</h2><p class="sub">Caught early, so this is a small fix, not a setback.</p>
+    <h2 class="hello" style="margin-top:4px">Here’s the plan</h2><p class="sub">Caught early, so it’s a small fix.</p>
     <div class="card"><ol class="steps">${s.steps(a).map(x => `<li><span><b>${esc(x[0])}</b><span>${esc(x[1])}</span></span></li>`).join('')}</ol></div>
     ${sent ? `<div class="sent" role="status"><b>Sent to ${who}</b>They can see your answers and what we noticed. You’ll get a message here.</div>
-      <button class="btn" data-act="skip">Skip ahead: 1 day later →</button>`
-      : `<button class="btn" data-act="send">Send to ${who} · 1 tap</button><p class="small muted" style="text-align:center;margin:8px 0 0">They’ll see your answers, so you won’t have to repeat yourself.</p>`}
+      <button class="btn soft" data-act="skip">See the next day</button>`
+      : `<button class="btn" data-act="send">Send to ${who}</button><p class="small muted" style="text-align:center;margin:8px 0 0">They’ll see your answers, so you won’t have to repeat yourself.</p>`}
   </div></main>`;
 }
 
 function closedScreen(){
   const s = S(), r = s.reply;
   return `<main class="screen" id="screen">${floatbar()}<div class="pad">
-    <h2 class="hello">Care</h2><p class="sub">The next day</p>
+    <h2 class="hello">Care</h2>
     <div class="card"><div class="inbox"><span class="av">${r.av}</span><div><div class="who">${r.from} · ${r.role}</div><div class="when">Today, 9:40am · re: your check-in</div><p>${esc(r.text)}</p></div></div></div>
     <div class="card"><h3>Treatment tracker</h3><div class="tracker">${s.tracker.map(t => `<div><div class="k">${t[0]}</div><div class="v ${t[2] ? 'new' : ''}">${t[1]}</div></div>`).join('')}</div></div>
-    <button class="btn ghost" data-act="replay">Replay this scenario</button>
   </div></main>${tabbar('Care')}`;
 }
 
@@ -567,7 +625,7 @@ function closedScreen(){
 function render(){
   const st = state.stage;
   const body = st === 'today' ? todayScreen() : st === 'lock' ? lockScreen() : st === 'chat' ? chatScreen() : st === 'plan' ? planScreen() : closedScreen();
-  $('#app').innerHTML = body;
+  $('#app').innerHTML = body + (st === 'today' ? quickSheet() : '');
   const scr = $('#screen');
   if (st === 'chat' && scr){ if (matchMedia('(max-width:900px)').matches) window.scrollTo(0, document.body.scrollHeight); else scr.scrollTop = scr.scrollHeight; }
   renderTimeline(); renderCase();
@@ -611,6 +669,11 @@ document.addEventListener('click', e => {
     case 'unhear': state.chat.heard.keys = state.chat.heard.keys.filter(k => k !== el.dataset.k); render(); break;
     case 'unhear-x': state.chat.heard.extra = state.chat.heard.extra.filter(x => x[0] !== el.dataset.k); render(); break;
     case 'heard-ok': heardOk(); break;
+    case 'quick': stopPlay(); state.quick = {}; render(); break;
+    case 'q-scrim': if (e.target !== el) break;
+    case 'q-close': state.quick = null; render(); break;
+    case 'q-x': state.quick.heard = state.quick.heard.filter(k => k !== el.dataset.k); render(); break;
+    case 'q-ok': state.logged = Object.fromEntries(state.quick.heard.map(k => [k, true])); state.quick = null; render(); toast('Logged'); break;
     case 'to-plan': state.stage = 'plan'; render(); $('#screen').scrollTop = 0; break;
     case 'send': state.chat.sent = true; render(); toast('Sent. They’ll see everything.'); break;
     case 'skip': state.stage = 'closed'; render(); $('#screen').scrollTop = 0; break;
@@ -626,6 +689,7 @@ function pressEnd(){
   const pending = holdT !== null; clearTimeout(holdT); holdT = null;
   if (held){ held = false; endTalk(); return; }
   if (!pending) return;
+  if (state.quick){ toast('Hold the button, then talk'); return; }
   const c = state.chat; if (!c) return;
   if (c.step < 0) chatAnswer('go'); else toast('Tap an answer above, or hold to talk');
 }

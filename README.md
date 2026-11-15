@@ -54,18 +54,7 @@ The same data the app already collects, shown back as progress. The Today screen
 
 ## Prototype: Pre-emptive Check-In (`/check-in/`)
 
-Users who are quietly stalling rarely ask for help. They feel fine until the day they decide "it's not working" and cancel. This acts on early signals instead.
-
-- **The system's view:** press play to watch Sarah's weeks. Small signals appear, none alarming alone. Together they cross a threshold, weeks before she'd likely cancel.
-- **Sarah's view:** an ordinary week, then a gentle notification from June.
-- **Tap to answer, or hold to talk.** One button in the chat. A tap gives quick answer buttons. Holding it lets her say it in her own words, and one sentence can answer everything June needs.
-- **"Here's what I heard":** June shows what she picked up as chips. Sarah removes anything that's wrong before it's saved, and June asks only for what's still missing. Her own words go to the care team with the case.
-- **Routing and closing the loop:** one tap sends a pre-drafted case to a prescriber or coach. The next day they reply and the treatment tracker updates.
-
-Scenarios:
-- **Stalled, feels fine:** she logs everything and feels good, but she's below the expected range and still on the starter dose. June leads with what's going well, then the gap.
-- **Gone quiet:** she's stopped logging, so there's nothing to see. June doesn't list what she hasn't done: "No need to log anything. How's it going?" What she says sorts her into one of three paths: fine and busy (a win is added to her home screen), avoiding the scale (weigh-in reminders paused, no weigh-in needed), or struggling (prescriber review).
-- **Doing it all, not responding:** a true stall at full dose, which goes to a prescriber.
+We notice something is off before she does, and June reaches out. The left side shows the signals building week by week; the phone shows what she sees. In the chat she can tap to answer, or hold the button and say it in her own words. Scenarios: stalled but feels fine, gone quiet, and doing everything right but not responding.
 
 ## How I built it with AI
 
