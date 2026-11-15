@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Monthly Progress Report · Prototype</title>
-<meta name="description" content="Working prototype: a monthly progress report that adapts to how much data a patient has, and pays every input back. Illustrative data only.">
+<meta name="description" content="Working prototype: a monthly progress report that adapts to how much data a user has, and pays every input back. Illustrative data only.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -140,6 +140,16 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 .chg .v{margin-left:auto;text-align:right;white-space:nowrap}
 .chg .v .then{font-size:12px;color:var(--muted);text-decoration:line-through}
 .chg .v .now{font-family:var(--serif);font-size:19px;color:var(--brand)}
+.quote{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:10px 0}
+.quote .when{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.quote p{margin:2px 0 0;font-family:var(--serif);font-size:18px;color:var(--brand);line-height:1.3}
+.normlist{margin:0;padding-left:18px}
+.normlist li{margin:6px 0}
+.expect{background:var(--surface-2);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14.5px}
+.expect b{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.getback{list-style:none;margin:8px 0 0;padding:10px 12px;background:var(--accent-soft);border-radius:12px;font-size:13.5px}
+.getback::before{content:"What you get back";display:block;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.getback li{margin:2px 0}
 .insight{background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;margin:10px 0;font-size:15px}
 .insight b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
 .unlock{display:flex;gap:12px;align-items:center;border:1.5px dashed #CBBFD9;border-radius:var(--radius);padding:14px;margin:10px 0}
@@ -219,6 +229,12 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
   .lock{position:relative;min-height:100vh}
   .tabbar{position:sticky;bottom:0;z-index:4}
 }
+.try{background:var(--accent-soft);border-radius:14px;padding:12px 16px;margin:0 0 16px}
+.try b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.try ol{margin:0;padding-left:18px}
+.try li{margin:3px 0}
+.more{margin:0 0 12px}
+.more>summary{display:flex!important;align-items:center;min-height:44px;font-weight:600;color:var(--brand);cursor:pointer}
 </style>
 </head>
 <body>
@@ -227,22 +243,24 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
     <details id="demoDetails" open>
       <summary>Demo controls</summary>
       <h1>Monthly Progress Report</h1>
-      <p class="intro">Answers “Is this working, and is it worth it?” a few days before renewal, for every patient, including those who log nothing. Flip the data level to watch it scale down, then press <strong>Next month</strong> to watch the flywheel turn. <strong>All data is illustrative.</strong></p>
+      <p class="intro">Answers “Is this working, and is it worth it?” a few days before renewal, for every user, including those who log nothing. Each stage gets a different report, because the question changes. Flip the data level to watch it scale down, then press <strong>Next month</strong> to watch the flywheel turn. <strong>All data is illustrative.</strong></p>
+      <div class="try"><b>Try this</b><ol><li>Tap the notification on the phone.</li><li>Switch the journey stage. Each one is a different report.</li><li>Set data to <strong>None</strong>, answer the 30-second check-in, then press <strong>Next month</strong>.</li></ol></div>
       <fieldset class="seg"><legend>Data we have</legend><div class="seg-row">
         <label><input type="radio" name="data" value="rich" checked><span>Rich</span></label>
         <label><input type="radio" name="data" value="light"><span>Light</span></label>
         <label><input type="radio" name="data" value="none"><span>None</span></label></div></fieldset>
       <fieldset class="seg"><legend>Journey stage</legend><div class="seg-row">
-        <label><input type="radio" name="stage" value="early"><span>Month 1</span></label>
-        <label><input type="radio" name="stage" value="middle" checked><span>Month 3</span></label>
-        <label><input type="radio" name="stage" value="plateau"><span>Month 6</span></label></div></fieldset>
+        <label><input type="radio" name="stage" value="early"><span>Start · month 1</span></label>
+        <label><input type="radio" name="stage" value="middle" checked><span>Middle · month 3</span></label>
+        <label><input type="radio" name="stage" value="plateau"><span>Plateau · month 6</span></label></div></fieldset>
       <fieldset class="seg"><legend>Progress</legend><div class="seg-row">
         <label><input type="radio" name="progress" value="on" checked><span>On track</span></label>
-        <label><input type="radio" name="progress" value="below"><span>Below range</span></label></div></fieldset>
+        <label><input type="radio" name="progress" value="risk"><span>Behind, feels fine</span></label>
+        <label><input type="radio" name="progress" value="below"><span>Stalled</span></label></div></fieldset>
       <button class="flybtn" data-act="nextmonth"><span>Next month: watch the flywheel</span><span aria-hidden="true">→</span></button>
       <div class="explain" id="explain" aria-live="polite"></div>
       <button class="link-btn" data-act="reset">Reset demo</button>
-      <p class="foot">Fictional patient (Sarah, Mounjaro). “Typical range” bands are illustrative, not clinical data.</p>
+      <p class="foot">Fictional user (Sarah, Mounjaro). “Expected range” bands are illustrative, not clinical data.</p>
     </details>
   </aside>
   <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
@@ -266,12 +284,14 @@ const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', opened: 
 let state = initial();
 
 function sc(){
-  const st = STAGES[state.stage], below = state.progress === 'below', p = st[below ? 'below' : 'on'];
+  const st = STAGES[state.stage], below = state.progress !== 'on', p = st[below ? 'below' : 'on'];
   const b = band(st.week);
   return { ...st, ...p, below, stage: state.stage, data: state.data, kg: +(START_KG * -p.pct / 100).toFixed(1),
     dose: DOSES[p.doseIdx], stuck: !!p.stuck, inRange: p.pct <= b.lo && p.pct >= b.hi, band: b,
     // Below range in month 1 is expected (starter dose), so it isn't treated as a stall.
-    stall: below && state.stage !== 'early', month: MONTHS[state.monthIdx % MONTHS.length], ...answerFlags() };
+    stall: state.progress === 'below' && state.stage !== 'early',
+    // Hidden risk: behind the expected range but she feels fine. An early warning, not an alarm.
+    risk: state.progress === 'risk' && state.stage !== 'early' && state.data !== 'none', month: MONTHS[state.monthIdx % MONTHS.length], ...answerFlags() };
 }
 // Concern also comes from what she tells us, not only the scale.
 function answerFlags(){
@@ -299,6 +319,7 @@ const I = {
   bolt: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>',
   tape: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 9h18v6H3zM7 9v3M11 9v3M15 9v3M19 9v3"/></svg>',
   moon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
+  heart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
   share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg>',
 };
 const src = t => `<p class="src">${I.info}<span>${t}</span></p>`;
@@ -317,8 +338,12 @@ function hero(s){
     h = 'This month was slower than we’d expect.';
     p = s.data === 'none'
       ? 'Thanks for telling us. Some of your answers suggest things have slowed. That’s usually fixable, often the dose. Let’s look at it together.'
-      : `You’re ${sgn(s.pct)}% since you started, which is below the typical range for month ${s.n}. That’s not a failure. It’s usually something fixable, often the dose. Let’s look at it together.`;
+      : `You’re ${sgn(s.pct)}% since you started, which is below the expected range for month ${s.n}. That’s not a failure. It’s usually something fixable, often the dose. Let’s look at it together.`;
     cta = helpCta();
+  } else if (s.risk && !s.flags.length){
+    h = 'A consistent month, and one thing to look at.';
+    p = `You took every dose and kept logging. Your results are a little behind where we’d expect at month ${s.n} (${sgn(s.pct)}%). It’s usually something simple, often the dose, and it’s easier to sort out early.`;
+    cta = state.helpSent ? helpCta() : `<button class="cta" data-act="help">Review it with my care team</button>`;
   } else if (s.flags.length){
     cls = 'amber'; cta = helpCta();
     const f = s.flags[0];
@@ -336,14 +361,14 @@ function hero(s){
     h = q.appetite === 'same' ? 'Thanks. That tells us something useful.' : 'Your appetite has changed. That’s the medicine working.';
     p = q.appetite === 'same' ? `An unchanged appetite at month ${s.n} is worth a closer look. Your care team can see your answers.` : 'A smaller appetite is one of the clearest early signs, often before the scale shows it.';
   } else if (s.stage === 'early'){
-    h = 'You got through the hard part.';
-    p = s.below ? `The scale has barely moved (${sgn(s.pct)}%). That’s common on the starter dose, and loss usually picks up after your first step up.` : `The first weeks are the toughest, and you’ve stuck with it. You’re ${sgn(s.pct)}% so far, right where we’d expect.`;
+    h = 'Month 1 done. Your body is adjusting.';
+    p = s.below ? `The scale has barely moved (${sgn(s.pct)}%). That’s common on the starter dose, and loss usually picks up after your first step up.` : `The first weeks are about getting used to the medicine, not big numbers. You took every dose and your side effects are easing. You’re ${sgn(s.pct)}% so far, right where we’d expect.`;
   } else if (s.stage === 'middle'){
     h = `${sgn(s.pct)}% since you started. It’s working.`;
-    p = `That’s within the typical range for month 3. You lost ${Math.abs(s.chg).toFixed(1)}kg this month, and your appetite and sleep are moving the right way too.`;
+    p = `That’s within the expected range for month 3. You lost ${Math.abs(s.chg).toFixed(1)}kg this month, and your appetite and sleep are moving the right way too.`;
   } else {
     h = 'A steady month, and that’s a win.';
-    p = `You’re holding at ${sgn(s.pct)}%. Most people slow down around month 6 as the body settles. Staying on treatment now is what protects everything you’ve achieved.`;
+    p = `You’re holding at ${sgn(s.pct)}%. Most people level off around month 6 as the body settles. Holding steady is the result now, and the changes below have lasted.`;
   }
   return `<section class="hero ${cls}"><p class="eyebrow">${s.month} report · Month ${s.n}</p><h1 id="h1" tabindex="-1">${h}</h1><p>${p}</p>${cta}</section>`;
 }
@@ -383,7 +408,7 @@ function chart(s){
   const last = pts[pts.length - 1];
   const ticks = []; for (let v = 0; v >= minV; v -= 5) ticks.push(v);
   return `<div class="sec"><div class="sec-h"><h2>Where you are</h2><span>${s.data === 'light' ? 'Monthly weigh-ins' : 'Weekly weigh-ins'}</span></div><div class="card">
-    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Your weight change of ${sgn(s.pct)} percent compared with an illustrative typical range at week ${s.week}.">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Your weight change of ${sgn(s.pct)} percent compared with an illustrative expected range at week ${s.week}.">
       ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#E8E1EA"/><text x="${L - 6}" y="${y(v) + 4}" font-size="10.5" text-anchor="end" fill="#56605A">${v === 0 ? '0%' : '−' + Math.abs(v) + '%'}</text>`).join('')}
       <polygon points="${up}${dn}" fill="#DCE8DF"/>
       <path d="${d}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -391,7 +416,7 @@ function chart(s){
       <text x="${Math.min(x(last[0]) - 4, W - R - 4)}" y="${y(last[1]) - 12}" font-size="11.5" font-weight="700" text-anchor="end" fill="#1F2A24">${sgn(s.pct)}% · you are here</text>
       <text x="${L}" y="${H - 6}" font-size="10.5" fill="#56605A">Start</text><text x="${x(s.week)}" y="${H - 6}" font-size="10.5" text-anchor="middle" fill="#56605A">Week ${s.week}</text>
     </svg>
-    <p class="small muted" style="margin:6px 0 0"><span style="display:inline-block;width:12px;height:9px;background:#DCE8DF;border-radius:2px;margin-right:5px"></span>Typical range (illustrative). Compared with where people usually are at your stage.</p></div></div>`;
+    <p class="small muted" style="margin:6px 0 0"><span style="display:inline-block;width:12px;height:9px;background:#DCE8DF;border-radius:2px;margin-right:5px"></span>Expected range. Where people usually are at your stage.</p></div></div>`;
 }
 
 function drivers(s){
@@ -412,7 +437,11 @@ function drivers(s){
   if (s.data === 'rich') wi = `<div class="drv"><div class="top"><span class="name">Weekly weigh-ins</span><span class="val">${s.week}-week streak</span></div><div class="pips" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i === 6 ? 'freeze' : ''}"></i>`).join('')}</div><div class="why">1 streak freeze used. Still counts. Regular weigh-ins are linked to better results.</div></div>`;
   else if (s.data === 'light') wi = `<div class="drv"><div class="top"><span class="name">Weekly weigh-ins</span><span class="val">2 this month</span></div><div class="pips" aria-hidden="true">${[1, 0, 1, 0].map(o => `<i class="${o ? '' : 'off'}"></i>`).join('')}</div><div class="why">Weekly shows your real trend, not just a dot. Streak freezes are built in.</div></div>`;
   else wi = `<div class="drv"><div class="top"><span class="name">Weekly weigh-ins</span><span class="val ${answered() && q.weight ? '' : 'na'}">${answered() && q.weight ? '1 this month' : 'Start a streak'}</span></div><div class="pips" aria-hidden="true">${[answered() && q.weight, 0, 0, 0].map(o => `<i class="${o ? '' : 'off'}"></i>`).join('')}</div><div class="why">One a week is plenty, and streak freezes are built in.</div></div>`;
-  return `<div class="sec"><div class="sec-h"><h2>What you did</h2><span>The habits that matter</span></div><div class="card">${dose}${se}${wi}</div>
+  // Each phase rewards a different behaviour most, so it leads.
+  const hb = s.stage === 'plateau' && s.data === 'rich' ? `<div class="drv"><div class="top"><span class="name">Habits holding</span><span class="val">Protein target 5 days/wk</span></div><div class="bar"><i class="p" style="width:${s.below ? 50 : 72}%"></i></div><div class="why">For 3 months running. These are what keep results steady.</div></div>` : '';
+  const order = s.stage === 'early' ? [dose, se, wi] : s.stage === 'middle' ? [wi, dose, se] : [hb, wi, dose, se];
+  const [ttl, sub] = s.stage === 'early' ? ['Your treatment so far', 'What matters in month 1'] : s.stage === 'plateau' && !s.below ? ['What’s keeping you steady', 'The habits that matter'] : ['What you did', 'The habits that matter'];
+  return `<div class="sec"><div class="sec-h"><h2>${ttl}</h2><span>${sub}</span></div><div class="card">${order.join('')}</div>
     <p class="small muted" style="margin:6px 4px 0">We reward what you do, not what the scale does.</p></div>`;
 }
 
@@ -423,6 +452,7 @@ function changed(s){
     items.push(['bowl', 'Food noise', 'From your monthly check-ins', '8/10', `${b ? 6 : { early: 6, middle: 3, plateau: 2 }[s.stage]}/10`]);
     items.push(['tape', 'Waist', 'From your measurements', '104cm', `${104 - Math.round(11 * k / 1.4)}cm`]);
     items.push(['moon', 'Sleep', 'Average per night, from your watch', '6h 05m', `6h ${String(5 + Math.round(40 * k)).padStart(2, '0')}m`]);
+    if (s.stage !== 'early' && !answered()) items.push(['bolt', 'Energy', 'From your monthly check-ins', '2/5', `${b ? 3 : 4}/5`]);
   } else if (s.data === 'light'){
     items.push(['bowl', 'Food noise', 'Based on what you told June', '8/10', `${b ? 6 : 4}/10`]);
     items.push(['wave', 'Nausea', 'Based on what you told June', '4 days/wk', `${b ? 3 : 1} day/wk`]);
@@ -446,12 +476,49 @@ function changed(s){
 }
 
 function insight(s){
-  if (s.data === 'rich' && !s.below) return `<div class="sec"><div class="insight"><b>What’s working for you</b>In weeks you got protein in at most meals, evening snacking dropped to once a week. Keep that going.</div></div>`;
+  if (s.data === 'rich' && !s.below){
+    const t = { early: ['A pattern in your month', 'Your nausea peaked about 2 days after each dose and was gone by day 4. That’s the usual pattern, and it has got shorter each week.'],
+      middle: ['What’s working for you', 'In weeks you got protein in at most meals, evening snacking dropped to once a week and your nausea was lower. Keep that going.'],
+      plateau: ['What has lasted', 'Your weight has stayed within 0.5kg for 8 weeks, while your sleep and waist kept improving. The change is holding without the scale having to move.'] }[s.stage];
+    return `<div class="sec"><div class="insight"><b>${t[0]}</b>${t[1]}</div></div>`;
+  }
   if (s.data === 'rich' && s.below) return `<div class="sec"><div class="insight"><b>What we noticed</b>Your dose hasn’t stepped up yet. That’s the most common reason progress slows at this stage, and it’s very fixable.</div></div>`;
   if (s.data === 'light') return `<div class="sec"><div class="unlock"><div><div class="t">Unlock “what’s working for you”</div><div class="s">Weigh in weekly next month and we’ll show which habits are moving your results.</div></div></div></div>`;
   return '';
 }
 
+// START: set expectations before showing weight.
+function normalNow(s){
+  if (s.stage !== 'early' || s.data === 'none') return '';
+  return `<div class="sec"><div class="sec-h"><h2>What’s normal in month 1</h2><span>On 2.5mg</span></div><div class="card"><ul class="normlist">
+    <li><strong>Small losses.</strong> The starter dose is for getting used to the medicine. Loss usually picks up after the first step up.</li>
+    <li><strong>Some nausea that eases.</strong> Most common in the first weeks, and after each dose increase.</li>
+    <li><strong>Appetite changing first.</strong> Feeling full sooner often comes before the scale moves.</li></ul>
+    ${src('What people at this stage typically see, not your data.')}</div></div>`;
+}
+// PLATEAU: lead with what has been kept, not with a monthly change that looks like slowing.
+function kept(s){
+  const t = (k, v, d) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="d">${d}</span></div>`;
+  const tiles = [t('Weight held', '8 weeks', 'Within 0.5kg'), t('Since you started', `${sgn(s.pct)}%`, 'In the expected range'), s.data === 'rich' ? t('Waist', '93cm', 'Down 11cm, and holding') : t('Doses on time', '4/4', 'From your orders')];
+  return `<div class="sec"><div class="sec-h"><h2>What you’ve kept</h2><span>Month 6</span></div><div class="tiles">${tiles.join('')}</div></div>`;
+}
+function markers(s){
+  if (s.data !== 'rich') return '';
+  const rows = [['heart', 'HbA1c (blood sugar)', 'Intake vs your month-6 test', '5.9%', '5.6%'], ['heart', 'LDL cholesterol', 'Intake vs your month-6 test', '3.6', '3.1 mmol/L']];
+  return `<div class="sec"><div class="sec-h"><h2>Health markers</h2><span>From your blood tests</span></div><div class="card">
+    ${rows.map(x => `<div class="chg"><span class="ic">${I[x[0]]}</span><div><div class="t">${x[1]}</div><div class="s">${x[2]}</div></div><div class="v"><div class="then">${x[3]}</div><div class="now">${x[4]}</div></div></div>`).join('')}
+    ${src('These are the changes that matter most for long-term health. Your prescriber goes through them at your 6-month review.')}</div></div>`;
+}
+// Her own reflections, then and now.
+function words(s){
+  if (s.data !== 'rich' || s.below || s.stage === 'early') return '';
+  const now = s.stage === 'middle' ? 'I forgot to finish my lunch today. That has never happened.' : 'I don’t really think about it any more. I just eat when I’m hungry.';
+  return `<div class="sec"><div class="sec-h"><h2>In your words</h2><span>From your reflections</span></div><div class="card">
+    <div class="quote"><span class="when">Week 1</span><p>“I think about food all day.”</p></div><div class="quote"><span class="when">This month</span><p>“${now}”</p></div></div></div>`;
+}
+const EXPECT = { early: 'After your first step up, appetite usually drops further and loss picks up. Nausea can return for a few days, then settle again.',
+  middle: 'Loss usually continues at a steadier pace from here. Your dose review decides whether to step up or hold.',
+  plateau: 'Holding steady is the goal. Your 6-month review covers your maintenance dose and your blood results.' };
 function whatsNext(s){
   const ring = f => `<svg width="40" height="40" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" fill="none" stroke="#E8E1EA" stroke-width="5"/><circle cx="22" cy="22" r="18" fill="none" stroke="#7E52B8" stroke-width="5" stroke-linecap="round" stroke-dasharray="${2 * Math.PI * 18}" stroke-dashoffset="${2 * Math.PI * 18 * (1 - f)}" transform="rotate(-90 22 22)"/></svg>`;
   const tile = (big, unit, what, f) => `<div class="tile"><div class="ring">${ring(f)}<span class="v" style="margin:0">${big}${unit ? `<small style="font-family:var(--sans);font-size:12px;font-weight:600"> ${unit}</small>` : ''}</span></div><span class="d" style="font-size:12.5px;margin-top:auto">${what}</span></div>`;
@@ -465,8 +532,9 @@ function whatsNext(s){
     b = m ? tile(m.left, 'kg', `to your first ${m.p}%`, s.kg / (START_KG * m.p / 100)) : tile('6', 'days', 'until your next order ships', .8);
   } else b = tile('3', 'taps', 'to personalise this report', answered() ? 1 : 0);
   return `<div class="sec"><div class="sec-h"><h2>What’s next</h2></div><div class="next">${a}${b}</div>
+    ${s.stall ? '' : `<div class="expect"><b>What to expect next month</b>${EXPECT[s.stage]}</div>`}
     <p class="renew">Your next order ships on ${NEXT_ORDER[state.monthIdx + 1]}. You can change or pause it any time in Shop.</p>
-    ${(s.stall || s.flags.length) && !state.helpSent ? `<div class="needhelp"><span>Something not right? Your care team can help.</span><button class="link-btn" data-act="help">Get help</button></div>` : ''}</div>`;
+    ${(s.stall || s.risk || s.flags.length) && !state.helpSent ? `<div class="needhelp"><span>Something not right? Your care team can help.</span><button class="link-btn" data-act="help">Get help</button></div>` : ''}</div>`;
 }
 
 function checkin(s){
@@ -476,6 +544,7 @@ function checkin(s){
   const ready = q.appetite && q.side && q.energy;
   return `<div class="sec" id="qc"><div class="sec-h"><h2>Your 30 seconds</h2><span>3 taps</span></div><div class="card qc">
     <p class="small muted" style="margin:0">${s.data === 'rich' ? 'A quick monthly check so this stays accurate.' : 'Answer these and this report updates straight away.'}</p>
+    <ul class="getback"><li>Your headline, rewritten for you</li><li>Your side effects and energy added to this report</li><li>${s.data === 'rich' ? 'A sharper insight next month' : 'A fuller report next month'}</li></ul>
     <div class="qq"><p>Appetite compared with before you started?</p><div class="opts">${opt('appetite', 'much', 'Much smaller')}${opt('appetite', 'bit', 'A bit smaller')}${opt('appetite', 'same', 'About the same')}</div></div>
     <div class="qq"><p>Side effects this month?</p><div class="opts">${opt('side', 'none', 'None')}${opt('side', 'some', 'Some, manageable')}${opt('side', 'most', 'Most days')}</div></div>
     <div class="qq"><p>Energy compared with when you started?</p><div class="opts">${opt('energy', 'better', 'Better')}${opt('energy', 'same', 'Same')}${opt('energy', 'worse', 'Worse')}</div></div>
@@ -530,7 +599,7 @@ function seen(s){
   if (s.flags.includes('gain')) L.push([`Weight ${sgn(s.wPct)}% since intake (you confirmed ${state.q.weight.toFixed(1)}kg)`, 'This month’s check-in']);
   if (answered() && state.q.side === 'most') L.push(['You told us side effects most days', 'This month’s check-in']);
   if (s.flags.includes('appetite')) L.push([`Appetite unchanged at month ${s.n}`, 'This month’s check-in']);
-  if (s.data !== 'none' && s.below) L.push([`${sgn(s.pct)}% since you started, below the typical range for month ${s.n}`, 'Weigh-ins']);
+  if (s.data !== 'none' && s.below) L.push([`${sgn(s.pct)}% since you started, below the expected range for month ${s.n}`, 'Weigh-ins']);
   if (s.data === 'none' && !answered()) L.push(['We haven’t heard from you in a few weeks', 'App activity']);
   if (state.worth === 'unsure' || state.worth === 'no') L.push(['You told us treatment doesn’t feel worth it right now', 'This report']);
   return L;
@@ -580,10 +649,16 @@ function lockScreen(s){
       <b>Your ${s.month} report is ready</b><span class="m">Is it working? Here’s your month in 2 minutes.</span></button>
     <p class="hint">Tap the notification to open</p></div>`;
 }
+// Each phase answers a different question, so the order changes. A stalled user always gets the plain version.
+function body(s){
+  if (s.stage === 'early') return drivers(s) + normalNow(s) + vsLastMonth(s) + chart(s) + changed(s) + insight(s);        // "Is this normal?"
+  if (s.stage === 'plateau' && !s.below && s.data !== 'none') return kept(s) + markers(s) + changed(s) + words(s) + insight(s) + drivers(s) + chart(s);  // "Is it still worth it?"
+  return vsLastMonth(s) + chart(s) + changed(s) + words(s) + insight(s) + drivers(s);                                   // "Is it working?" (and any stall)
+}
 function reportScreen(s){
   return `<div class="floatbar"><button class="fbtn ic" data-act="lock" aria-label="Back to notification"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><span class="ttl" aria-hidden="true">${s.month} report</span><button class="fbtn ic" data-act="todo" aria-label="Share report">${I.share}</button></div>
-    <main class="screen" id="screen">${hero(s)}${vsLastMonth(s)}${chart(s)}${drivers(s)}${changed(s)}${insight(s)}${whatsNext(s)}${checkin(s)}${feedback(s)}
-    <p class="fine">Prototype · Sarah is a fictional patient and all data is illustrative.</p></main>
+    <main class="screen" id="screen">${hero(s)}${body(s)}${whatsNext(s)}${checkin(s)}${feedback(s)}
+    <div style="height:24px"></div></main>
     <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === 'Progress' ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === 'Progress' ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>
     ${helpSheet(s)}`;
 }
@@ -595,11 +670,13 @@ function explain(){
   if (state.help){ q = 'Get help'; cls = 'risk'; txt = 'Infer first (show what we already see), ask two things, recommend the right human, then say exactly what happens next. Urgent symptoms go straight to 000 or a GP.'; }
   else if (state.flyNote){ q = 'Flywheel'; cls = 'fly'; txt = state.flyNote; }
   else if (s.flags.length && !s.stall){ q = 'Her answers raise concern'; cls = 'risk'; txt = state.helpSent ? 'Help requested. The headline now shows who has her answers and when they’ll reply.' : 'Concern comes from what she tells us, not just the demo’s progress setting: weight up since intake, side effects most days, or no appetite change after month 1. A weight far from intake is confirmed first, since it’s often a typo.'; }
+  else if (s.risk && !s.flags.length){ q = 'Early warning'; cls = 'risk'; txt = state.helpSent ? 'Review requested. The headline shows who has her report and when they’ll reply.' : 'Hidden risk: she’s behind the expected range but feels fine, so she wouldn’t ask. The report credits what she’s doing, names the gap calmly, and offers a review before it becomes a stall.'; }
   else if (s.stall){ q = 'No false reassurance'; cls = 'risk'; txt = state.helpSent ? 'Help requested. The headline now shows who has her report and when they’ll reply, instead of another call to action.' : 'Below range, so the report doesn’t cheer. It says so plainly and offers a get-help flow right here.'; }
   else if (s.data === 'none'){ q = answered() ? 'Every input paid back' : 'Infer before you ask'; txt = answered() ? 'Three taps, and the headline, “What you did” and “What changed” all updated straight away.' : 'No tracking data, but orders and the prescription still give a real report. Benchmarks are labelled as benchmarks. The 30-second check-in fills the gaps.'; }
   else if (s.data === 'light'){ q = 'Scale-down: light data'; txt = 'Core report from 2 weigh-ins and June chats, with transparency lines, plus one ask to unlock more.'; }
   else { q = 'Full report'; txt = 'Weekly weigh-ins, side-effect log and wearable. Standard monthly structure: headline → this month vs last → where you are → what you did → what changed → what’s next.'; }
-  $('#explain').innerHTML = `<span class="q ${cls}">${q}</span><p>${txt}</p><p class="small">Rewards the process (dose on schedule, side effects managed, weigh-ins), never kilos. The last two questions are the success measures: useful, and worth it.</p>`;
+  const PHASE = { early: 'Start: the report answers “Is this normal?”. Treatment progress and what’s typical come before weight.', middle: 'Middle: the report answers “Is it working?”. Weight against the expected range leads, then what’s driving it.', plateau: 'Plateau: the report answers “Is it still worth it?”. What she has kept and her health markers lead, and a flat month is never shown as slowing.' }[s.stage];
+  $('#explain').innerHTML = `<span class="q ${cls}">${q}</span><p>${txt}</p><p>${s.stall ? 'Stalled, so the phase framing is dropped: plain facts and a route to help.' : s.risk ? 'The celebratory sections are held back until she’s back in range.' : PHASE}</p><p class="small">Rewards the process (dose on schedule, side effects managed, weigh-ins), never kilos. The last two questions are the success measures: useful, and worth it.</p>`;
 }
 
 /* ===================== Render + events ===================== */

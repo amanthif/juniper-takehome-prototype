@@ -70,6 +70,7 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 .seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .seg-row span{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer;font-size:13.5px}
 .seg-row input:checked+span{background:var(--brand);color:#fff}
+.seg-row label.off span{opacity:.35;cursor:not-allowed}
 .seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
 .presets{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .preset{min-width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer}
@@ -81,6 +82,13 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 .tgb[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .tgb[aria-checked="true"]::before{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 3px var(--accent-soft)}
 .fewer{font-size:13px;color:var(--muted);margin:8px 4px 0}
+
+.try{background:var(--accent-soft);border-radius:14px;padding:12px 16px;margin:0 0 16px}
+.try b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.try ol{margin:0;padding-left:18px}
+.try li{margin:3px 0}
+.more{margin:0 0 12px}
+.more>summary{display:flex!important;align-items:center;min-height:44px;font-weight:600;color:var(--brand);cursor:pointer}
 
 /* app chrome */
 .screen{flex:1;overflow-y:auto;position:relative}
@@ -262,16 +270,19 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
       <summary>Demo controls</summary>
       <h1>Non-Scale Victories</h1>
       <p class="demo-intro">Not more tracking. The same data the app already collects, used differently: a win is redefined, logging is paid back, and every number sits next to what’s normal. <strong>Sarah is fictional and all data is illustrative.</strong></p>
+      <div class="try"><b>Try this</b><ol><li>Tap the notification on the phone.</li><li>Switch off both log boxes below. A question appears under the greeting: answer it.</li><li>Press preset <strong>D</strong> to see a real stall, where nothing is dressed up as a win.</li></ol></div>
 
       <fieldset class="seg"><legend>Quick presets</legend><div class="presets" id="presets"></div></fieldset>
       <fieldset class="seg"><legend>Stage of treatment</legend><div class="seg-row" data-k="stage"></div></fieldset>
       <fieldset class="seg"><legend>Scale this week</legend><div class="seg-row" data-k="scale"></div></fieldset>
-      <fieldset class="seg"><legend>Weight overall</legend><div class="seg-row" data-k="range"></div></fieldset>
+      <fieldset class="seg"><legend>Total weight lost so far</legend><div class="seg-row" data-k="range"></div></fieldset>
       <fieldset class="seg"><legend>What she already logs in the app</legend><div class="tg" id="have"></div></fieldset>
+      <details class="more"><summary>More controls and what we’d measure</summary>
       <div class="toggle-row"><span><strong>Nothing new since last visit</strong><small>The greeting falls back to the phase message.</small></span><button class="switch" role="switch" aria-checked="false" aria-label="Nothing new since last visit" data-act="stale"></button></div>
       <fieldset class="seg"><legend>Step in the journey</legend><div class="steps" id="steps"></div></fieldset>
-      <div class="explain" id="explain" aria-live="polite"></div>
       <div class="measure"><h2>What we’d measure</h2><ul id="events"></ul></div>
+      </details>
+      <div class="explain" id="explain" aria-live="polite"></div>
       <button class="link-btn" data-act="reset">Reset demo</button>
       <p class="demo-foot">Expected ranges are illustrative curves, not clinical data.</p>
     </details>
@@ -308,7 +319,7 @@ const STAGES = {
 const CONTROLS = {
   stage: Object.entries(STAGES).map(([k, v]) => [k, v.lbl]),
   scale: [['down', 'Down'], ['flat', 'Flat']],
-  range: [['in', 'In expected range'], ['below', 'Below range']],
+  range: [['in', 'As expected'], ['below', 'Less than expected']],
 };
 // Data the current app already collects. Switch off to see fewer wins (nothing is invented).
 const LOGS = [['appetite', 'Appetite logs'], ['side', 'Side-effect logs'], ['waist', 'Waist'], ['habits', 'Protein and steps']];
@@ -588,10 +599,10 @@ function render(){
   // control panel
   const [t, x, risk] = caption(d);
   $('#explain').innerHTML = `<span class="q ${risk ? 'risk' : ''}">${t}</span><p>${x}</p>${d.stall ? '<p><a href="../check-in/">Open the Pre-emptive Check-In →</a></p>' : ''}<p style="color:var(--muted)">Notification: ${trigger(d)[0]}.${d.reassure ? ' The week 12 trial line in the weight card is illustrative, to be replaced with Juniper’s own data.' : ''}</p>`;
-  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; el.innerHTML = CONTROLS[k].map(([v, l]) => `<label><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''}><span>${l}</span></label>`).join(''); });
+  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; el.innerHTML = CONTROLS[k].map(([v, l]) => { const off = k === 'range' && v === 'below' && state.stage === 'w58'; return `<label ${off ? 'class="off" title="Not offered at week 58"' : ''}><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${l}</span></label>`; }).join(''); });
   $('#have').innerHTML = LOGS.map(([k, l]) => `<button class="tgb" role="switch" aria-checked="${!!state.have[k]}" data-act="have" data-k="${k}">${l}</button>`).join('');
   const cur = Object.entries(PRESETS).find(([, [, p]]) => p.stage === state.stage && p.scale === state.scale && p.range === state.range && LOGS.every(([k]) => !!state.have[k] === p.have.includes(k)));
-  $('#presets').innerHTML = Object.entries(PRESETS).map(([k, [l]]) => `<button class="preset" data-act="preset" data-k="${k}" aria-pressed="${!!cur && cur[0] === k}" title="${l}">${k}</button>`).join('') + `<span class="preset-l">${cur ? cur[1][0] : 'Custom'}</span>`;
+  $('#presets').innerHTML = Object.entries(PRESETS).map(([k, [l]]) => `<button class="preset" data-act="preset" data-k="${k}" aria-pressed="${!!cur && cur[0] === k}" title="${l}">${k}</button>`).join('') + `<span class="preset-l">${cur ? cur[1][0] : t}</span>`;
   $('[data-act="stale"]').setAttribute('aria-checked', state.stale);
   $('#steps').innerHTML = STEPS.map(([k, l], i) => `<button class="step" data-act="step" data-k="${k}" aria-current="${state.step === k ? 'step' : 'false'}">${l}</button>`).join('');
 }
@@ -622,7 +633,7 @@ function goStep(k){
 }
 let opener = null;
 function closeSheet(){ state.sheet = null; state.step = 'home'; render(); const b = opener && document.querySelector(opener); (b || $('#h1')).focus({ preventScroll: true }); }
-document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; dataChanged(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
+document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; if (state.stage === 'w58') state.range = 'in'; dataChanged(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
 document.addEventListener('input', e => { if (e.target.id === 'apl'){ state.apl = +e.target.value; $('#aplv').textContent = APPETITE[state.apl - 1]; } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sheet) closeSheet(); });
 document.addEventListener('click', e => {
