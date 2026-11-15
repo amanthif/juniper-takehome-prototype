@@ -54,7 +54,11 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 
 /* phone */
 .screen{flex:1;overflow-y:auto;position:relative}
-.floatbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:52px 16px 0;z-index:3;pointer-events:none}
+.floatbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:52px 16px 8px;z-index:3;pointer-events:none;transition:background .2s,box-shadow .2s}
+.floatbar .ttl{font-weight:600;font-size:15px;color:var(--brand);opacity:0;transition:opacity .2s}
+.floatbar.solid{background:rgba(250,245,251,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
+.floatbar.solid .ttl{opacity:1}
+.floatbar.solid .fbtn{box-shadow:none;background:transparent}
 .floatbar>*{pointer-events:auto}
 .fbtn{min-width:44px;height:44px;border-radius:99px;border:0;background:rgba(255,255,255,.88);box-shadow:0 2px 10px rgba(31,42,36,.1);display:inline-flex;align-items:center;justify-content:center;padding:0 14px;font-weight:600;font-size:14px;cursor:pointer}
 .fbtn.ic{padding:0;width:44px}
@@ -103,6 +107,11 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 .tile .v{font-family:var(--serif);font-size:24px;color:var(--brand);line-height:1.1;margin-top:auto}
 .tile .d{font-size:11.5px;color:var(--muted);line-height:1.25}
 .tile.new{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
+.tile.warn{background:var(--warn-soft)}
+.tile.warn .v{color:var(--warn-ink)}
+.wcheck{background:var(--warn-soft);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14.5px;color:var(--warn-ink)}
+.wcheck p{margin:0 0 8px}
+.wcheck .opts{margin:0}
 
 /* drivers */
 .drv{padding:12px 0;border-top:1px solid var(--line)}
@@ -205,7 +214,7 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
   .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0;box-shadow:none}
   .app{border-radius:0;height:auto;min-height:100vh;overflow:visible}
   .screen{overflow:visible}
-  .floatbar{padding-top:12px}
+  .floatbar{position:sticky;top:0;padding-top:12px;margin-bottom:-64px}
   .hero{padding-top:72px}
   .lock{position:relative;min-height:100vh}
   .tabbar{position:sticky;bottom:0;z-index:4}
@@ -253,7 +262,7 @@ const STAGES = {
 };
 const band = w => { const k = 1 - Math.exp(-w / 22); return { lo: -10 * k, hi: -22 * k }; };
 
-const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', opened: false, monthIdx: 0, q: {}, qDone: false, useful: null, worth: null, fresh: [], flyNote: null, help: null, helpSent: null });
+const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', opened: false, monthIdx: 0, q: {}, qDone: false, useful: null, worth: null, fresh: [], flyNote: null, help: null, helpSent: null, wPrompt: false, wOk: false });
 let state = initial();
 
 function sc(){
@@ -262,8 +271,21 @@ function sc(){
   return { ...st, ...p, below, stage: state.stage, data: state.data, kg: +(START_KG * -p.pct / 100).toFixed(1),
     dose: DOSES[p.doseIdx], stuck: !!p.stuck, inRange: p.pct <= b.lo && p.pct >= b.hi, band: b,
     // Below range in month 1 is expected (starter dose), so it isn't treated as a stall.
-    stall: below && state.stage !== 'early', month: MONTHS[state.monthIdx % MONTHS.length] };
+    stall: below && state.stage !== 'early', month: MONTHS[state.monthIdx % MONTHS.length], ...answerFlags() };
 }
+// Concern also comes from what she tells us, not only the scale.
+function answerFlags(){
+  const q = state.q, flags = [];
+  if (state.qDone){
+    const wPct = q.weight ? (q.weight - START_KG) / START_KG * 100 : null;
+    if (wPct !== null && wPct > 1) flags.push('gain');
+    if (q.side === 'most') flags.push('side');
+    if (q.appetite === 'same' && state.stage !== 'early') flags.push('appetite');
+  }
+  return { flags, wPct: q.weight ? (q.weight - START_KG) / START_KG * 100 : null };
+}
+// A weight this far from intake is more often a typo than real, so confirm it first.
+const wImplausible = w => w && ((w - START_KG) / START_KG > .03 || (START_KG - w) / START_KG > .2);
 
 /* ===================== Helpers ===================== */
 const $ = s => document.querySelector(s);
@@ -297,6 +319,19 @@ function hero(s){
       ? 'Thanks for telling us. Some of your answers suggest things have slowed. That’s usually fixable, often the dose. Let’s look at it together.'
       : `You’re ${sgn(s.pct)}% since you started, which is below the typical range for month ${s.n}. That’s not a failure. It’s usually something fixable, often the dose. Let’s look at it together.`;
     cta = helpCta();
+  } else if (s.flags.length){
+    cls = 'amber'; cta = helpCta();
+    const f = s.flags[0];
+    if (f === 'gain'){
+      h = 'Your weight has gone up since you started.';
+      p = `You’re ${sgn(s.wPct)}% since intake${s.flags.includes('side') ? ', and you’ve had side effects most days' : ''}. That isn’t what we’d expect on treatment, and it’s worth a proper look. Your care team can see your answers.`;
+    } else if (f === 'side'){
+      h = 'Side effects most days isn’t something to push through.';
+      p = `${s.stage === 'early' ? 'Some side effects are common in month 1, but most days is more than we’d like.' : 'Most days is more than we’d expect at this stage.'} There’s usually a fix, like a slower step-up or simple changes to meals. Your care team can see your answers.`;
+    } else {
+      h = 'Thanks. That tells us something useful.';
+      p = `An unchanged appetite at month ${s.n} is worth a closer look, often the dose. Your care team can see your answers.`;
+    }
   } else if (s.data === 'none'){
     h = q.appetite === 'same' ? 'Thanks. That tells us something useful.' : 'Your appetite has changed. That’s the medicine working.';
     p = q.appetite === 'same' ? `An unchanged appetite at month ${s.n} is worth a closer look. Your care team can see your answers.` : 'A smaller appetite is one of the clearest early signs, often before the scale shows it.';
@@ -314,14 +349,14 @@ function hero(s){
 }
 
 function vsLastMonth(s){
-  const q = state.q, fresh = id => state.fresh.includes(id) ? 'new' : '';
+  const q = state.q, fresh = id => id === 'gain' ? 'warn' : state.fresh.includes(id) ? 'new' : '';
   const t = (k, v, d, id = '') => `<div class="tile ${fresh(id)}"><span class="k">${k}</span><span class="v">${v}</span><span class="d">${d}</span></div>`;
   const doseT = t('Doses on time', '4/4', s.data === 'rich' ? 'Same as last month' : 'From your orders');
   let tiles;
   if (s.data === 'rich') tiles = [t('Weight this month', `${sgn(s.chg)}kg`, s.last === null ? 'Your first month' : `Last month ${sgn(s.last)}kg`), t('Weigh-ins', '4/4', 'Last month 4/4'), doseT];
   else if (s.data === 'light') tiles = [t('Weight this month', `${sgn(s.chg)}kg`, 'From 2 weigh-ins'), t('Weigh-ins', '2/4', 'Weekly shows your real trend'), doseT];
   else {
-    const w = answered() && q.weight ? t('Since intake', `${sgn((q.weight - START_KG) / START_KG * 100)}%`, 'From today’s weigh-in', 'weight') : t('Weeks on treatment', String(s.week), 'From your prescription');
+    const w = answered() && q.weight ? t('Since intake', `${sgn(s.wPct)}%`, s.wPct > 1 ? 'Up since you started' : 'From today’s weigh-in', s.wPct > 1 ? 'gain' : 'weight') : t('Weeks on treatment', String(s.week), 'From your prescription');
     tiles = [doseT, t('Current dose', `${s.dose}mg`, `Step ${s.doseIdx + 1} of 4`), w];
   }
   return `<div class="sec"><div class="sec-h"><h2>This month</h2><span>vs last month</span></div><div class="tiles">${tiles.join('')}</div></div>`;
@@ -431,7 +466,7 @@ function whatsNext(s){
   } else b = tile('3', 'taps', 'to personalise this report', answered() ? 1 : 0);
   return `<div class="sec"><div class="sec-h"><h2>What’s next</h2></div><div class="next">${a}${b}</div>
     <p class="renew">Your next order ships on ${NEXT_ORDER[state.monthIdx + 1]}. You can change or pause it any time in Shop.</p>
-    ${s.stall && !state.helpSent ? `<div class="needhelp"><span>Something not right? Your care team can help.</span><button class="link-btn" data-act="help">Get help</button></div>` : ''}</div>`;
+    ${(s.stall || s.flags.length) && !state.helpSent ? `<div class="needhelp"><span>Something not right? Your care team can help.</span><button class="link-btn" data-act="help">Get help</button></div>` : ''}</div>`;
 }
 
 function checkin(s){
@@ -444,8 +479,13 @@ function checkin(s){
     <div class="qq"><p>Appetite compared with before you started?</p><div class="opts">${opt('appetite', 'much', 'Much smaller')}${opt('appetite', 'bit', 'A bit smaller')}${opt('appetite', 'same', 'About the same')}</div></div>
     <div class="qq"><p>Side effects this month?</p><div class="opts">${opt('side', 'none', 'None')}${opt('side', 'some', 'Some, manageable')}${opt('side', 'most', 'Most days')}</div></div>
     <div class="qq"><p>Energy compared with when you started?</p><div class="opts">${opt('energy', 'better', 'Better')}${opt('energy', 'same', 'Same')}${opt('energy', 'worse', 'Worse')}</div></div>
-    ${s.data === 'none' ? `<div class="qq"><p>Today’s weight? <span class="muted" style="font-weight:400">(optional)</span></p><div class="wt"><label class="sr-only" for="wt">Weight in kg</label><input id="wt" type="number" inputmode="decimal" min="40" max="250" step="0.1" placeholder="kg" value="${q.weight || ''}"><span class="muted small">kg</span></div></div>` : ''}
+    ${s.data === 'none' ? `<div class="qq"><p>Today’s weight? <span class="muted" style="font-weight:400">(optional)</span></p><div class="wt"><label class="sr-only" for="wt">Weight in kg</label><input id="wt" type="number" inputmode="decimal" min="40" max="250" step="0.1" placeholder="kg" value="${q.weight || ''}"><span class="muted small">kg</span></div>${state.wPrompt ? wCheck(q.weight) : ''}</div>` : ''}
     <button class="btn" data-act="qdone" ${ready ? '' : 'disabled'}>Update my report</button></div></div>`;
+}
+function wCheck(w){
+  const d = +(w - START_KG).toFixed(1);
+  return `<div class="wcheck" role="alert"><p><strong>Just checking:</strong> ${w.toFixed(1)}kg is ${Math.abs(d).toFixed(1)}kg ${d > 0 ? 'more' : 'less'} than when you started (${START_KG}kg). Is that right?</p>
+    <div class="opts"><button class="opt" data-act="w-ok">Yes, that’s right</button><button class="opt" data-act="w-fix">Let me fix it</button></div></div>`;
 }
 function payback(s){
   const q = state.q, items = [];
@@ -487,7 +527,9 @@ function seen(s){
   if (s.stuck) L.push([`Your dose hasn’t stepped up from ${s.dose}mg yet`, 'Prescription & orders']);
   if (s.data === 'rich' && s.below) L.push(['Nausea 3 days a week', 'Your side-effect log']);
   if (s.data === 'light' && s.below) L.push(['You mentioned nausea to June', 'June chat, AI-summarised']);
+  if (s.flags.includes('gain')) L.push([`Weight ${sgn(s.wPct)}% since intake (you confirmed ${state.q.weight.toFixed(1)}kg)`, 'This month’s check-in']);
   if (answered() && state.q.side === 'most') L.push(['You told us side effects most days', 'This month’s check-in']);
+  if (s.flags.includes('appetite')) L.push([`Appetite unchanged at month ${s.n}`, 'This month’s check-in']);
   if (s.data !== 'none' && s.below) L.push([`${sgn(s.pct)}% since you started, below the typical range for month ${s.n}`, 'Weigh-ins']);
   if (s.data === 'none' && !answered()) L.push(['We haven’t heard from you in a few weeks', 'App activity']);
   if (state.worth === 'unsure' || state.worth === 'no') L.push(['You told us treatment doesn’t feel worth it right now', 'This report']);
@@ -539,7 +581,7 @@ function lockScreen(s){
     <p class="hint">Tap the notification to open</p></div>`;
 }
 function reportScreen(s){
-  return `<div class="floatbar"><button class="fbtn ic" data-act="lock" aria-label="Back to notification"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><button class="fbtn ic" data-act="todo" aria-label="Share report">${I.share}</button></div>
+  return `<div class="floatbar"><button class="fbtn ic" data-act="lock" aria-label="Back to notification"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><span class="ttl" aria-hidden="true">${s.month} report</span><button class="fbtn ic" data-act="todo" aria-label="Share report">${I.share}</button></div>
     <main class="screen" id="screen">${hero(s)}${vsLastMonth(s)}${chart(s)}${drivers(s)}${changed(s)}${insight(s)}${whatsNext(s)}${checkin(s)}${feedback(s)}
     <p class="fine">Prototype · Sarah is a fictional patient and all data is illustrative.</p></main>
     <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === 'Progress' ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === 'Progress' ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>
@@ -552,6 +594,7 @@ function explain(){
   let q, txt, cls = '';
   if (state.help){ q = 'Get help'; cls = 'risk'; txt = 'Infer first (show what we already see), ask two things, recommend the right human, then say exactly what happens next. Urgent symptoms go straight to 000 or a GP.'; }
   else if (state.flyNote){ q = 'Flywheel'; cls = 'fly'; txt = state.flyNote; }
+  else if (s.flags.length && !s.stall){ q = 'Her answers raise concern'; cls = 'risk'; txt = state.helpSent ? 'Help requested. The headline now shows who has her answers and when they’ll reply.' : 'Concern comes from what she tells us, not just the demo’s progress setting: weight up since intake, side effects most days, or no appetite change after month 1. A weight far from intake is confirmed first, since it’s often a typo.'; }
   else if (s.stall){ q = 'No false reassurance'; cls = 'risk'; txt = state.helpSent ? 'Help requested. The headline now shows who has her report and when they’ll reply, instead of another call to action.' : 'Below range, so the report doesn’t cheer. It says so plainly and offers a get-help flow right here.'; }
   else if (s.data === 'none'){ q = answered() ? 'Every input paid back' : 'Infer before you ask'; txt = answered() ? 'Three taps, and the headline, “What you did” and “What changed” all updated straight away.' : 'No tracking data, but orders and the prescription still give a real report. Benchmarks are labelled as benchmarks. The 30-second check-in fills the gaps.'; }
   else if (s.data === 'light'){ q = 'Scale-down: light data'; txt = 'Core report from 2 weigh-ins and June chats, with transparency lines, plus one ask to unlock more.'; }
@@ -564,6 +607,7 @@ function render(){
   const s = sc(), prev = $('#screen'), keep = prev ? prev.scrollTop : 0, winY = window.scrollY;
   $('#app').innerHTML = state.opened ? reportScreen(s) : lockScreen(s);
   const scr = $('#screen'); if (scr) scr.scrollTop = keep;
+  barState();
   if (matchMedia('(max-width:860px)').matches) window.scrollTo(0, winY);
   explain();
 }
@@ -577,10 +621,16 @@ function nextMonth(){
     state.flyNote = `Sarah answered her 30 seconds last month, so the ${nm} report has more of her in it: ${up === 'light' ? 'side effects, what changed and her trend, from her answers and June chats' : 'weekly trends, wearable data and a personal insight'}.`;
   } else if (did) state.flyNote = `Sarah already has rich data. Her answers keep the ${nm} report accurate.`;
   else state.flyNote = `Sarah skipped the check-in, so the ${nm} report looks the same. Next we’d try a different nudge: ask in a June chat instead, or infer it from her refills.`;
-  state.monthIdx++; state.q = {}; state.qDone = false; state.useful = null; state.worth = null; state.fresh = []; state.opened = false;
+  state.monthIdx++; state.q = {}; state.qDone = false; state.useful = null; state.worth = null; state.fresh = []; state.opened = false; state.wPrompt = false; state.wOk = false;
   syncRadios(); render(); toast(`${nm} report ready`);
 }
 
+function barState(){
+  const bar = document.querySelector('.floatbar'); if (!bar) return;
+  const scr = $('#screen'), mobile = matchMedia('(max-width:860px)').matches;
+  bar.classList.toggle('solid', (mobile ? window.scrollY - $('#app').offsetTop : scr.scrollTop) > 40);
+}
+document.addEventListener('scroll', barState, true);
 let helpOpener = null;
 function focusSheet(){ const sh = document.querySelector('.sheet'); if (sh){ sh.scrollTop = 0; const x = sh.querySelector('.x'); x && x.focus({ preventScroll: true }); } }
 function closeHelp(){
@@ -590,7 +640,7 @@ function closeHelp(){
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.help) closeHelp(); });
 document.addEventListener('change', e => { const r = e.target; if (r.matches('.seg input')){ state[r.name] = r.value; state.flyNote = null; state.help = null; state.helpSent = null; render(); } });
-document.addEventListener('input', e => { if (e.target.id === 'wt'){ const v = parseFloat(e.target.value); state.q.weight = v >= 40 && v <= 250 ? v : null; } });
+document.addEventListener('input', e => { if (e.target.id === 'wt'){ const v = parseFloat(e.target.value); state.q.weight = v >= 40 && v <= 250 ? v : null; state.wOk = false; if (state.wPrompt){ state.wPrompt = false; const c = document.querySelector('.wcheck'); c && c.remove(); } } });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
   const a = el.dataset.act;
@@ -601,12 +651,15 @@ document.addEventListener('click', e => {
   switch (a){
     case 'open': state.opened = true; render(); $('#screen').scrollTop = 0; break;
     case 'lock': state.opened = false; render(); break;
+    case 'w-ok': state.wOk = true; state.wPrompt = false; // falls through to submit
     case 'qdone': {
+      if (wImplausible(state.q.weight) && !state.wOk){ state.wPrompt = true; render(); const c = document.querySelector('.wcheck button'); c && c.focus(); break; }
       state.qDone = true; state.flyNote = null;
       state.fresh = state.q.weight ? ['weight'] : [];
       render(); const scr = $('#screen'); scr.scrollTop = 0; window.scrollTo(0, 0);
       toast('Report updated with your answers'); break;
     }
+    case 'w-fix': { state.wPrompt = false; render(); const i = $('#wt'); i.focus(); i.select(); break; }
     case 'help': helpOpener = el.dataset.act; state.help = { step: 0 }; render(); focusSheet(); break;
     case 'h-next': state.help.step = 1; render(); focusSheet(); break;
     case 'h-send': state.help.choice = el.dataset.v; state.help.step = 2; state.helpSent = el.dataset.v; render(); focusSheet(); toast(`Sent to ${HELP[el.dataset.v].who}`); break;

@@ -131,6 +131,26 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 .opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:500}
 .opt:hover{border-color:var(--accent)}
+.talkrow{display:flex;align-items:center;gap:12px}
+.talk{flex:none;width:60px;height:60px;border-radius:50%;border:0;background:var(--brand);color:#fff;display:grid;place-items:center;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 4px 14px rgba(30,59,44,.3)}
+.talk.sm{width:44px;height:44px;box-shadow:none;background:var(--accent-soft);color:var(--accent)}
+.talkrow .lbl{flex:1;font-size:14.5px;line-height:1.3}
+.talkrow .lbl b{display:block;color:var(--brand)}
+.talkrow .lbl span{color:var(--muted);font-size:13px}
+.orhold{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:var(--muted)}
+.listening{display:flex;align-items:center;gap:14px;min-height:60px}
+.listening .pulse{flex:none;width:60px;height:60px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(126,82,184,.45)}50%{box-shadow:0 0 0 14px rgba(126,82,184,0)}}
+.listening b{display:block;color:var(--brand)}
+.listening span{font-size:13px;color:var(--muted)}
+.msg.me.voice::before{content:"Spoken · ";font-size:12px;opacity:.75}
+.heard{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;align-self:stretch}
+.heard h4{margin:0 0 2px;font-family:var(--serif);font-weight:400;font-size:20px;color:var(--brand)}
+.heard .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.hchip{border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--brand);border-radius:10px;min-height:44px;padding:4px 12px;font-size:14px;cursor:pointer;text-align:left;line-height:1.25}
+.hchip small{display:block;color:var(--muted);font-size:11.5px}
+.hchip.win{border-color:var(--brand);background:var(--brand-soft)}
+.hchip[disabled]{cursor:default;opacity:1}
 .guard{font-size:12px;color:var(--muted);text-align:center;margin:8px 0 0}
 
 /* plan + closed */
@@ -155,7 +175,7 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media (prefers-reduced-motion:reduce){.notif{animation:none}.typing i{animation:none}.screen{scroll-behavior:auto}.signals li{transition:none}}
+@media (prefers-reduced-motion:reduce){.listening .pulse{animation:none}.notif{animation:none}.typing i{animation:none}.screen{scroll-behavior:auto}.signals li{transition:none}}
 
 @media (max-width:900px){
   .layout{display:block;padding:0}
@@ -178,13 +198,17 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
     <details id="sideDetails" open>
       <summary>What we see behind the scenes</summary>
       <h1>We know before she does</h1>
-      <p class="intro">Sarah feels fine. Her data says otherwise. Press play to watch small signals build up week by week, and see the check-in reach her before she feels it isn’t working. <strong>All data is illustrative.</strong></p>
+      <p class="intro">Press play to watch small signals build up week by week, and see June reach out before Sarah feels it isn’t working. In the chat she can tap to answer, or hold the button and just say it. <strong>All data is illustrative.</strong></p>
 
       <fieldset class="seg"><legend>Scenario</legend><div class="seg-row">
-        <label><input type="radio" name="scenario" value="dose" checked><span>Stuck on starter dose</span></label>
-        <label><input type="radio" name="scenario" value="drift"><span>Quietly drifting</span></label>
+        <label><input type="radio" name="scenario" value="dose" checked><span>Stalled, feels fine</span></label>
+        <label><input type="radio" name="scenario" value="drift"><span>Gone quiet</span></label>
         <label><input type="radio" name="scenario" value="noresp"><span>Doing it all, not responding</span></label></div></fieldset>
 
+      <fieldset class="seg" id="sayPick" hidden><legend>When she holds to talk, Sarah says</legend><div class="seg-row">
+        <label><input type="radio" name="say" value="busy" checked><span>Fine, just busy</span></label>
+        <label><input type="radio" name="say" value="scale"><span>Avoiding the scale</span></label>
+        <label><input type="radio" name="say" value="side"><span>Struggling</span></label></div></fieldset>
       <div class="panel" id="timeline"></div>
       <div class="panel case" id="case"></div>
       <button class="link-btn" data-act="reset">Reset demo</button>
@@ -200,19 +224,21 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 const band = w => { const k = 1 - Math.exp(-w / 22); return { lo: -10 * k, hi: -22 * k }; };
 const SC = {
   dose: {
-    persona: 'Ready but stuck', weeks: 16, flag: 8, churn: 13, churnTxt: 'says “it’s not working” and cancels at renewal',
-    lastWeigh: 7, dose: 2.5, nextDose: 5,
+    persona: 'Stalled but feels fine', weeks: 16, flag: 8, churn: 13, churnTxt: 'says “it’s not working” and cancels at renewal',
+    lastWeigh: 8, dose: 2.5, nextDose: 5,
     pct: w => w <= 4 ? -0.45 * w : -1.8 - 0.12 * (w - 4),
     recover: w => -2.3 - 0.55 * (w - 8),
     signals: [
       { w: 4, t: 'Step-up to 5mg didn’t happen', s: 'Prescription & orders', k: 'warn' },
-      { w: 5, t: 'Mentioned nausea to June', s: 'June chat, AI-summarised', k: 'warn' },
-      { w: 6, t: 'Refill 3 days late', s: 'Orders', k: 'warn' },
-      { w: 7, t: 'Weight drifting below typical range', s: 'Weigh-ins', k: 'warn' },
-      { w: 8, t: 'Weigh-ins stopped', s: 'App activity', k: 'warn' },
+      { w: 5, t: 'Every dose and weigh-in logged', s: 'App activity', k: 'ok' },
+      { w: 6, t: 'Weight below typical range', s: 'Weigh-ins', k: 'warn' },
+      { w: 7, t: 'Told June “feeling good, no complaints”', s: 'June chat, AI-summarised', k: 'ok' },
+      { w: 8, t: 'Below range for 3 weeks, still on the starter dose', s: 'Weigh-ins & prescription', k: 'warn' },
     ],
-    notif: ['Your step-up hasn’t happened yet', 'That’s often where results pick up. Can we sort it out together? 2 min'],
-    opener: ['Hi Sarah, it’s June from your care team.', 'We spotted something early: your step up to 5mg hasn’t happened yet. That’s usually where results really pick up, so we wanted to check in before it starts to feel stuck.'],
+    notif: ['A quick check-in on your progress', 'You’ve been really consistent. Can I ask a few quick things? 2 min'],
+    opener: ['Hi Sarah, it’s June from your care team.', 'You’ve been really consistent: every dose and every weigh-in. Your results are a bit behind where we’d expect at week 8, and there’s usually a simple reason. Can I ask a few quick things?'],
+    say: { def: { t: 'Honestly the nausea put me off stepping up. It’s better now, only some days. I thought I was doing fine.', answers: { why: 'nausea', nausea: 'some', feel: 'fine' },
+      reply: 'Thank you. That’s really clear, and it’s exactly why we reached out now. This is much easier to fix before it feels stuck.' } },
     qs: [
       { k: 'why', q: 'What got in the way of stepping up?', o: [['nausea', 'The nausea put me off'], ['unsure', 'Wasn’t sure I should'], ['forgot', 'Forgot, or ran out']],
         a: { nausea: 'That makes total sense. Nausea is the most common reason people stay on the starter dose.', unsure: 'Good question to have. That’s exactly what your prescriber is for.', forgot: 'That happens. Easy to fix.' } },
@@ -227,13 +253,13 @@ const SC = {
       [a.nausea === 'rare' ? 'Step up when your prescriber says go' : 'A gentler plan for nausea', a.nausea === 'rare' ? 'Your next dose could be 5mg.' : 'Smaller meals, slower eating, and options to ease into 5mg.'],
       ['June checks in again in 2 weeks', 'To make sure the step-up is going smoothly.'],
     ],
-    caseFlags: ['On 2.5mg for 8 weeks. Step-up due at week 4.', 'Nausea mentioned in chat (week 5)', 'Weight below illustrative range at week 7'],
+    caseFlags: ['On 2.5mg for 8 weeks. Step-up due at week 4.', 'Fully adherent: doses and weigh-ins logged', 'Weight below illustrative range since week 6', 'Reports feeling fine'],
     sugg: 'Review titration: consider stepping up to 5mg with a nausea-management plan.',
     reply: { from: 'Dr Lee', role: 'Prescriber', av: 'L', text: 'Hi Sarah, thanks for the check-in. Let’s step you up to 5mg from your next dose. If nausea flares, try smaller meals and avoid rich food on dose day, and message us. We can adjust.' },
     tracker: [['Next dose', '5mg', true], ['Next check-in', 'In 2 weeks', false]],
   },
   drift: {
-    persona: 'Silent drifter', weeks: 16, flag: 9, churn: 12, churnTxt: 'quietly lapses at renewal, with no reason given',
+    persona: 'Gone quiet', quiet: true, weeks: 16, flag: 9, churn: 12, churnTxt: 'quietly lapses at renewal, with no reason given',
     lastWeigh: 5, dose: 5, nextDose: 5,
     pct: w => -0.62 * w,
     recover: w => -3.1 - 0.5 * (w - 9),
@@ -244,8 +270,16 @@ const SC = {
       { w: 8, t: 'No dose logged for 2 weeks', s: 'Treatment tracker', k: 'warn' },
       { w: 9, t: 'Refill 5 days late', s: 'Orders', k: 'warn' },
     ],
-    notif: ['Just checking in, no judgement', 'We haven’t seen you in a little while. Everything okay? 2 min'],
-    opener: ['Hi Sarah, it’s June. No judgement, just checking in.', 'We haven’t seen a dose logged in 2 weeks and your last refill came a bit late. Life gets busy! We’d rather ask now than have you drift off without support.'],
+    notif: ['Hi Sarah, how’s it going?', 'No need to log anything. Just checking in.'],
+    opener: ['Hi Sarah, it’s June.', 'I haven’t heard from you in a few weeks. No need to log anything. How’s it going?'],
+    say: {
+      busy: { t: 'I’m fine, just flat out with work. I’m still taking it every week, I just don’t log it. My jeans are looser, actually.', answers: { why: 'busy', doses: 'yes', help: 'remind' }, extra: [['win', 'New win', 'Clothes fitting looser']],
+        reply: 'That’s great to hear, and looser jeans is a real sign of progress. I’ve added it to your wins. No need to log every dose; your refills tell us enough.' },
+      scale: { t: 'Honestly I stopped weighing in because it wasn’t moving and it was getting me down. I’m still taking my doses.', answers: { why: 'doubt', doses: 'yes', help: 'coach' }, extra: [['scale', 'Noted', 'Avoiding the scale']],
+        reply: 'Thank you for telling me. Lots of people step off the scale when it slows down, and you don’t need to weigh in for us to help. A slow stretch at 5mg is common.' },
+      side: { t: 'I’ve felt sick most days, so I skipped the last two. I didn’t know who to tell.', answers: { why: 'side', doses: 'some', help: 'coach' }, extra: [['side', 'Noted', 'Nausea most days']],
+        reply: 'I’m sorry, that sounds rough, and I’m glad you told me. You don’t have to push through this alone. Two missed doses is very recoverable.' },
+    },
     qs: [
       { k: 'why', q: 'What’s been going on?', o: [['busy', 'Life got busy'], ['side', 'Side effects'], ['cost', 'Cost is tight'], ['doubt', 'Not sure it’s working']],
         a: { busy: 'Totally normal. Let’s make it easier to fit in.', side: 'Thanks for telling me. Side effects are fixable, and you don’t have to push through alone.', cost: 'Thanks for being upfront. Our support team can walk you through your options.', doubt: 'That’s a really common feeling at this point. Let’s look at it properly.' } },
@@ -260,11 +294,13 @@ const SC = {
       if (a.doses === 'stopped' || a.why === 'side') s.push(['A prescriber reviews today', 'They’ll tell you the safest way to continue. They already have your answers.']);
       else s.push(['Priya, your coach, messages you today', 'A 10-minute chat to make treatment fit your week.']);
       if (a.why === 'cost') s.push(['Support team shares your plan options', 'No pressure. Just so you know what’s possible.']);
+      if (a.x_win) s.unshift(['Added to your wins: clothes fitting looser', 'It’s on your home screen now.']);
+      if (a.x_scale){ s.unshift(['Weigh-in reminders paused for 2 weeks', 'Weigh in when you feel like it. Nothing is lost.']); s.push(['Here’s what to expect at week 9', 'Your coach will show you where most people are at this point, and what usually changes after the next dose step.']); }
       s.push([a.help === 'remind' ? 'Dose reminder set: Sundays, 7pm' : 'A gentle reminder on dose day', 'You can change it any time.']);
       s.push(['June checks in again in 2 weeks', 'Just to see how it’s going.']);
       return s;
     },
-    caseFlags: ['Engagement down from week 5 (opens, weigh-ins, messages)', 'No dose logged for 2 weeks', 'Refill 5 days late'],
+    caseFlags: ['Quiet since week 5 (opens, weigh-ins, messages)', 'No dose logged for 2 weeks', 'Refill 5 days late'],
     sugg: 'Re-engage via coach; prescriber review if doses have stopped or side effects are reported.',
     reply: { from: 'Priya', role: 'Coach', av: 'P', text: 'Hey Sarah! So glad you replied. I’ve set your dose reminder for Sunday at 7pm and pencilled in a 10-minute chat on Thursday. Small steps, we’ve got this.' },
     tracker: [['Dose reminder', 'Sun, 7pm', true], ['Coach chat', 'Thursday', true]],
@@ -283,6 +319,8 @@ const SC = {
       { w: 14, t: 'Asked June “is this normal?”', s: 'June chat, AI-summarised', k: 'warn' },
     ],
     notif: ['You’ve done everything right', 'Your results haven’t matched your effort. Let’s look at why. 2 min'],
+    say: { def: { t: 'My appetite’s about the same as before. No new medications. I’m a bit stuck, to be honest.', answers: { appetite: 'same', meds: 'no', feel: 'stuck' },
+      reply: 'Thank you, that’s really useful for your prescriber. Feeling stuck is completely understandable after this much effort.' } },
     opener: ['Hi Sarah, it’s June.', 'You’ve done everything right: every dose and every step-up, on schedule. But your weight hasn’t moved the way we’d expect at your dose. You shouldn’t have to wait and wonder, so we’d like a prescriber to take a proper look.'],
     qs: [
       { k: 'appetite', q: 'How’s your appetite compared with before you started?', o: [['same', 'About the same'], ['bit', 'A bit smaller'], ['much', 'Much smaller']],
@@ -306,7 +344,7 @@ const SC = {
 };
 
 /* ===================== State ===================== */
-const initial = (scenario = 'dose') => ({ scenario, week: 1, stage: 'today', playing: false, chat: null });
+const initial = (scenario = 'dose', say = 'busy') => ({ scenario, say, week: 1, stage: 'today', playing: false, chat: null });
 let state = initial();
 const S = () => SC[state.scenario];
 
@@ -321,6 +359,7 @@ const I = {
   scale: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9.5a4 4 0 016 0L12 12" stroke-linecap="round"/></svg>',
   leaf: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/></svg>',
   check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  mic: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM6 11a6 6 0 0012 0M12 17v4"/></svg>',
   back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
 };
 
@@ -378,7 +417,7 @@ function renderCase(){
   const tag = st === 'closed' ? '<span class="tag ok">Actioned</span>' : c && c.sent ? '<span class="tag fire">In review queue</span>' : '<span class="tag">Drafting</span>';
   const ans = s.qs.map(q => `<tr><td>${q.q.replace(/\?.*$/, '?')}</td><td>${a[q.k] ? esc(q.o.find(o => o[0] === a[q.k])[1]) : '<span class="muted">Waiting…</span>'}</td></tr>`).join('');
   $('#case').innerHTML = `<h2>${route === 'coach' ? 'Coach case' : 'Prescriber case'} ${tag}</h2>
-    <table><tr><td>Patient</td><td>Sarah M. · week ${s.flag} · ${s.dose}mg</td></tr><tr><td>Why flagged</td><td>${s.caseFlags.map(esc).join('<br>')}</td></tr>${ans}</table>
+    <table><tr><td>Patient</td><td>Sarah M. · week ${s.flag} · ${s.dose}mg</td></tr><tr><td>Why flagged</td><td>${s.caseFlags.map(esc).join('<br>')}</td></tr>${c && c.said ? `<tr><td>In her words</td><td>“${esc(c.said)}”</td></tr>` : ''}${ans}</table>
     <div class="sugg"><b>For consideration</b>${esc(s.sugg)}</div>
     <p class="small muted" style="margin:8px 0 0;font-size:12px">Drafted by June from records and answers. Prompts, not orders. Clinical decisions rest with the prescriber.</p>`;
 }
@@ -422,44 +461,80 @@ function lockScreen(){
     <p class="hint">Tap the notification to open</p></div>`;
 }
 
-function newChat(){ return { log: S().opener.map(t => ({ who: 'june', t })), step: -1, answers: {}, opts: [['go', 'Okay, let’s chat'], ['later', 'Not right now']], typing: false, done: false, sent: false }; }
+function newChat(){ return { log: S().opener.map(t => ({ who: 'june', t })), step: -1, answers: {}, opts: [], typing: false, listening: false, heard: null, said: null, done: false, sent: false }; }
+const script = () => { const s = S(); return s.say[state.say] || s.say.def; };
+const talkBtn = small => `<button class="talk ${small ? 'sm' : ''}" data-talk aria-label="Tap to answer with buttons. Hold to talk to June.">${I.mic}</button>`;
+function replyBar(c){
+  const guard = '<p class="guard">June is an AI assistant. She never diagnoses. Clinical decisions go to a human.</p>';
+  if (c.listening) return `<div class="reply-bar"><div class="listening" role="status"><span class="pulse">${I.mic}</span><span><b>Listening</b><span>Let go to send</span></span></div></div>`;
+  if (c.done) return `<div class="reply-bar"><button class="btn" style="margin:0" data-act="to-plan">See the plan</button></div>`;
+  if (c.typing || c.heard) return `<div class="reply-bar">${guard.replace('margin:8px 0 0', '')}</div>`;
+  // Before the first answer: one button. Tap for quick answers, hold to say it.
+  if (c.step < 0) return `<div class="reply-bar"><div class="talkrow">${talkBtn()}<span class="lbl"><b>Tap to answer</b><span>or hold to talk to June</span></span>${c.step === -1 ? '<button class="opt" data-act="chat" data-v="later">Not now</button>' : ''}</div>${guard}</div>`;
+  return `<div class="reply-bar"><div class="opts" role="group" aria-label="Reply options">${c.opts.map(o => `<button class="opt" data-act="chat" data-v="${o[0]}">${esc(o[1])}</button>`).join('')}</div>
+    <div class="orhold">${talkBtn(true)}<span>or hold to say the rest</span></div>${guard}</div>`;
+}
 function chatScreen(){
   const c = state.chat; let out = '', last = null;
   for (const m of c.log){
-    if (m.who === 'june' && last !== 'june') out += `<div class="june-tag"><span class="june-av" aria-hidden="true">J</span>June</div>`;
+    if ((m.who === 'june' || m.who === 'heard') && last !== 'june') out += `<div class="june-tag"><span class="june-av" aria-hidden="true">J</span>June</div>`;
     if (m.who === 'noticed') out += noticedCard();
-    else out += `<div class="msg ${m.who}"><span class="sr-only">${m.who === 'june' ? 'June: ' : 'You: '}</span>${esc(m.t)}</div>`;
-    last = m.who;
+    else if (m.who === 'heard') out += heardCard(m.h);
+    else out += `<div class="msg ${m.who} ${m.voice ? 'voice' : ''}"><span class="sr-only">${m.who === 'june' ? 'June: ' : 'You: '}</span>${esc(m.t)}</div>`;
+    last = m.who === 'heard' ? 'june' : m.who;
   }
   if (c.typing) out += `<div class="msg june typing" aria-label="June is typing"><i></i><i></i><i></i></div>`;
-  const bar = c.opts.length
-    ? `<div class="reply-bar"><div class="opts" role="group" aria-label="Reply options">${c.opts.map(o => `<button class="opt" data-act="chat" data-v="${o[0]}" ${c.typing ? 'disabled' : ''}>${esc(o[1])}</button>`).join('')}</div><p class="guard">June is an AI assistant. She never diagnoses. Clinical decisions go to a human.</p></div>`
-    : c.done ? `<div class="reply-bar"><button class="btn" style="margin:0" data-act="to-plan">See the plan</button></div>` : `<div class="reply-bar"><p class="guard" style="margin:0">June is an AI assistant. She never diagnoses.</p></div>`;
   return `<header class="row" style="padding:52px 12px 6px;gap:6px"><button class="fbtn" style="box-shadow:none;background:none;padding:0;width:44px" data-act="back-lock" aria-label="Back">${I.back}</button><div><div style="font-weight:600">June</div><div class="small muted" style="font-size:12px">Care team assistant</div></div></header>
-    <main class="screen" id="screen"><div class="chat" aria-live="polite">${out}</div></main>${bar}`;
+    <main class="screen" id="screen"><div class="chat" aria-live="polite">${out}</div></main>${replyBar(c)}`;
+}
+// What June picked up from what Sarah said. She can remove anything that's wrong before it's saved.
+function heardCard(h){
+  const c = state.chat, s = S(), live = c.heard === h;
+  const chips = h.keys.map(k => { const q = s.qs.find(x => x.k === k); return `<button class="hchip" ${live ? `data-act="unhear" data-k="${k}" aria-label="Remove: ${esc(q.o.find(o => o[0] === h.answers[k])[1])}"` : 'disabled'}><small>${esc(q.q.replace(/\?.*$/, '?'))}</small>${esc(q.o.find(o => o[0] === h.answers[k])[1])}${live ? ' ×' : ''}</button>`; })
+    .concat(h.extra.map(([id, tag, t]) => `<button class="hchip ${id === 'win' ? 'win' : ''}" ${live ? `data-act="unhear-x" data-k="${id}" aria-label="Remove: ${esc(t)}"` : 'disabled'}><small>${esc(tag)}</small>${esc(t)}${live ? ' ×' : ''}</button>`));
+  return `<div class="heard"><h4>Here’s what I heard</h4><p class="small muted" style="margin:0">${live ? 'Tap anything I got wrong to remove it.' : 'Saved, so you won’t need to repeat it.'}</p>
+    <div class="chips">${chips.join('') || '<span class="small muted">Nothing kept.</span>'}</div>
+    ${live ? `<button class="btn" style="margin:12px 0 0" data-act="heard-ok">That’s right</button>` : ''}</div>`;
+}
+const pause = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 150 : 700;
+// Ask the next unanswered question, or finish.
+function nextQuestion(){
+  const c = state.chat, s = S();
+  while (c.step < s.qs.length && c.answers[s.qs[c.step].k] !== undefined) c.step++;
+  if (c.step < s.qs.length){ const q = s.qs[c.step]; c.log.push({ who: 'june', t: q.q }); c.opts = q.o; }
+  else { c.opts = []; c.done = true; c.log.push({ who: 'june', t: 'Thank you, Sarah. That’s everything I need. Here’s what happens next.' }); }
+}
+function chatAnswer(v){
+  const c = state.chat, s = S(); if (c.typing || c.heard) return;
+  if (v === 'go'){ c.typing = true; render(); setTimeout(() => { c.typing = false; if (!s.quiet) c.log.push({ who: 'noticed' }); c.step = 0; nextQuestion(); render(); }, pause()); return; }
+  const label = v === 'later' ? 'Not right now' : (c.opts.find(o => o[0] === v) || [, v])[1];
+  c.log.push({ who: 'me', t: label }); c.opts = []; c.typing = true; render();
+  setTimeout(() => {
+    c.typing = false;
+    if (v === 'later'){ c.log.push({ who: 'june', t: 'No problem at all. I’ll check back tomorrow, or come back here whenever suits you.' }); c.step = -2; render(); return; }
+    const q = s.qs[c.step]; c.answers[q.k] = v; c.log.push({ who: 'june', t: q.a[v] }); c.step++;
+    nextQuestion(); render();
+  }, pause());
+}
+// Hold to talk: one sentence in her own words answers everything still open (scripted, not a live model).
+function startTalk(){ const c = state.chat; if (!c || c.typing || c.heard || c.done || c.listening) return; c.listening = true; render(); }
+function endTalk(){
+  const c = state.chat, s = S(); if (!c || !c.listening) return;
+  const sc = script(), keys = s.qs.map(q => q.k).filter(k => c.answers[k] === undefined && sc.answers[k] !== undefined);
+  c.listening = false; c.said = sc.t; c.opts = []; c.log.push({ who: 'me', t: sc.t, voice: true }); c.typing = true; render();
+  setTimeout(() => { c.typing = false; c.heard = { keys, answers: sc.answers, extra: (c.heardOnce ? [] : sc.extra || []).slice(), reply: sc.reply }; c.heardOnce = true; c.log.push({ who: 'heard', h: c.heard }); render(); }, pause() + 300);
+}
+function heardOk(){
+  const c = state.chat, h = c.heard; if (!h) return;
+  h.keys.forEach(k => c.answers[k] = h.answers[k]); h.extra.forEach(([id]) => c.answers['x_' + id] = true);
+  c.heard = null; c.typing = true; render();
+  setTimeout(() => { c.typing = false; c.log.push({ who: 'june', t: h.reply }); if (c.step < 0) c.step = 0; nextQuestion(); render(); }, pause());
 }
 function noticedCard(){
   const s = S(), sig = s.signals.filter(x => x.w <= s.flag);
   return `<div class="noticed"><h4>What we noticed</h4><p class="small muted" style="margin:0">Small things that add up. Here’s exactly what we looked at.</p>
     <ul>${sig.map(x => `<li><span class="d ${x.k === 'ok' ? 'ok' : ''}"></span><span>${esc(x.t)}<small>Week ${x.w} · ${esc(x.s)}</small></span></li>`).join('')}</ul></div>`;
 }
-function chatAnswer(v){
-  const c = state.chat, s = S(); if (c.typing) return;
-  const label = (c.opts.find(o => o[0] === v) || [, v])[1];
-  c.log.push({ who: 'me', t: label }); c.opts = []; c.typing = true; render();
-  setTimeout(() => {
-    c.typing = false;
-    if (c.step === -1){
-      if (v === 'later'){ c.log.push({ who: 'june', t: 'No problem at all. I’ll check back tomorrow, or tap here whenever suits you.' }); c.opts = [['go', 'Actually, let’s do it now']]; c.step = -2; render(); return; }
-      c.log.push({ who: 'noticed' }); c.step = 0;
-    } else if (c.step === -2){ c.log.push({ who: 'noticed' }); c.step = 0; }
-    else { const q = s.qs[c.step]; c.answers[q.k] = v; c.log.push({ who: 'june', t: q.a[v] }); c.step++; }
-    if (c.step < s.qs.length){ const q = s.qs[c.step]; c.log.push({ who: 'june', t: q.q }); c.opts = q.o; }
-    else { c.done = true; c.log.push({ who: 'june', t: 'Thank you, Sarah. That’s everything I need. Here’s what happens next.' }); }
-    render();
-  }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 150 : 700);
-}
-
 function planScreen(){
   const s = S(), a = state.chat.answers, route = s.route(a), sent = state.chat.sent;
   const who = route === 'prescriber' ? 'your prescriber' : 'your coach';
@@ -491,6 +566,7 @@ function render(){
   const scr = $('#screen');
   if (st === 'chat' && scr){ if (matchMedia('(max-width:900px)').matches) window.scrollTo(0, document.body.scrollHeight); else scr.scrollTop = scr.scrollHeight; }
   renderTimeline(); renderCase();
+  $('#sayPick').hidden = !S().quiet;
 }
 function setWeek(w){
   const s = S(); state.week = Math.max(1, Math.min(s.flag, w));
@@ -503,7 +579,7 @@ function stopPlay(){ clearInterval(timer); timer = null; state.playing = false; 
 function play(){
   const s = S();
   if (state.playing){ stopPlay(); render(); return; }
-  if (state.week >= s.flag || state.stage !== 'today'){ state = initial(state.scenario); }
+  if (state.week >= s.flag || state.stage !== 'today'){ state = initial(state.scenario, state.say); }
   state.playing = true; render();
   timer = setInterval(() => {
     if (state.week >= s.flag){ stopPlay(); render(); toast('Check-in sent to Sarah'); return; }
@@ -514,7 +590,8 @@ function play(){
 
 document.addEventListener('input', e => { if (e.target.id === 'wk'){ stopPlay(); setWeek(+e.target.value); } });
 document.addEventListener('change', e => {
-  if (e.target.name === 'scenario'){ stopPlay(); state = initial(e.target.value); render(); }
+  if (e.target.name === 'scenario'){ stopPlay(); state = initial(e.target.value, state.say); render(); }
+  if (e.target.name === 'say'){ state.say = e.target.value; if (state.chat){ state.chat = newChat(); if (state.stage !== 'chat' && state.stage !== 'lock') state.stage = 'lock'; } render(); }
 });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
@@ -525,14 +602,33 @@ document.addEventListener('click', e => {
     case 'back-lock': state.stage = 'lock'; render(); break;
     case 'back-chat': state.stage = 'chat'; render(); break;
     case 'chat': chatAnswer(v); break;
+    case 'unhear': state.chat.heard.keys = state.chat.heard.keys.filter(k => k !== el.dataset.k); render(); break;
+    case 'unhear-x': state.chat.heard.extra = state.chat.heard.extra.filter(x => x[0] !== el.dataset.k); render(); break;
+    case 'heard-ok': heardOk(); break;
     case 'to-plan': state.stage = 'plan'; render(); $('#screen').scrollTop = 0; break;
     case 'send': state.chat.sent = true; render(); toast('Sent. They’ll see everything.'); break;
     case 'skip': state.stage = 'closed'; render(); $('#screen').scrollTop = 0; break;
-    case 'replay': stopPlay(); state = initial(state.scenario); render(); break;
-    case 'reset': stopPlay(); state = initial(); document.querySelector('input[name=scenario][value=dose]').checked = true; render(); toast('Demo reset'); break;
+    case 'replay': stopPlay(); state = initial(state.scenario, state.say); render(); break;
+    case 'reset': stopPlay(); state = initial(); document.querySelector('input[name=scenario][value=dose]').checked = true; document.querySelector('input[name=say][value=busy]').checked = true; render(); toast('Demo reset'); break;
     case 'todo': toast('Not part of this prototype'); break;
   }
 });
+/* Tap vs hold on the talk button. Tap = answer with buttons. Hold (or hold Space/Enter) = talk to June. */
+const HOLD_MS = 350; let holdT = null, held = false;
+function pressStart(){ held = false; clearTimeout(holdT); holdT = setTimeout(() => { held = true; startTalk(); }, HOLD_MS); }
+function pressEnd(){
+  const pending = holdT !== null; clearTimeout(holdT); holdT = null;
+  if (held){ held = false; endTalk(); return; }
+  if (!pending) return;
+  const c = state.chat; if (!c) return;
+  if (c.step < 0) chatAnswer('go'); else toast('Tap an answer above, or hold to talk');
+}
+document.addEventListener('pointerdown', e => { if (e.target.closest('[data-talk]')){ e.preventDefault(); pressStart(); } });
+document.addEventListener('pointerup', () => { if (holdT !== null || held) pressEnd(); });
+document.addEventListener('pointercancel', () => { clearTimeout(holdT); holdT = null; if (held){ held = false; endTalk(); } });
+document.addEventListener('contextmenu', e => { if (e.target.closest('[data-talk]')) e.preventDefault(); });
+document.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat && e.target.closest && e.target.closest('[data-talk]')){ e.preventDefault(); pressStart(); } });
+document.addEventListener('keyup', e => { if ((e.key === ' ' || e.key === 'Enter') && (holdT !== null || held)){ e.preventDefault(); pressEnd(); } });
 render();
 </script>
 </body>

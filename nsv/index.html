@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Non-Scale Victories · Prototype</title>
-<meta name="description" content="Working prototype: a Progress tab that redefines a 'win' beyond kilos, for a GLP-1 weight-loss program. Illustrative data only.">
+<meta name="description" content="Working prototype: a home screen that greets the user with credible progress beyond the scale, next to what's normal for each stage of GLP-1 treatment. Illustrative data only.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --page:#F1ECF2; --surface:#FFFFFF; --surface-2:#FAF5FB; --ink:#1F2A24; --muted:#56605A; --line:#E8E1EA;
-  --brand:#1E3B2C; --brand-soft:#E6EEE8; --accent:#7E52B8; --accent-soft:#EFE6F8; --lilac:#CFC3F5;
+  --brand:#1E3B2C; --brand-soft:#E6EEE8; --accent:#7E52B8; --accent-soft:#EFE6F8; --band:#DCD2F2;
   --warn-ink:#7A4E00; --warn-soft:#FFF3D6;
-  --radius:22px; --shadow:0 1px 2px rgba(31,42,36,.05),0 6px 20px rgba(31,42,36,.06);
+  --radius:20px; --shadow:0 1px 2px rgba(31,42,36,.05),0 6px 20px rgba(31,42,36,.06);
   --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
@@ -21,7 +21,6 @@ html,body{margin:0}
 body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 
 /* layout */
 .layout{display:grid;grid-template-columns:minmax(280px,360px) auto;gap:48px;justify-content:center;align-items:start;padding:40px 24px}
@@ -29,162 +28,216 @@ button{font:inherit;color:inherit}
 .phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px;box-shadow:0 30px 60px rgba(31,42,36,.25)}
 .app{position:relative;height:100%;background:var(--surface-2);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
 
-/* demo panel */
+/* control panel */
 .demo{font-size:14px}
 .demo h1{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.15;margin:0 0 6px}
-.demo-intro{color:var(--muted);margin:0 0 20px}
+.demo-intro{color:var(--muted);margin:0 0 18px}
 .demo summary{display:none}
-fieldset.seg{border:0;padding:0;margin:0 0 14px}
+fieldset.seg{border:0;padding:0;margin:0 0 12px}
 fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0}
-.seg-row{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
-.seg-row label{flex:1;position:relative}
-.seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
-.seg-row span{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer}
-.seg-row input:checked+span{background:var(--brand);color:#fff}
-.seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
-.explain{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:18px 0 12px}
-.explain .q{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-bottom:6px}
-.explain .q.risk{background:var(--warn-soft);color:var(--warn-ink)}
-.explain p{margin:4px 0}
-.explain .small{color:var(--muted);font-size:13px}
-.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.vs div{border-radius:10px;padding:10px;font-size:12.5px;line-height:1.35}
-.vs .before{background:var(--surface-2)}
-.vs .after{background:var(--accent-soft)}
-.vs b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;color:var(--muted)}
-.link-btn{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
-.demo-foot{color:var(--muted);font-size:12px;margin-top:12px}
-
-/* app chrome */
-.screen{flex:1;overflow-y:auto;scroll-behavior:smooth;position:relative}
-.floatbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:52px 16px 0;z-index:3;pointer-events:none}
-.floatbar>*{pointer-events:auto}
-.fbtn{min-width:44px;height:44px;border-radius:99px;border:0;background:rgba(255,255,255,.85);box-shadow:0 2px 10px rgba(31,42,36,.1);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;font-weight:600;font-size:14px;cursor:pointer}
-.fbtn.av{padding:0;width:44px;color:var(--accent)}
-.tabbar{flex:none;display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px 22px}
-.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);min-height:48px;cursor:pointer;padding-top:4px}
-.tab[aria-current="page"]{color:var(--brand);font-weight:600}
-
-/* hero */
-.hero{position:relative;background:linear-gradient(180deg,#C9BCF4 0%,#E4DCFA 48%,var(--surface-2) 100%);padding:112px 22px 26px;text-align:center;overflow:hidden}
-.hero.stall{background:linear-gradient(180deg,#F3DFB5 0%,#FBEFD6 50%,var(--surface-2) 100%)}
-.hero .arc{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:520px;height:520px;border-radius:50%;border:18px solid rgba(255,255,255,.35);pointer-events:none}
-.hero .lbl{position:relative;font-weight:600;font-size:15px;color:var(--brand);margin:0 0 10px}
-.hero h1{position:relative;font-family:var(--serif);font-weight:400;color:var(--brand);font-size:36px;line-height:1.08;margin:0 0 14px;letter-spacing:-.015em}
-.hero p.sub{position:relative;margin:0 auto 20px;max-width:310px;color:#3E4A44;font-size:15.5px}
-.hero .cta{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 22px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:600;cursor:pointer}
-.hero .cta2{position:relative;display:block;margin:8px auto 0}
-.hero-nav{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px}
-.hero-nav .dotbtn{width:28px;height:28px;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
-.hero-nav .dotbtn i{width:8px;height:8px;border-radius:50%;background:rgba(30,59,44,.25)}
-.hero-nav .dotbtn[aria-current="true"] i{background:var(--brand);width:20px;border-radius:99px}
-.hero-nav .arrow{width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.6);cursor:pointer;display:grid;place-items:center}
-
-/* sections */
-.sec{padding:0 16px}
-.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:26px 2px 10px}
-.sec-h h2{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:24px;margin:0}
-.sec-h span{font-size:13px;color:var(--muted)}
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:12px 0}
-.card h3{margin:0;font-size:17px;font-weight:600;color:var(--brand)}
-.muted{color:var(--muted)}
-.pill{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;background:var(--accent-soft);color:var(--accent)}
-.pill.green{background:var(--brand-soft);color:var(--brand)}
-.pill.amber{background:var(--warn-soft);color:var(--warn-ink)}
-.src{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start;margin:10px 0 0}
-.src svg{flex:none;margin-top:2px}
-
-/* since-you-started rail */
-.rail{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:16px;padding:4px 16px 14px;margin:0 -16px}
-.rail::-webkit-scrollbar{display:none}
-.wcard{flex:none;width:168px;scroll-snap-align:start;background:var(--surface);border-radius:20px;box-shadow:var(--shadow);border:0;padding:14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:156px}
-.wcard:hover{box-shadow:0 2px 4px rgba(31,42,36,.06),0 10px 24px rgba(31,42,36,.1)}
-.wcard .t{font-weight:600;font-size:14.5px;line-height:1.25}
-.wcard .tn{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:auto}
-.wcard .then{font-size:13px;color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(86,96,90,.5)}
-.wcard .now{font-family:var(--serif);font-size:22px;color:var(--brand);line-height:1.1}
-.wcard.new{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
-.wcard.add{background:transparent;box-shadow:none;border:1.5px dashed #CBBFD9;justify-content:center;align-items:flex-start}
-.wcard.add .plus{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:20px;font-weight:600}
-.wcard.add .s{font-size:12.5px;color:var(--muted)}
-.tile{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
-.tile.g{background:var(--brand-soft);color:var(--brand)}
-.tile.p{background:var(--accent-soft);color:var(--accent)}
-.tile.a{background:var(--warn-soft);color:var(--warn-ink)}
-
-/* weight */
-.wt-top{display:flex;justify-content:space-between;align-items:center}
-.wt-nums{display:flex;gap:28px;margin:12px 0 4px}
-.wt-nums .v{font-family:var(--serif);font-size:30px;color:var(--brand);line-height:1.1}
-.wt-nums .k{font-size:13px;color:var(--muted)}
-.calm{background:var(--surface-2);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14.5px}
-.calm b{color:var(--brand)}
-.mini-toggle{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px}
+.scen{display:grid;gap:6px}
+.scen label{position:relative;display:block}
+.scen input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.scen span{display:flex;gap:10px;align-items:center;min-height:44px;border-radius:12px;background:var(--surface);border:1px solid var(--line);padding:8px 12px;cursor:pointer}
+.scen b{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--surface-2);color:var(--brand);font-size:13px}
+.scen input:checked+span{background:var(--brand);border-color:var(--brand);color:#fff}
+.scen input:checked+span b{background:rgba(255,255,255,.18);color:#fff}
+.scen input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0}
+.toggle-row small{display:block;color:var(--muted)}
 .switch{width:48px;height:30px;border-radius:99px;border:0;background:#C9C2CC;position:relative;cursor:pointer;flex:none}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .switch[aria-checked="true"]{background:var(--brand)}
 .switch[aria-checked="true"]::after{transform:translateX(18px)}
+.explain{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px}
+.explain .q{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-bottom:6px}
+.explain .q.risk{background:var(--warn-soft);color:var(--warn-ink)}
+.explain p{margin:4px 0}
+.explain a{color:var(--brand);font-weight:600}
+.measure{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.measure h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.measure ul{list-style:none;margin:0;padding:0}
+.measure li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:13px}
+.measure li:first-child{border-top:0}
+.measure code{font-size:12px;color:var(--muted)}
+.measure .n{align-self:center;min-width:24px;text-align:center;border-radius:99px;background:var(--surface-2);font-weight:600;transition:background .3s}
+.measure .n.hit{background:var(--accent);color:#fff}
+.link-btn{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
+.demo-foot{color:var(--muted);font-size:12px;margin-top:8px}
 
-/* photos */
-.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.photo{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:3/4;background:linear-gradient(160deg,#E7DFF0,#D6CBE3);border:0;padding:0;cursor:pointer}
-.photo svg{width:100%;height:100%;transition:filter .3s}
-.photo.blur svg{filter:blur(14px)}
-.photo .cap{position:absolute;left:8px;bottom:8px;background:rgba(255,255,255,.92);font-size:12px;font-weight:600;border-radius:99px;padding:3px 9px}
-.photo .lock{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:600}
-.photo .lock span{background:rgba(255,255,255,.92);border-radius:99px;padding:6px 12px}
-.photo-empty{text-align:center;padding:8px 0 0}
-.photo-empty h3{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.1;margin:6px 0 8px}
+.seg-row{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg-row label{flex:1;position:relative}
+.seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg-row span{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer;font-size:13.5px}
+.seg-row input:checked+span{background:var(--brand);color:#fff}
+.seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
+.presets{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.preset{min-width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer}
+.preset[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.preset-l{color:var(--muted);font-size:13px;margin-left:4px}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tgb{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;padding:0 12px;text-align:left}
+.tgb::before{content:"";width:18px;height:18px;border-radius:6px;border:1.5px solid #B9B1BD;flex:none}
+.tgb[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.tgb[aria-checked="true"]::before{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 3px var(--accent-soft)}
+.fewer{font-size:13px;color:var(--muted);margin:8px 4px 0}
 
-/* habits */
-.habit{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
-.habit:first-of-type{border-top:0;padding-top:4px}
-.habit .body{flex:1;min-width:0}
-.habit .name{font-weight:600;font-size:15.5px}
-.dots{display:flex;gap:5px;margin:7px 0 6px}
-.dots i{width:22px;height:22px;border-radius:50%;background:#EEEAF0;display:grid;place-items:center}
-.dots i.on{background:var(--brand);color:#fff}
-.link-out{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--accent);font-weight:500}
-.link-out.neutral{color:var(--muted);font-weight:400}
+/* app chrome */
+.screen{flex:1;overflow-y:auto;position:relative}
+.tabbar{flex:none;display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px 22px}
+.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);min-height:48px;cursor:pointer;padding-top:4px}
+.tab[aria-current="page"]{color:var(--brand);font-weight:600}
+
+/* header */
+.head{background:linear-gradient(180deg,#C9BCF4 0%,#E4DCFA 60%,var(--surface-2) 100%);padding:40px 20px 18px}
+.head.amber{background:linear-gradient(180deg,#F3DFB5 0%,#FBEFD6 60%,var(--surface-2) 100%)}
+.head .title{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+.head .sub{font-size:14px;color:#3E4A44}
+.head .meta{display:inline-flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.chip{font-size:13px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.75);color:var(--brand)}
+.head p{margin:0;color:#3E4A44;font-size:15.5px}
+
+/* trigger (notification) */
+.lock{position:absolute;inset:0;background:linear-gradient(170deg,#2B2440 0%,#4A3B6E 45%,#8C79B9 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:70px 14px 30px}
+.lock .when{font-size:17px;font-weight:500;opacity:.9;margin:0}
+.lock .time{font-size:84px;font-weight:300;letter-spacing:-2px;line-height:1;margin:4px 0 30px}
+.notif{width:100%;background:rgba(255,255,255,.86);color:var(--ink);border-radius:20px;padding:12px 14px;text-align:left;border:0;cursor:pointer;animation:drop .5s ease-out;min-height:64px}
+@keyframes drop{from{transform:translateY(-24px);opacity:0}to{transform:none;opacity:1}}
+.notif .top{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.notif .appic{width:22px;height:22px;border-radius:6px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.notif b{display:block;font-size:15.5px;line-height:1.3}
+.lock .hint{margin-top:auto;font-size:13px;opacity:.8}
+
+/* journey steps */
+.steps{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
+.step{flex:1;border:0;background:none;border-radius:9px;min-height:44px;font-size:12.5px;font-weight:500;cursor:pointer;padding:0 2px}
+.step[aria-current="step"]{background:var(--brand);color:#fff}
+
+/* outcome + rest of home */
+.out{background:var(--brand-soft);box-shadow:none}
+.out .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--brand)}
+.out p{margin:4px 0 0;font-size:15px}
+.row .val{font-size:13.5px;color:var(--muted);flex:none}
+
+
+/* today / progress additions */
+.head.plain{background:none;padding-bottom:4px}
+.head.plain .title{font-size:30px;margin-bottom:4px}
+.greet{display:block;width:100%;text-align:left;border:0;background:none;padding:0;cursor:pointer}
+.strip{list-style:none;display:flex;margin:16px 0 0;padding:0}
+.strip li{flex:1;position:relative;font-size:12px;color:#3E4A44;padding-top:16px;text-align:center}
+.strip li::before{content:"";position:absolute;top:5px;left:0;right:0;height:3px;background:rgba(255,255,255,.7)}
+.strip li.done::before,.strip li.here::before{background:var(--brand)}
+.strip li i{position:absolute;top:0;left:50%;margin-left:-6px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #B9B1BD}
+.strip li.done i{background:var(--brand);border-color:var(--brand)}
+.strip li.here i{background:#fff;border:4px solid var(--brand);width:14px;height:14px;margin-left:-7px;top:-1px}
+.strip li b{display:block;font-size:11px;color:var(--brand)}
+.wline{margin:0;font-weight:600;font-size:15px;color:var(--brand)}
+.kgline{margin:0;font-size:14px;color:#3E4A44}
+.trend+.trend{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.trend h3{margin:0 0 4px;font-size:15px;color:var(--brand)}
+.cap{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.slider{width:100%;min-height:44px;accent-color:var(--brand)}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:-4px}
+.lv{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px;margin:10px 0 0}
+.opt[aria-pressed="true"],.opt.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.sayb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;margin-top:6px}
+.said{font-family:var(--serif);font-size:19px;color:var(--brand);margin:0;line-height:1.3}
+.step[disabled]{opacity:.35;cursor:not-allowed}
+
+/* sections */
+.sec{padding:0 16px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 8px}
+.sec-h h2{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:22px;margin:0}
+.sec-h span{font-size:13px;color:var(--muted)}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:0 0 10px}
+
+/* headline win */
+.hl{display:block;width:100%;text-align:left;border:0;cursor:pointer;margin-top:4px}
+.hl .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.hl .big{font-family:var(--serif);font-size:26px;line-height:1.15;color:var(--brand);margin:6px 0 10px}
+.normal{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px;color:#3E4A44}
+.normal b{color:var(--brand)}
+.note{display:flex;gap:8px;font-size:13.5px;color:var(--muted);margin-top:10px}
+.note svg{flex:none;margin-top:2px}
+.more{display:block;font-size:13.5px;font-weight:600;color:var(--brand);margin-top:10px}
+
+/* win rows */
+.list{padding:4px 0}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:12px 16px;min-height:64px;cursor:pointer;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--brand-soft);color:var(--brand)}
+.row .ic.p{background:var(--accent-soft);color:var(--accent)}
+.row .ic.n{background:var(--surface-2);color:var(--muted)}
+.row .tx{flex:1;min-width:0}
+.row .t{display:block;font-weight:600;font-size:15px;line-height:1.3}
+.row .s{display:block;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
+.row .chev{color:#A9A2AD;flex:none}
+.row.new{background:var(--accent-soft);animation:pop .5s ease-out}
+@keyframes pop{from{background:#D9C8F0}to{background:var(--accent-soft)}}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);margin-left:6px;vertical-align:1px}
+.tag.new{background:var(--accent);color:#fff}
+.empty{padding:14px 16px;font-size:14px;color:var(--muted)}
+
+/* flat card (stall) */
+.flat{border-left:4px solid #C98A1B}
+.flat .big{font-family:var(--serif);font-size:24px;line-height:1.15;color:var(--brand);margin:6px 0 10px}
+.flat .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--warn-ink)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;border-radius:10px;border:0;font-weight:600;font-size:16px;cursor:pointer;padding:0 16px;background:var(--brand);color:#fff;margin-top:14px}
+.btn.soft{background:var(--surface-2);color:var(--brand)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.sent{display:flex;gap:8px;align-items:flex-start;margin-top:12px;background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:14.5px;color:var(--brand)}
+
+/* weight */
+.wbtn{display:flex;width:100%;gap:12px;align-items:center;justify-content:space-between;border:0;background:none;text-align:left;cursor:pointer;padding:0;min-height:44px}
+.wbtn .t{display:block;font-weight:600;font-size:15px;color:var(--brand)}
+.wbtn .s{font-size:14px;color:#3E4A44;margin-top:2px}
+.wbtn .chev{transition:transform .2s;color:var(--muted);flex:none}
+.wbtn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.status{display:table;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-top:6px}
+.status.amber{background:var(--warn-soft);color:var(--warn-ink)}
+.chart{margin-top:12px}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.reassure{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px}
+.reassure .il{display:block;font-size:12px;color:var(--accent);font-weight:600;margin-top:6px}
 
 /* check-in */
-.ci{border:2px solid var(--accent);background:var(--surface)}
-.qq{margin-top:16px}
-.qq p{margin:0 0 8px;font-weight:600;font-size:15px}
-.qq .intake{font-weight:400;color:var(--muted);font-size:13px;display:block}
+.ci{border:2px solid var(--accent)}
+.ci p.q{margin:0 0 10px;font-weight:600;font-size:15.5px}
+.ci p.why{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
 .opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:500}
+.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:500}
 .opt:hover{border-color:var(--accent)}
-.opt[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
-.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:10px;border:0;font-weight:600;font-size:16px;cursor:pointer;padding:0 16px;background:var(--brand);color:#fff;margin-top:16px}
-.btn[disabled]{opacity:.4;cursor:not-allowed}
-.btn.soft{background:var(--surface-2);color:var(--brand)}
-.payback{background:var(--accent-soft)}
-.payback ul{list-style:none;margin:8px 0 0;padding:0}
-.payback li{display:flex;gap:8px;margin:7px 0;font-size:14.5px}
-.payback li svg{flex:none;margin-top:3px;color:var(--accent)}
+.done{display:flex;gap:8px;align-items:flex-start;font-size:14.5px;color:var(--brand)}
+.done svg{flex:none;margin-top:3px;color:var(--accent)}
 
-.fine{font-size:12px;color:var(--muted);text-align:center;margin:22px 24px 28px}
+.fine{font-size:12px;color:var(--muted);text-align:center;margin:20px 24px 26px}
 
 /* sheet */
 .scrim{position:absolute;inset:0;background:rgba(20,24,22,.4);z-index:5;display:flex;align-items:flex-end}
 .sheet{background:var(--surface);width:100%;border-radius:26px 26px 0 0;padding:10px 20px 28px;max-height:88%;overflow-y:auto;animation:up .25s ease-out}
 @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .grab{width:40px;height:5px;border-radius:9px;background:#DDD6E0;margin:0 auto 10px}
-.sheet-h{display:flex;align-items:center;gap:12px}
+.sheet-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .sheet-h h2{flex:1;margin:0;font-size:19px;color:var(--brand)}
 .x{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px}
-.big-tn{display:grid;grid-template-columns:1fr 20px 1fr;align-items:center;gap:6px;margin:16px 0}
-.big-tn .col{background:var(--surface-2);border-radius:14px;padding:12px}
-.big-tn .col.now{background:var(--brand-soft)}
-.big-tn .k{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.big-tn .v{font-family:var(--serif);font-size:24px;color:var(--brand);margin-top:2px}
-.helping{background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:14.5px}
-.helping b{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.kv{margin:14px 0 0}
+.kv dt{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.kv dd{margin:2px 0 12px;font-size:15px}
+.bars{display:flex;gap:6px;align-items:flex-end;height:64px;margin:8px 0 4px}
+.bars i{flex:1;background:var(--accent-soft);border-radius:6px 6px 2px 2px;position:relative}
+.bars i.last{background:var(--accent)}
+.bars-l{display:flex;gap:6px;font-size:11px;color:var(--muted)}
+.bars-l span{flex:1;text-align:center}
+.checks{list-style:none;padding:0;margin:10px 0 0}
+.checks li{display:flex;gap:8px;margin:8px 0;font-size:14.5px}
+.checks svg{flex:none;margin-top:3px;color:var(--brand)}
 
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media (prefers-reduced-motion:reduce){.sheet{animation:none}.screen{scroll-behavior:auto}.switch::after,.photo svg{transition:none}}
+@media (prefers-reduced-motion:reduce){.sheet,.row.new,.notif{animation:none}.switch::after,.wbtn .chev{transition:none}}
 
 @media (max-width:860px){
   .layout{display:block;padding:0}
@@ -195,8 +248,8 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
   .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0;box-shadow:none}
   .app{border-radius:0;height:auto;min-height:100vh;overflow:visible}
   .screen{overflow:visible}
-  .floatbar{padding-top:12px}
-  .hero{padding-top:76px}
+  .head{padding-top:24px}
+  .lock{position:relative;min-height:100vh}
   .tabbar{position:sticky;bottom:0;z-index:4}
   .scrim{position:fixed}
 }
@@ -204,31 +257,23 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 </head>
 <body>
 <div class="layout">
-  <aside class="demo" aria-label="Prototype demo controls">
+  <aside class="demo" aria-label="Prototype controls">
     <details id="demoDetails" open>
       <summary>Demo controls</summary>
       <h1>Non-Scale Victories</h1>
-      <p class="demo-intro">A Progress tab where a “win” isn’t just kilos. Flip the switches to see how it responds to a good week, a flat week and a real stall. <strong>All patient data is illustrative.</strong></p>
+      <p class="demo-intro">Not more tracking. The same data the app already collects, used differently: a win is redefined, logging is paid back, and every number sits next to what’s normal. <strong>Sarah is fictional and all data is illustrative.</strong></p>
 
-      <fieldset class="seg"><legend>This week’s weigh-in</legend><div class="seg-row">
-        <label><input type="radio" name="scale" value="down"><span>Down</span></label>
-        <label><input type="radio" name="scale" value="flat" checked><span>Flat</span></label>
-        <label><input type="radio" name="scale" value="up"><span>Up</span></label></div></fieldset>
-      <fieldset class="seg"><legend>Journey stage</legend><div class="seg-row">
-        <label><input type="radio" name="stage" value="early"><span>Early</span></label>
-        <label><input type="radio" name="stage" value="middle" checked><span>Middle</span></label>
-        <label><input type="radio" name="stage" value="plateau"><span>Plateau</span></label></div></fieldset>
-      <fieldset class="seg"><legend>Data we have</legend><div class="seg-row">
-        <label><input type="radio" name="data" value="rich" checked><span>Rich</span></label>
-        <label><input type="radio" name="data" value="light"><span>Light</span></label>
-        <label><input type="radio" name="data" value="none"><span>None</span></label></div></fieldset>
-      <fieldset class="seg"><legend>Overall progress</legend><div class="seg-row">
-        <label><input type="radio" name="progress" value="on" checked><span>On track</span></label>
-        <label><input type="radio" name="progress" value="below"><span>Below range</span></label></div></fieldset>
-
+      <fieldset class="seg"><legend>Quick presets</legend><div class="presets" id="presets"></div></fieldset>
+      <fieldset class="seg"><legend>Stage of treatment</legend><div class="seg-row" data-k="stage"></div></fieldset>
+      <fieldset class="seg"><legend>Scale this week</legend><div class="seg-row" data-k="scale"></div></fieldset>
+      <fieldset class="seg"><legend>Weight overall</legend><div class="seg-row" data-k="range"></div></fieldset>
+      <fieldset class="seg"><legend>What she already logs in the app</legend><div class="tg" id="have"></div></fieldset>
+      <div class="toggle-row"><span><strong>Nothing new since last visit</strong><small>The greeting falls back to the phase message.</small></span><button class="switch" role="switch" aria-checked="false" aria-label="Nothing new since last visit" data-act="stale"></button></div>
+      <fieldset class="seg"><legend>Step in the journey</legend><div class="steps" id="steps"></div></fieldset>
       <div class="explain" id="explain" aria-live="polite"></div>
+      <div class="measure"><h2>What we’d measure</h2><ul id="events"></ul></div>
       <button class="link-btn" data-act="reset">Reset demo</button>
-      <p class="demo-foot">Fictional patient (Sarah, Mounjaro). Values are illustrative, not clinical data.</p>
+      <p class="demo-foot">Expected ranges are illustrative curves, not clinical data.</p>
     </details>
   </aside>
   <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
@@ -236,371 +281,380 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* ===================== Model (illustrative) ===================== */
-const START_KG = 92;
+/* ===================== Sample data (illustrative) ===================== */
+// Expected % of body weight lost by week of treatment: [week, low, high]. Illustrative, to be replaced with Juniper's own data.
+const RANGE = [[0, 0, 0], [4, 0.5, 2.5], [6, 1, 4], [12, 3, 7], [14, 3.8, 7.8], [20, 6, 10], [22, 7, 11], [30, 9, 14], [40, 11, 17], [58, 12, 20], [80, 12, 20]];
+function range(w){
+  for (let i = 1; i < RANGE.length; i++){
+    const [w1, l1, h1] = RANGE[i], [w0, l0, h0] = RANGE[i - 1];
+    if (w <= w1){ const f = (w - w0) / (w1 - w0); return { lo: l0 + (l1 - l0) * f, hi: h0 + (h1 - h0) * f }; }
+  }
+  return { lo: 12, hi: 20 };
+}
+const mid = w => { const r = range(w); return (r.lo + r.hi) / 2; };
+const START_KG = 92, DOSES = ['2.5', '5', '7.5', '10'];
+
+/* What Juniper already holds at each stage. `lost` and `waist` have a value for in range / below range. */
 const STAGES = {
-  early:   { week: 3,  label: 'Month 1', k: 0.3, months: 2 },
-  middle:  { week: 10, label: 'Month 3', k: 1,   months: 4 },
-  plateau: { week: 26, label: 'Month 6', k: 1.5, months: 7 },
+  w6:  { lbl: 'Week 6',  week: 6,  dose: '5 mg',   doseIdx: 1, phase: 'inc',    lost: { in: 2.1, below: 0.6 },  waist: { in: 2, below: 1 },
+         out: 'Next dose increase in 4 weeks. Side effects may return for a few days. That’s expected, and it passes.', next: 'Thursday · 5 mg' },
+  w12: { lbl: 'Week 12', week: 12, dose: '7.5 mg', doseIdx: 2, phase: 'inc',    lost: { in: 4.2, below: 1.8 },  waist: { in: 3, below: 1 },
+         out: 'Your next dose review is next week. If you step up, side effects may return for a few days. That’s expected.', next: 'Thursday · 7.5 mg' },
+  w22: { lbl: 'Week 22', week: 22, dose: '10 mg',  doseIdx: 3, phase: 'steady', lost: { in: 9.4, below: 2.6 },  waist: { in: 7, below: 2 },
+         out: 'Your next weigh-in is Monday, and this updates then.', next: 'Thursday · 10 mg' },
+  w58: { lbl: 'Week 58', week: 58, dose: '10 mg',  doseIdx: 3, phase: 'steady', lost: { in: 14.0, below: 6.5 }, waist: { in: 11, below: 4 },
+         out: 'Your next weigh-in is Monday, and this updates then.', next: 'Thursday · 10 mg' },
 };
-const TOTAL = { early: { on: -1.9, below: -0.4 }, middle: { on: -7.4, below: -2.8 }, plateau: { on: -13.1, below: -5.2 } };
-const TREND4 = { early: { on: -1.2, below: -0.3 }, middle: { on: -1.8, below: -0.2 }, plateau: { on: -0.5, below: 0 } };
+const CONTROLS = {
+  stage: Object.entries(STAGES).map(([k, v]) => [k, v.lbl]),
+  scale: [['down', 'Down'], ['flat', 'Flat']],
+  range: [['in', 'In expected range'], ['below', 'Below range']],
+};
+// Data the current app already collects. Switch off to see fewer wins (nothing is invented).
+const LOGS = [['appetite', 'Appetite logs'], ['side', 'Side-effect logs'], ['waist', 'Waist'], ['habits', 'Protein and steps']];
+// The app's existing inputs, reused: a five-point appetite slider and side-effect chips.
+const APPETITE = ['Very low: rarely hungry, easy to forget meals', 'Low: less hungry than usual, full quickly', 'Balanced: hungry when expected, able to stop eating when comfortably full', 'High: hungry between meals', 'Very high: hungry most of the time'];
+const SIDE_CHIPS = ['Nausea', 'Vomiting', 'Diarrhoea', 'Constipation', 'Headaches', 'Fatigue', 'Reflux', 'Hair loss', 'Other'];
+const PRESETS = {
+  A: ['Dose increasing, flat week', { stage: 'w6', scale: 'flat', range: 'in', have: ['appetite', 'side'] }],
+  B: ['Steady dose, good week', { stage: 'w22', scale: 'down', range: 'in', have: ['waist', 'habits'] }],
+  C: ['Plateau after loss', { stage: 'w58', scale: 'flat', range: 'in', have: ['waist', 'habits'] }],
+  D: ['Real stall', { stage: 'w22', scale: 'flat', range: 'below', have: ['side'] }],
+};
+// Which wins lead in each phase. A down week always leads with weight.
+const PRIORITY = {
+  inc: ['weight', 'appetite', 'side', 'course', 'habits', 'waist'],
+  steady: ['weight', 'waist', 'habits', 'appetite', 'course', 'side'],
+  plateau: ['kept', 'waist', 'habits', 'course', 'appetite', 'side'],
+};
+const TREND = { appetite: [2, 3, 3, 4, 4, 5, 5, 5], sideInc: [2, 3, 3, 2, 4, 3, 2, 1], sideSteady: [3, 2, 2, 1, 1, 0, 1, 0] };
 
-const initial = () => ({ scale: 'flat', stage: 'middle', data: 'rich', progress: 'on', slide: 0, hideWeight: false, photosOpen: false, added: {}, ci: {}, ciDone: false, sheet: null, fresh: [] });
+/* ===================== State ===================== */
+const initial = () => ({ tab: 'today', stage: 'w6', scale: 'flat', range: 'in', have: { appetite: true, side: true, waist: false, habits: false }, ans: {}, just: [],
+  apl: 3, chips: [], say: null, sayChips: [], kg: false, stale: false, step: 'trigger', weightOpen: null, sheet: null, sent: false, events: {}, lastGreet: '' });
+const STEPS = [['trigger', 'Trigger'], ['home', 'Today'], ['detail', 'Detail'], ['checkin', 'Check-in'], ['outcome', 'Outcome']];
 let state = initial();
+const fmt = n => n.toFixed(1).replace(/\.0$/, '');
 
-function sc(){
-  const st = STAGES[state.stage], below = state.progress === 'below', key = below ? 'below' : 'on';
-  const total = TOTAL[state.stage][key];
-  const wk = { down: below ? -0.2 : -0.6, flat: 0, up: 0.4 }[state.scale];
-  const t4 = +(TREND4[state.stage][key] + { down: -0.3, flat: 0, up: 0.3 }[state.scale]).toFixed(1);
-  return { ...st, stage: state.stage, below, total, wk, t4, data: state.data,
-    kg: +(START_KG * -total / 100).toFixed(1),
-    now: +(START_KG * (1 + total / 100)).toFixed(1),
-    // Month 1 is slow by design (starter dose), so it never counts as a stall.
-    stall: below && state.scale !== 'down' && state.stage !== 'early' };
+/* ===================== Model: everything on screen is worked out from the state ===================== */
+function model(){
+  const st = STAGES[state.stage], below = state.range === 'below', flat = state.scale === 'flat', lost = st.lost[state.range];
+  const r = range(st.week), lo = Math.round(r.lo), hi = Math.round(r.hi), steady = st.phase === 'steady';
+  // Plateau = flat AFTER reaching the expected range. Stall = flat while still BELOW it, on a steady dose.
+  const stall = below && flat && steady, plateau = !below && flat && st.week >= 58;
+  const flatWeeks = stall ? 6 : plateau ? 8 : flat ? 1 : 0;
+  const phase = plateau ? 'plateau' : st.phase;
+  const pts = []; for (let w = 0; w <= st.week; w++) pts.push(+(lost * mid(Math.min(w, st.week - flatWeeks)) / mid(st.week - flatWeeks)).toFixed(2));
+  const weekChg = pts[pts.length - 1] - pts[pts.length - 2], chg = +weekChg.toFixed(1) > 0 ? fmt(weekChg) : '';
+  const wk = Math.min(8, st.week), today = k => state.ans[k] !== undefined ? 'Your log just now' : null;
+  const all = [];
+
+  all.push({ id: 'course', type: 'Your doses', icon: 'syringe', title: `${st.week} doses in a row, on time.`, short: `you haven’t missed a dose in ${st.week} weeks`,
+    normal: st.phase === 'inc' ? `You’re on ${st.dose}, right on schedule. Reaching your full dose is what drives results.` : `You’ve settled into ${st.dose}. A steady dose is when most progress happens.`, source: 'Your treatment tracker' });
+
+  // Appetite: from her existing appetite logs, or from the slider just now.
+  const al = state.ans.appetite;
+  if (state.have.appetite) all.push({ id: 'appetite', type: 'Appetite', icon: 'bowl', title: 'Your appetite has been Balanced or lower on 5 of the last 7 days.', short: 'your appetite has settled',
+    normal: 'A steadier appetite is usually the first change people notice, often weeks before the scale moves much.', source: 'Your appetite logs', bars: TREND.appetite.slice(-wk), barsL: 'Days at Balanced or lower, per week' });
+  else if (al !== undefined) all.push(al <= 3
+    ? { id: 'appetite', type: 'Appetite', icon: 'bowl', title: `Your appetite is ${al === 3 ? 'Balanced' : 'lower'} today.`, short: al === 3 ? 'your appetite is balanced' : 'your appetite is lower', normal: 'A steadier appetite is usually the first change people notice, often weeks before the scale moves much. Your trend starts today.', source: today('appetite') }
+    : { id: 'appetite', type: 'Appetite', icon: 'bowl', win: false, title: 'Appetite high today.', normal: `Thanks for telling us. That’s common at ${st.dose}, and it often settles after the next dose step. Your trend starts today.`, source: today('appetite') });
+
+  // Side effects: from her existing side-effect logs, or from the chips just now.
+  const sl = state.ans.side, sideBars = (st.phase === 'inc' ? TREND.sideInc : TREND.sideSteady).slice(-wk);
+  if (state.have.side) all.push(st.phase === 'inc'
+    ? { id: 'side', type: 'Side effects', icon: 'wave', title: 'Your nausea is easing.', short: 'your nausea is easing', normal: 'Just 1 day this week. Your body is adjusting to the medicine, which is common in the first weeks on a new dose.',
+        note: 'It can come back for a few days after your next dose increase. That’s expected.', source: 'Your side-effect logs', bars: sideBars, barsL: 'Days with nausea, per week' }
+    : { id: 'side', type: 'Side effects', icon: 'wave', title: 'Your side effects have settled.', short: 'your side effects have settled', normal: 'None this week. Your body has adjusted to this dose.', source: 'Your side-effect logs', bars: sideBars, barsL: 'Days with side effects, per week' });
+  else if (sl !== undefined) all.push(sl.length === 0
+    ? { id: 'side', type: 'Side effects', icon: 'wave', title: 'No side effects this week.', short: 'you’ve had no side effects this week', normal: 'Your body is adjusting well to this dose. Your trend starts today.', source: today('side') }
+    : { id: 'side', type: 'Side effects', icon: 'wave', win: false, title: `${sl.join(', ')} this week.`, normal: 'Thanks for telling us. This is common on a new dose and usually eases. Your care team can see it, and your trend starts today.', source: today('side') });
+
+  if (state.have.habits) all.push({ id: 'habits', type: 'Habits', icon: 'bolt', title: 'You hit your protein target 5 days this week.', short: 'you hit your protein target 5 days this week',
+    normal: 'Enough protein helps you keep muscle while you lose weight. Five days in seven is a strong week.', source: 'Your daily goals', bars: [2, 3, 3, 4, 4, 5, 4, 5].slice(-wk), barsL: 'Days on protein target, per week' });
+  if (state.have.waist){ const cm = st.waist[state.range]; all.push({ id: 'waist', type: 'Waist', icon: 'tape', title: `Waist down ${cm} cm since you started.`, short: `your waist is down ${cm} cm`,
+    normal: 'Waist shows fat lost around your middle, which matters most for health. It often changes before the scale does.', source: 'Your waist measurements' }); }
+
+  const wType = `Weight · expected ${lo} to ${hi}% at week ${st.week}`;
+  if (!below && !flat) all.push({ id: 'weight', type: wType, icon: 'scale', title: `${fmt(lost)}% of your body weight lost.`, short: `you’ve lost ${fmt(lost)}% of your body weight`, shortAlone: `you’ve lost ${fmt(lost)}% of your body weight, right where we’d expect at week ${st.week}`,
+    normal: `Expected range for week ${st.week}: <b>${lo} to ${hi}%</b>. You’re right in it${chg ? `, and down another ${chg}% this week` : ''}.`, source: 'Your weigh-ins' });
+  // Down this week but still under the range: a real win, shown honestly and never as the lead.
+  if (below && !flat) all.push({ id: 'weight', late: true, type: wType, icon: 'scale', title: 'The scale is down this week.', short: 'the scale is down this week',
+    normal: `You’re at ${fmt(lost)}%. Expected range for week ${st.week}: <b>${lo} to ${hi}%</b>. You’re under it for now, and moving in the right direction.`, source: 'Your weigh-ins' });
+  if (plateau) all.push({ id: 'kept', type: wType, icon: 'shield', title: `You’ve kept off ${fmt(lost)}% of your body weight for 8 weeks.`, short: 'you’ve kept the weight off for 8 weeks',
+    normal: `Expected range for week ${st.week}: <b>${lo} to ${hi}%</b>. You reached it and you’re holding it. That’s what maintenance looks like.`, source: 'Your weigh-ins' });
+
+  const order = PRIORITY[phase], rank = w => { const i = order.indexOf(w.id); return w.late ? 50 : i < 0 ? 99 : i; };
+  all.sort((x, y) => rank(x) - rank(y));
+  const wins = all.filter(w => w.win !== false), noted = all.filter(w => w.win === false);
+  const noLogs = !state.have.appetite && !state.have.side;
+  // The one question: the first input she hasn't logged (side effects first in a stall, for the care team).
+  const missing = (stall ? ['side', 'appetite'] : ['appetite', 'side']).filter(k => !state.have[k] && state.ans[k] === undefined);
+  const qKey = missing[0] || null;
+  const normalNow = stall ? `Below the expected range for week ${st.week}.` : plateau ? 'Holding your weight is the goal now.' : st.phase === 'inc' ? 'Loss is usually slow while your dose is increasing.' : below ? 'Slower than we’d expect, and still moving.' : 'You’re in the phase where most progress happens.';
+  const phaseMsg = plateau ? 'holding your weight is the goal now.' : st.phase === 'inc' ? 'a slow start is normal while your dose is increasing.' : 'you’re in the phase where most progress happens.';
+  const out = plateau ? ['What this means', 'Holding your weight for 8 weeks means the change has lasted. Staying steady is the result now.'] : ['Next up', st.out];
+  const kgLost = START_KG * lost / 100;
+  return { ...st, below, flat, lost, lo, hi, stall, plateau, flatWeeks, phase, pts, wins, noted, noLogs, missing, qKey, normalNow, phaseMsg, out, sideBars,
+    kgLost, kgNow: START_KG - kgLost, reassure: state.stage === 'w12' && lost < 5 };
+}
+const joinAnd = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+// Greeting rules: a summary of real wins, never generic praise; no praise in a stall; phase message when nothing is new.
+function greeting(d){
+  if (d.stall) return ['stall_honest', 'your progress has slowed more than we’d expect. Let’s look at it together.'];
+  if (state.stale) return ['phase_message', d.phaseMsg];
+  const top = d.wins.slice(0, 3);
+  if (top.length === 1) return [top[0].id, `${top[0].shortAlone || top[0].short}.${top[0].id === 'course' ? ' Change often starts before the scale shows it.' : ''}`];
+  return [top.map(w => w.id).join('+'), joinAnd(top.map(w => w.short)) + '.'];
+}
+function trigger(d){
+  const n = d.wins.length;
+  if (d.stall) return ['after 6 flat weeks', 'Your progress has slowed. Let’s look at it together.'];
+  if (d.plateau) return ['a few days before renewal', '8 weeks at your new weight.'];
+  if (!d.flat && !d.below) return ['weekly summary', `Your week ${d.week} progress is ready.`];
+  return ['after this week’s weigh-in', n > 1 ? `${n} things went well this week. Take a look.` : 'Here’s what went well this week.'];
+}
+
+/* Instrumentation (no real analytics): these are the events we'd send. */
+const EVENTS = [['today_opened', 'Today opened'], ['win_tapped', 'Win tapped'], ['weight_expanded', 'Weight expanded'], ['checkin_answered', 'Check-in answered'], ['care_team_tapped', '“Talk to your care team” tapped']];
+function track(e){ state.events[e] = (state.events[e] || 0) + 1; renderEvents(e); }
+function renderEvents(hit){
+  $('#events').innerHTML = EVENTS.map(([k, l]) => `<li><span>${l}<br><code>${k}${k === 'today_opened' && state.lastGreet ? ` · greeting: ${state.lastGreet}` : ''}</code></span><span class="n ${k === hit ? 'hit' : ''}">${state.events[k] || 0}</span></li>`).join('');
+  if (hit) setTimeout(() => { const n = document.querySelector('.measure .n.hit'); n && n.classList.remove('hit'); }, 700);
 }
 
 /* ===================== Helpers ===================== */
-const $ = s => document.querySelector(s);
-const sgn = n => (n < 0 ? '−' : n > 0 ? '+' : '±') + Math.abs(n).toFixed(1);
+const $ = q => document.querySelector(q);
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
 const I = {
-  info: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>',
-  check: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-  link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:2px"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
-  bowl: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 11h18a9 9 0 01-18 0zM8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/></svg>',
-  moon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
-  tape: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 9h18v6H3zM7 9v3M11 9v3M15 9v3M19 9v3"/></svg>',
-  wave: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></svg>',
-  cookie: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 109 9 3 3 0 01-3-3 3 3 0 01-3-3 3 3 0 01-3-3z"/><path d="M9 10h.01M14 15h.01M9 15h.01"/></svg>',
-  bolt: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>',
-  heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
-  shirt: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 01-8 0z"/></svg>',
-  pen: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16zM14 6l3 3"/></svg>',
-  cam: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
-  egg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3c4 0 7 6 7 10a7 7 0 01-14 0c0-4 3-10 7-10z"/></svg>',
-  shoe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h18v-2l-6-2-3-5H8v4l-5 1z"/><path d="M3 20h18"/></svg>',
-  syringe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 2l4 4M20 4l-9 9M7 13l4 4M14 6l4 4-8 8H6v-4zM6 18l-4 4"/></svg>',
-  chevL: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
-  chevR: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
+  wave: '<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
+  bowl: '<path d="M3 11h18a9 9 0 01-18 0zM8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/>',
+  syringe: '<path d="M18 2l4 4M20 4l-9 9M7 13l4 4M14 6l4 4-8 8H6v-4zM6 18l-4 4"/>',
+  tape: '<path d="M3 9h18v6H3zM7 9v3M11 9v3M15 9v3M19 9v3"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
+  scale: '<path d="M5 4h14l1 16H4zM9 9a3 3 0 016 0"/>',
+  shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  cal: '<path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/>',
+  bolt: '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
+  shoe: '<path d="M3 17h18v-2l-6-2-3-5H8v4l-5 1z"/><path d="M3 20h18"/>',
+  drop: '<path d="M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z"/>',
+  cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  mic: '<path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM6 11a6 6 0 0012 0M12 17v4"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  chevR: '<path d="M9 18l6-6-6-6"/>', chevD: '<path d="M6 9l6 6 6-6"/>',
 };
-const src = t => `<p class="src">${I.info}<span>${t}</span></p>`;
-function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600); }
-const pick = (o) => o[state.stage];
+const ic = (n, sz = 20, sw = 2) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const weightLine = d => `${fmt(d.lost)}% lost. Expected range for week ${d.week}: ${d.lo} to ${d.hi}%.`;
+const weightStatus = d => d.stall ? ['amber', `Below the expected range · flat for ${d.flatWeeks} weeks`] : d.plateau ? ['', `In range · stable for ${d.flatWeeks} weeks`]
+  : d.below ? ['amber', d.phase === 'inc' ? 'Under the range · common while your dose is increasing' : 'Below the expected range · still moving'] : ['', d.phase === 'inc' ? 'You’re on track' : 'In range'];
+const plain = (icon, t, v, act = 'todo') => `<button class="row" data-act="${act}"><span class="ic n">${ic(icon)}</span><span class="tx"><span class="t">${t}</span></span><span class="val">${v}</span></button>`;
+const sec = (title, right, body, id = '') => `<div class="sec" ${id ? `id="${id}"` : ''}><div class="sec-h"><h2>${title}</h2><span>${right}</span></div>${body}</div>`;
+const bars = (a, lbl) => `<div class="bars">${a.map((b, i) => `<i class="${i === a.length - 1 ? 'last' : ''}" style="height:${Math.max(6, b / Math.max(1, ...a) * 100)}%"></i>`).join('')}</div><div class="bars-l">${a.map(b => `<span>${b}</span>`).join('')}</div><p class="cap">${lbl}</p>`;
 
-/* ===================== Wins ===================== */
-function wins(){
-  const s = sc(), b = s.below, d = s.data, add = state.added, ci = state.ciDone ? state.ci : null;
-  const L = [];
-  // Process win: always known from orders. Reward the process, not the outcome.
-  L.push({ id: 'doses', icon: 'syringe', tone: 'g', title: 'Doses on time', then: '—', now: `${s.week} weeks`, nowLbl: `${s.week} of ${s.week} weeks`, good: true, avail: true,
-    hero: `${s.week} weeks in, every dose on time.`, heroSub: 'That consistency is what makes everything else possible. It’s the part you control, and you’re nailing it.',
-    src: 'From your order history', help: 'Your next order ships automatically. Nothing to do.', process: true });
-  // Food noise
-  let fn = b ? pick({ early: 7, middle: 6, plateau: 6 }) : pick({ early: 6, middle: 3, plateau: 2 }), fnSrc = d === 'rich' ? 'From your intake and monthly check-ins' : 'Based on what you told your coach';
-  let fnAvail = d !== 'none';
-  if (ci){ fn = { low: 2, mid: 5, high: 8 }[ci.food]; fnAvail = true; fnSrc = 'From your intake and today’s check-in'; }
-  L.push({ id: 'food', icon: 'bowl', tone: 'p', title: 'Food noise', then: '8/10', now: `${fn}/10`, good: fn < 8, avail: fnAvail, num: [8, fn], unit: '/10', lowerBetter: true,
-    hero: `Food noise is down from 8/10 to ${fn}/10.`, heroSub: 'Less mental chatter about food is one of the clearest signs the medicine is working, often before the scale shows it.',
-    src: fnSrc, help: 'Your dose is doing the heavy lifting here. Regular protein keeps it steady between meals.' });
-  // Evening snacking
-  const cr = b ? pick({ early: 'Most nights', middle: '4–5 a week', plateau: '4–5 a week' }) : pick({ early: '4–5 a week', middle: '1–2 a week', plateau: 'Rarely' });
-  L.push({ id: 'cravings', icon: 'cookie', tone: 'p', title: 'Evening snacking', then: 'Most nights', now: cr, good: cr !== 'Most nights', avail: d !== 'none',
-    hero: `Evening snacking: from most nights to ${cr.toLowerCase()}.`, heroSub: 'Breaking the evening habit is huge. It’s usually where the hardest calories live.',
-    src: d === 'rich' ? 'From your food log' : 'Based on what you told your coach', help: 'Protein at dinner, 5 of the last 7 days, is linked with fewer evening cravings.' });
-  // Nausea
-  const nz = b ? pick({ early: [3, 4, 3], middle: [4, 4, 3], plateau: [4, 3, 3, 3, 2, 3, 3] }) : pick({ early: [2, 3, 2], middle: [4, 3, 2, 1], plateau: [4, 2, 1, 1, 0, 0, 0] });
-  const nzNow = nz[nz.length - 1];
-  L.push({ id: 'nausea', icon: 'wave', tone: 'g', title: 'Nausea days', then: `${nz[0]}/wk`, now: `${nzNow}/wk`, good: nzNow < nz[0], avail: d !== 'none', series: nz, unit: ' days',
-    hero: nzNow === 0 ? 'No nausea days for weeks now.' : `Nausea is down to ${nzNow} day${nzNow === 1 ? '' : 's'} a week.`, heroSub: 'Your body has adjusted to the medicine. The hardest part is behind you.',
-    src: d === 'rich' ? 'From your side-effect log' : 'Based on what you told your coach', help: 'Smaller meals and eating slowly help. Keep going.' });
-  // Waist
-  const wc = b ? pick({ early: 1, middle: 2, plateau: 4 }) : pick({ early: 2, middle: 6, plateau: 11 });
-  L.push({ id: 'waist', icon: 'tape', tone: 'g', title: 'Waist', then: '104 cm', now: `${104 - wc} cm`, good: true, avail: d === 'rich' || add.waist, num: [104, 104 - wc], unit: ' cm', lowerBetter: true,
-    hero: `${wc} cm off your waist.`, heroSub: 'Waist often keeps shrinking even when the scale stalls, because you’re losing fat around your middle.',
-    src: 'From your measurements', addTxt: 'Add your waist (30 sec)', help: 'Measure at your belly button, same time of day, once a month.' });
-  // Sleep
-  const sl = Math.round(40 * s.k * (b ? 0.4 : 1));
-  L.push({ id: 'sleep', icon: 'moon', tone: 'p', title: 'Sleep', then: '6h 05m', now: `6h ${String(5 + sl).padStart(2, '0')}m`, good: sl > 0, avail: d === 'rich' || add.sleep,
-    hero: `${sl} more minutes of sleep a night.`, heroSub: 'Better sleep was one of your reasons for starting. It’s happening.',
-    src: 'Average per night, from your watch', addTxt: 'Connect your watch', help: 'Steps 4 of 7 days this week. More movement in the day tends to mean deeper sleep.' });
-  // Energy
-  let en = Math.min(5, 2 + Math.round(2 * s.k * (b ? 0.4 : 1))), enAvail = d === 'rich', enSrc = 'From your monthly check-ins';
-  if (ci){ en = { better: Math.max(en, 4), same: 2, worse: 1 }[ci.energy]; enAvail = true; enSrc = 'From today’s check-in'; }
-  L.push({ id: 'energy', icon: 'bolt', tone: 'g', title: 'Energy', then: '2/5', now: `${en}/5`, good: en > 2, avail: enAvail, num: [2, en], unit: '/5',
-    hero: `Energy up from 2/5 to ${en}/5.`, heroSub: 'You said you wanted to keep up with the kids. This is what that looks like.', src: enSrc, help: 'Protein and steps both help here.' });
-  // Clothes (check-in only)
-  if (ci) L.push({ id: 'clothes', icon: 'shirt', tone: 'p', title: 'Clothes fit', then: 'At intake', now: { looser: 'Looser', same: 'Same', tighter: 'Tighter' }[ci.clothes], good: ci.clothes === 'looser', avail: true,
-    hero: 'Your clothes are fitting looser.', heroSub: 'That’s real change you can feel every day, whatever the scale says this week.', src: 'From today’s check-in', help: 'Want to make it official? Add a waist measurement.' });
-  // Blood pressure
-  if (s.stage !== 'early') L.push({ id: 'bp', icon: 'heart', tone: 'g', title: 'Blood pressure', then: '138/88', now: b ? '134/86' : s.stage === 'plateau' ? '122/80' : '126/82', good: true, avail: d === 'rich' || add.bp,
-    hero: b ? 'Blood pressure is edging down.' : 'Blood pressure is back in the healthy range.', heroSub: 'Less strain on your heart. A win that matters for decades, not weeks.',
-    src: 'From GP results you shared (illustrative)', addTxt: 'Share a GP result', help: 'Your prescriber can see this too.' });
-  return L;
+/* ===================== Shared sections ===================== */
+function lock(d){
+  const [, msg] = trigger(d);
+  return `<div class="lock"><p class="when">Monday 16 November</p><div class="time">7:42</div>
+    <button class="notif" data-act="enter" aria-label="Notification: ${msg} Open."><span class="top"><span class="appic">J</span>Your care team<span style="margin-left:auto">now</span></span><b>${msg}</b></button></div>`;
 }
-function heroWin(L){
-  const ok = L.filter(w => w.avail && w.good && !w.process);
-  const pri = { early: ['nausea', 'clothes', 'food', 'cravings', 'energy'], middle: ['clothes', 'cravings', 'food', 'waist', 'sleep'], plateau: ['waist', 'bp', 'clothes', 'sleep', 'energy', 'food'] }[state.stage];
-  for (const id of pri){ const w = ok.find(x => x.id === id); if (w) return w; }
-  return ok[0] || L.find(w => w.id === 'doses');
+// The existing Today content, kept in both views.
+function existingToday(d){
+  return sec('Tasks', '', `<div class="card list" style="padding:0">${plain('scale', 'Weekly weigh-in', 'Due Monday')}${plain('syringe', 'Next dose', d.next)}</div>`)
+    + sec('Daily goals', '', `<div class="card list" style="padding:0">${plain('shoe', 'Steps', '4,312 / 4,000')}${plain('bowl', 'Protein', '0 / 88 g · Log a meal')}${plain('drop', 'Hydration', '0 / 2,100 mL · Log water')}</div>`);
 }
+const existingProgress = d => sec('More', '', `<div class="card list" style="padding:0">${plain('tape', 'Waist', state.have.waist ? `${104 - d.waist[state.range]} cm` : 'Add')}${plain('cam', 'Progress photos', 'Add')}${plain('bolt', 'Habit streaks', state.have.habits ? '5 days' : 'Start')}</div>`);
 
-/* ===================== Hero ===================== */
-function nextMilestone(s){
-  for (const m of [5, 10, 15, 20]){ const target = START_KG * m / 100; if (s.kg < target) return { m, left: +(target - s.kg).toFixed(1) }; }
-  return null;
+/* ===================== Today and Progress ===================== */
+function header(d){
+  const [, g] = greeting(d), top = d.stall ? null : d.wins[0];
+  return `<header class="head ${d.stall ? 'amber' : ''}">${top ? `<button class="greet" data-act="win" data-id="${top.id}" aria-label="Open the detail behind this">` : '<div>'}<h1 class="title" id="h1" tabindex="-1">Hey Sarah, ${g}</h1>${top ? '</button>' : '</div>'}
+    <p class="sub">Week ${d.week} · ${d.phase === 'inc' ? d.dose : 'steady dose'} · ${state.stale && !d.stall ? 'Nothing new since your last visit.' : d.normalNow}</p>
+    <ol class="strip" aria-label="Your dose steps">${DOSES.map((x, i) => `<li class="${i < d.doseIdx ? 'done' : i === d.doseIdx ? 'here' : ''}"><i></i><span>${x} mg</span>${i === d.doseIdx ? '<b>You are here</b>' : ''}</li>`).join('')}</ol></header>`;
 }
-function slides(){
-  const s = sc(), L = wins(), w = heroWin(L), hw = state.hideWeight;
-  if (s.stall){
-    return [{ cls: 'stall', lbl: 'Let’s take a look', h: 'Things have slowed down. Let’s find out why.',
-      sub: s.data === 'none' ? 'We haven’t seen much change, and we’d rather check than guess. It’s often something fixable, like the dose.' : 'Your weight’s been flat for 4 weeks and your appetite hasn’t shifted much. That’s worth a conversation, not more waiting. It’s often the dose, not you.',
-      cta: ['stall', 'Check in with your care team'], cta2: ['scroll', 'See what has changed'] }];
-  }
-  const nsv = { lbl: s.data === 'none' && !state.ciDone ? 'Your first win' : 'Your win this week', h: w.hero, sub: w.heroSub,
-    cta: s.data === 'none' && !state.ciDone ? ['scroll-ci', 'Tell us what’s changed'] : ['scroll', 'See everything that’s changed'] };
-  if (s.data === 'none') return [nsv]; // no weigh-ins, so no weight slide
-  let weight;
-  const ms = nextMilestone(s);
-  if (state.scale === 'down') weight = { lbl: 'This week', h: hw ? 'The scale moved this week.' : `Down ${Math.abs(s.wk)}kg this week.`, sub: ms ? (hw ? 'Your next milestone is in sight.' : `${ms.left}kg to ${ms.m}%, your next milestone.`) : 'Steady progress. Keep going.', cta: ['sheet:weight', 'See your weight'] };
-  else if (state.scale === 'flat') weight = { lbl: 'This week', h: 'The scale’s quiet this week.', sub: `That’s normal. Weight drops in steps, not a straight line.${hw ? '' : ` Your 4-week trend: ${sgn(s.t4)}kg.`}`, cta: ['sheet:weight', 'Why the scale pauses'] };
-  else weight = { lbl: 'This week', h: 'Up a little this week.', sub: hw ? 'Day-to-day changes are mostly water, not fat.' : `${sgn(s.wk)}kg is usually water, salt or timing, not fat. Your 4-week trend: ${sgn(s.t4)}kg.`, cta: ['sheet:weight', 'Why this happens'] };
-  // On a good week weight leads; on a flat or up week a non-scale win leads.
-  return state.scale === 'down' ? [weight, nsv] : [nsv, weight];
+function flatCard(d){
+  return `<div class="sec"><div class="card flat" style="margin-top:14px"><span class="k">Your weight</span>
+    <p class="big">Your weight has been flat for ${d.flatWeeks} weeks.</p>
+    <div class="normal">${weightLine(d)} You’re <b>below</b> where we’d expect at this point.</div>
+    <p class="note">${ic('info', 16)}<span>This usually has a reason, and it’s often fixable: the dose, side effects or injection technique.</span></p>
+    ${state.sent ? `<p class="sent">${ic('check', 18, 2.6)}<span><strong>Sent to your care team.</strong> Dr Lee will reply within 1 business day.</span></p>`
+      : `<button class="btn" data-act="care">Talk to your care team</button>`}</div></div>`;
 }
-function renderHero(){
-  const sl = slides(); if (state.slide >= sl.length) state.slide = 0;
-  const x = sl[state.slide];
-  const nav = sl.length > 1 ? `<div class="hero-nav"><button class="arrow" data-act="slide" data-v="-1" aria-label="Previous">${I.chevL}</button>${sl.map((_, i) => `<button class="dotbtn" data-act="slide-to" data-v="${i}" aria-label="Slide ${i + 1} of ${sl.length}" aria-current="${i === state.slide}"><i></i></button>`).join('')}<button class="arrow" data-act="slide" data-v="1" aria-label="Next">${I.chevR}</button></div>` : '';
-  return `<section class="hero ${x.cls || ''}" id="hero" aria-roledescription="carousel" aria-label="This week">
-    <span class="arc" aria-hidden="true"></span>
-    <p class="lbl">${x.lbl}</p><h1 id="h1" tabindex="-1">${x.h}</h1><p class="sub">${x.sub}</p>
-    <button class="cta" data-act="${x.cta[0]}">${x.cta[1]}</button>
-    ${x.cta2 ? `<button class="link-btn cta2" data-act="${x.cta2[0]}">${x.cta2[1]}</button>` : ''}
-    ${nav}</section>`;
+function row(w){
+  const isNew = state.just.includes(w.id), cls = w.win === false ? 'n' : ['appetite', 'side', 'habits', 'waist'].includes(w.id) ? 'p' : '';
+  return `<button class="row ${isNew ? 'new' : ''}" data-act="win" data-id="${w.id}"><span class="ic ${cls}">${ic(w.icon)}</span>
+    <span class="tx"><span class="t">${w.title}${isNew ? `<span class="tag new">${w.win === false ? 'Noted' : 'New'}</span>` : ''}</span><span class="s">${w.type}</span></span><span class="chev">${ic('chevR', 18)}</span></button>`;
 }
-
-/* ===================== Sections ===================== */
-function renderRail(){
-  const L = wins(), have = L.filter(w => w.avail), miss = L.filter(w => !w.avail && w.addTxt);
-  const card = w => `<button class="wcard ${state.fresh.includes(w.id) ? 'new' : ''}" data-act="sheet:win:${w.id}" aria-label="${w.title}: ${w.then} then, ${w.nowLbl || w.now} now. Open details.">
-      <span class="tile ${w.good ? w.tone : 'a'}">${I[w.icon]}</span><span class="t">${w.title}</span>
-      <span class="tn">${w.process ? '' : `<span class="then">${w.then}</span>`}<span class="now">${w.now}</span></span>
-      ${state.fresh.includes(w.id) ? '<span class="pill" style="align-self:flex-start">New</span>' : w.good ? '' : '<span class="pill amber" style="align-self:flex-start">Not yet</span>'}</button>`;
-  const addCard = w => `<button class="wcard add" data-act="add:${w.id}"><span class="plus" aria-hidden="true">+</span><span class="t">${w.title}</span><span class="s">${w.addTxt}</span></button>`;
-  const goodN = have.filter(w => w.good).length;
-  return `<div class="sec" id="since"><div class="sec-h"><h2>Since you started</h2><span>${goodN} win${goodN === 1 ? '' : 's'}</span></div>
-    <div class="rail" role="list">${have.map(card).join('')}${miss.map(addCard).join('')}</div></div>`;
+function winsList(d, title){
+  const n = d.wins.length;
+  return sec(d.stall ? 'What’s going well' : title, d.stall ? '' : `${n} win${n === 1 ? '' : 's'}`, `<div class="card list" style="padding:0">${d.wins.concat(d.noted).map(row).join('')}</div>`);
 }
-
-function weightSeries(s){
-  const pts = []; pts[7] = s.now; pts[6] = s.now - s.wk;
-  const per = (s.t4 - s.wk) / 3;
-  for (let i = 5; i >= 0; i--) pts[i] = pts[i + 1] - per + Math.sin(i * 7.3) * 0.15;
-  return pts;
+function chart(d){
+  const W = 320, H = 150, pl = 30, pr = 10, pt = 10, pb = 24, xs = d.week, ymax = Math.ceil((range(xs).hi + 2) / 5) * 5;
+  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax);
+  const steps = []; for (let w = 0; w <= xs; w += Math.max(1, Math.round(xs / 30))) steps.push(w); if (steps[steps.length - 1] !== xs) steps.push(xs);
+  const band = steps.map(w => `${X(w).toFixed(1)},${Y(range(w).hi).toFixed(1)}`).concat(steps.slice().reverse().map(w => `${X(w).toFixed(1)},${Y(range(w).lo).toFixed(1)}`)).join(' ');
+  const line = d.pts.map((v, w) => `${w ? 'L' : 'M'}${X(w).toFixed(1)},${Y(v).toFixed(1)}`).join('');
+  const grid = []; for (let v = 0; v <= ymax; v += 5) grid.push(`<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ECE6EE"/><text x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="10" fill="#56605A">${v}%</text>`);
+  const col = d.stall ? '#C98A1B' : 'var(--brand)';
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart: ${weightLine(d)}">
+    ${grid.join('')}<polygon points="${band}" fill="var(--band)" opacity=".75"/>
+    <path d="${line}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(xs)}" cy="${Y(d.pts[d.pts.length - 1])}" r="4.5" fill="${col}" stroke="#fff" stroke-width="2"/>
+    <text x="${pl}" y="${H - 6}" font-size="10" fill="#56605A">Week 0</text><text x="${W - pr}" y="${H - 6}" font-size="10" fill="#56605A" text-anchor="end">Week ${xs}</text></svg>
+    <div class="legend"><span><i style="background:var(--band)"></i>Expected range</span><span><i style="background:${col};height:3px;vertical-align:3px"></i>You, % of body weight lost</span></div></div>`;
 }
-function sparkline(pts, hw){
-  const W = 300, H = 90, min = Math.min(...pts) - 0.4, max = Math.max(...pts) + 0.4;
-  const x = i => 8 + i * (W - 16) / (pts.length - 1), y = v => 8 + (max - v) / (max - min) * (H - 22);
-  const d = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Weight over the last 8 weeks">
-    <path d="${d} L${x(pts.length - 1)},${H - 12} L${x(0)},${H - 12} Z" fill="#EFE6F8"/>
-    <path d="${d}" fill="none" stroke="#7E52B8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    ${pts.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="${i === pts.length - 1 ? 5 : 3}" fill="${i === pts.length - 1 ? '#7E52B8' : '#fff'}" stroke="#7E52B8" stroke-width="2"/>`).join('')}
-    <text x="8" y="${H - 1}" font-size="11" fill="#56605A">8 weeks ago</text><text x="${W - 8}" y="${H - 1}" font-size="11" fill="#56605A" text-anchor="end">This week</text></svg>`;
+// Today: weight is one tap away. Progress: the full chart, with kilograms on tap.
+function weightRow(d){
+  const [cls, st] = weightStatus(d);
+  return sec('Weight', '% of body weight', `<div class="card"><button class="wbtn" data-act="weight"><span><span class="t">${weightLine(d)}</span><span class="status ${cls}">${st}</span></span><span class="chev" style="transform:rotate(-90deg)">${ic('chevD', 20)}</span></button></div>`);
 }
-function renderWeight(){
-  const s = sc(), hw = state.hideWeight;
-  if (s.data === 'none') return `<div class="sec"><div class="card"><div class="wt-top"><h3>Weight</h3></div>
-    <p class="muted" style="margin:8px 0 0">No weigh-ins yet. When you add one, we’ll show it here with context, so one number never tells the whole story.</p>
-    <button class="btn soft" data-act="todo">Log a weigh-in</button></div></div>`;
-  const calm = s.stall
-    ? `Your weight has been about the same for 4 weeks, ${s.data === 'rich' ? 'and your wins have slowed too' : 'and that’s below what we’d expect'}. Your care team can help work out why.`
-    : state.scale === 'down' ? `Nice. <b>${hw ? 'Heading the right way.' : sgn(s.t4) + 'kg over 4 weeks.'}</b>`
-    : state.scale === 'flat' ? `No change this week, and that’s normal. <b>${hw ? 'Your 4-week trend is still down.' : `4-week trend: ${sgn(s.t4)}kg.`}</b>`
-    : `A small rise is usually water or salt. <b>${hw ? 'Your 4-week trend is still down.' : `4-week trend: ${sgn(s.t4)}kg.`}</b>`;
-  return `<div class="sec"><div class="sec-h"><h2>Weight</h2><span>${s.data === 'light' ? 'Monthly weigh-ins' : 'Weekly'}</span></div><div class="card">
-    <div class="wt-top"><h3>This week</h3>${hw ? '' : `<span class="pill">${s.total < 0 ? '↓' : ''} ${Math.abs(s.total).toFixed(1)}% since start</span>`}</div>
-    ${hw ? '' : `<div class="wt-nums"><div><div class="v">${s.now} kg</div><div class="k">Current</div></div><div><div class="v">${sgn(s.wk)} kg</div><div class="k">This week</div></div></div>`}
-    ${hw ? '' : sparkline(weightSeries(s))}
-    <div class="calm">${calm}</div>
-    <div class="mini-toggle"><button class="switch" role="switch" aria-checked="${hw}" aria-labelledby="hwl" data-act="hideweight"></button><span id="hwl">Hide weight numbers</span></div>
-    </div></div>`;
+function weightFull(d){
+  const [cls, st] = weightStatus(d);
+  return sec('Weight', '% of body weight', `<div class="card"><p class="wline">${weightLine(d)}</p><span class="status ${cls}">${st}</span>${chart(d)}
+    ${d.reassure ? `<div class="reassure">Under 5% at week 12 is common. In a large trial, 9 in 10 people with a slow start still went on to lose 5% or more.<span class="il">Source: SURMOUNT-1 trial analysis, 2024.</span></div>` : ''}
+    <button class="link-btn" data-act="kg" aria-expanded="${state.kg}">${state.kg ? 'Hide kilograms' : 'Show in kilograms'}</button>${state.kg ? `<p class="kgline">${d.kgNow.toFixed(1)} kg now, ${d.kgLost.toFixed(1)} kg less than when you started (${START_KG} kg).</p>` : ''}</div>`, 'wsec');
 }
-
-function renderPhotos(){
-  const s = sc();
-  if (!(s.data === 'rich' || state.added.photos)) return `<div class="sec"><div class="card photo-empty"><span class="tile p" style="margin:0 auto">${I.cam}</span>
-    <h3>See the change the scale can’t</h3><p class="muted" style="margin:0 0 4px">Photos are private to you and stay blurred until you tap.</p>
-    <button class="btn soft" data-act="add:photos">Add your first photo</button></div></div>`;
-  const blur = !state.photosOpen;
-  const fig = w => `<svg viewBox="0 0 120 160" aria-hidden="true"><circle cx="60" cy="38" r="16" fill="#A898BC"/><path d="M${60 - w} 150 Q${60 - w} 70 60 64 Q${60 + w} 70 ${60 + w} 150 Z" fill="#A898BC"/></svg>`;
-  const nowW = { early: 34, middle: 29, plateau: 25 }[s.stage] + (s.below ? 4 : 0);
-  return `<div class="sec"><div class="sec-h"><h2>Photos</h2><span>Private</span></div><div class="card">
-    <div class="photos">
-      <button class="photo ${blur ? 'blur' : ''}" data-act="photos" aria-label="${blur ? 'Reveal' : 'Hide'} photos">${fig(36)}<span class="cap">Week 0</span>${blur ? '<span class="lock"><span>Tap to reveal</span></span>' : ''}</button>
-      <button class="photo ${blur ? 'blur' : ''}" data-act="photos" aria-label="${blur ? 'Reveal' : 'Hide'} photos">${fig(nowW)}<span class="cap">Week ${s.week}</span>${blur ? '<span class="lock"><span>Tap to reveal</span></span>' : ''}</button>
-    </div>${src('Only you can see these. Illustrative placeholders.')}</div></div>`;
+function trends(d){
+  const t = (k, name, data, lbl) => `<div class="trend"><h3>${name}</h3>${state.have[k] ? bars(data, lbl) : state.ans[k] !== undefined ? '<p class="cap">First log today. Your trend starts here.</p>' : '<p class="cap">No logs yet. One log a week is enough to see your trend.</p>'}</div>`;
+  return sec('Your logs, as trends', `Last ${Math.min(8, d.week)} weeks`, `<div class="card">${t('appetite', 'Appetite', TREND.appetite.slice(-Math.min(8, d.week)), 'Days at Balanced or lower, per week')}${t('side', 'Side effects', d.sideBars, 'Days with side effects, per week')}</div>`);
 }
-
-function renderHabits(){
-  const s = sc(), L = wins(), get = id => L.find(w => w.id === id);
-  const dots = (n, on) => `<span class="dots" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}">${i < on ? I.check : ''}</i>`).join('')}</span>`;
-  const row = (icon, tone, name, d, sub, link, neutral) => `<div class="habit"><span class="tile ${tone}">${I[icon]}</span><div class="body"><div class="name">${name}</div>${d || ''}<div class="muted" style="font-size:13px">${sub}</div>${link ? `<div class="link-out ${neutral ? 'neutral' : ''}" style="margin-top:6px">${I.link}<span>${link}</span></div>` : ''}</div></div>`;
-  const doseN = Math.min(s.week, 7);
-  const cr = get('cravings'), en = get('energy');
-  const rows = [
-    row('syringe', 'g', 'Weekly dose', dots(doseN, doseN), `${s.week} weeks in a row`, 'Linked to: steadier appetite control between meals'),
-    s.data === 'none' ? row('egg', 'p', 'Protein', '', 'Not tracked yet', 'Log meals or tell your coach to see how protein links to your wins', true)
-      : row('egg', 'p', 'Protein at most meals', dots(7, s.data === 'rich' ? (s.below ? 2 : 5) : 3), s.data === 'rich' ? 'From your food log' : 'Self-reported',
-          s.below ? 'Protein’s been hard to fit in. Your coach has easy wins for small appetites.' : cr.avail && cr.good ? `Linked to: evening snacking down to ${cr.now.toLowerCase()}` : 'Linked to: fewer cravings', s.below),
-    s.data === 'rich' ? row('shoe', 'g', 'Steps · 4,000 a day', dots(7, s.below ? 2 : 4), 'From your phone', en.good ? `Linked to: energy up from 2/5 to ${en.now}` : 'Linked to: energy and sleep')
-      : row('shoe', 'g', 'Steps', '', 'Not connected', 'Connect your phone to link movement with energy and sleep', true),
-  ];
-  return `<div class="sec"><div class="sec-h"><h2>Habits → wins</h2><span>This week</span></div><div class="card">${rows.join('')}</div></div>`;
+// One question, reusing the app's own inputs. Optional: say it in a sentence (scripted).
+function checkin(d){
+  if (state.just.length){ const any = d.wins.some(w => state.just.includes(w.id)); return `<div class="sec" id="ci"><div class="card ci" role="status"><p class="done">${ic('check', 18, 2.6)}<span>${any ? 'Added to your wins.' : d.stall ? 'Added to what your care team will see.' : 'Thanks. We’ll ask again next week.'} Your trend is on the Progress tab.</span></p></div></div>`; }
+  if (!d.qKey) return '';
+  let body;
+  if (state.say === 'listening') body = `<p class="q">Listening</p><p class="said" aria-live="polite">“I’m getting full a lot faster, and I haven’t felt sick at all this week.”</p>`;
+  else if (state.say === 'confirm') body = `<p class="q">Here’s what we heard. Is this right?</p><div class="opts">${state.sayChips.map(k => `<button class="opt on" data-act="say-x" data-k="${k}" aria-label="Remove ${k}">${k === 'appetite' ? 'Appetite: Low' : 'Side effects: none'} ×</button>`).join('')}</div>
+      <button class="btn" data-act="say-ok" ${state.sayChips.length ? '' : 'disabled'}>Log this</button><button class="link-btn" data-act="say-cancel">Cancel</button>`;
+  else if (d.qKey === 'appetite') body = `<p class="q">How’s your appetite today?</p><input class="slider" id="apl" type="range" min="1" max="5" step="1" value="${state.apl}" aria-label="Appetite, from very low to very high">
+      <div class="ends"><span>Very low</span><span>Very high</span></div><p class="lv" id="aplv">${APPETITE[state.apl - 1]}</p><button class="btn" data-act="ci-app">Log appetite</button>`;
+  else body = `<p class="q">Any side effects this week?</p><div class="opts"><button class="opt" data-act="chip" data-v="none" aria-pressed="${state.chips.includes('none')}">None</button>${SIDE_CHIPS.map(c => `<button class="opt" data-act="chip" data-v="${c}" aria-pressed="${state.chips.includes(c)}">${c}</button>`).join('')}</div>
+      <button class="btn" data-act="ci-side" ${state.chips.length ? '' : 'disabled'}>Log side effects</button>`;
+  return sec('One quick question', 'Takes 2 seconds', `<div class="card ci">${body}${state.say ? '' : `<button class="sayb" data-act="say">${ic('mic', 18)}Or just say it</button>`}</div>`, 'ci');
 }
-
-function renderCheckin(){
-  if (state.ciDone) return renderPayback();
-  const q = state.ci;
-  const opt = (k, v, l) => `<button class="opt" data-act="ci:${k}:${v}" aria-pressed="${q[k] === v}">${l}</button>`;
-  return `<div class="sec" id="ci"><div class="sec-h"><h2>What’s changed?</h2><span>3 taps</span></div><div class="card ci">
-    <p class="muted" style="margin:0">We’ll compare your answers with what you told us when you started, and turn them into wins.</p>
-    <div class="qq"><p>Where’s your food noise today?<span class="intake">At intake you said 8/10</span></p><div class="opts">${opt('food', 'low', '1–3')}${opt('food', 'mid', '4–6')}${opt('food', 'high', '7–10')}</div></div>
-    <div class="qq"><p>How are your clothes fitting?<span class="intake">Compared with when you started</span></p><div class="opts">${opt('clothes', 'looser', 'Looser')}${opt('clothes', 'same', 'About the same')}${opt('clothes', 'tighter', 'Tighter')}</div></div>
-    <div class="qq"><p>And your energy?<span class="intake">At intake you said 2/5</span></p><div class="opts">${opt('energy', 'better', 'Better')}${opt('energy', 'same', 'Same')}${opt('energy', 'worse', 'Worse')}</div></div>
-    <button class="btn" data-act="ci-done" ${q.food && q.clothes && q.energy ? '' : 'disabled'}>Show my wins</button></div></div>`;
+const outcome = d => d.stall ? '' : `<div class="sec" id="outcome"><div class="card out"><span class="k">${d.out[0]}</span><p>${d.out[1]}</p></div></div>`;
+function afterToday(d){
+  const short = { ...d, wins: d.wins.filter((w, i) => i < 3 || state.just.includes(w.id)), noted: d.noted.filter(w => state.just.includes(w.id)) }, more = d.wins.length - short.wins.length;
+  return `${header(d)}${d.noLogs && !d.stall ? checkin(d) : ''}${d.stall ? flatCard(d) : ''}${winsList(short, 'Your wins this week').replace(`${short.wins.length} win${short.wins.length === 1 ? '' : 's'}`, `${d.wins.length} win${d.wins.length === 1 ? '' : 's'}`)}
+    ${more > 0 ? `<div class="sec"><button class="link-btn" data-act="tab" data-t="progress">See all ${d.wins.length} wins in Progress</button></div>` : ''}
+    ${weightRow(d)}${d.noLogs && !d.stall ? '' : checkin(d)}${outcome(d)}${existingToday(d)}`;
 }
-function renderPayback(){
-  const c = state.ci, items = [];
-  items.push(`Food noise updated: 8/10 → ${{ low: 2, mid: 5, high: 8 }[c.food]}/10`);
-  if (c.clothes === 'looser') items.push('New win: your clothes are fitting looser');
-  if (c.energy === 'better') items.push('Energy added to your wins');
-  const flat = c.food === 'high' && c.clothes !== 'looser' && c.energy !== 'better';
-  if (flat) items.push('Not much has shifted yet. That’s useful to know, and your care team can see it.');
-  items.push('Your coach sees this too, so you won’t have to repeat it');
-  return `<div class="sec" id="ci"><div class="card payback" role="status"><h3>Your answers just became wins</h3><ul>${items.map(i => `<li>${I.check}<span>${i}</span></li>`).join('')}</ul>
-    ${flat ? `<button class="btn" data-act="stall">Talk to my care team</button>` : ''}
-    <button class="link-btn" data-act="ci-redo" style="margin-top:6px">Redo check-in</button></div></div>`;
+function afterProgress(d){
+  return `<header class="head plain"><h1 class="title" id="h1" tabindex="-1">Progress</h1><p class="sub">Week ${d.week} · ${d.phase === 'inc' ? d.dose : 'steady dose'} · ${d.normalNow}</p></header>
+    ${d.stall ? flatCard(d) : ''}${winsList(d, 'This week’s wins')}${weightFull(d)}${trends(d)}${existingProgress(d)}`;
 }
 
 /* ===================== Sheets ===================== */
-function bars(w){
-  let vals;
-  if (w.series) vals = w.series;
-  else if (w.num){ const n = STAGES[state.stage].months, [a, z] = w.num; vals = Array.from({ length: n }, (_, i) => +(a + (z - a) * (1 - Math.exp(-2 * i / (n - 1))) / (1 - Math.exp(-2))).toFixed(1)); }
-  else return '';
-  const max = Math.max(...vals) * 1.1 || 1, bw = 26, gap = 10, W = vals.length * (bw + gap), H = 110;
-  return `<svg viewBox="0 0 ${W} ${H}" width="${Math.min(W, 320)}" role="img" aria-label="${w.title} by month: ${vals.join(', ')}">
-    ${vals.map((v, i) => { const h = Math.max(3, v / max * (H - 30)); return `<rect x="${i * (bw + gap)}" y="${H - 18 - h}" width="${bw}" height="${h}" rx="6" fill="${i === vals.length - 1 ? '#1E3B2C' : '#CFC3F5'}"/><text x="${i * (bw + gap) + bw / 2}" y="${H - 4}" font-size="10.5" text-anchor="middle" fill="#56605A">M${i + 1}</text>`; }).join('')}</svg>`;
-}
-function renderSheet(){
+function sheet(d){
   const sh = state.sheet; if (!sh) return '';
   let title, body;
-  if (sh.startsWith('win:')){
-    const w = wins().find(x => x.id === sh.slice(4));
-    title = w.title;
-    body = `${w.process ? `<p style="font-family:var(--serif);font-size:26px;color:var(--brand);margin:14px 0">${w.nowLbl}</p>` : `<div class="big-tn"><div class="col"><div class="k">Then</div><div class="v">${w.then}</div></div><div aria-hidden="true" style="text-align:center;color:var(--muted)">→</div><div class="col now"><div class="k">Now</div><div class="v">${w.now}</div></div></div>`}
-      ${bars(w)}
-      <p style="margin:12px 0 0">${w.good ? w.heroSub : 'Not much change yet. That’s worth knowing, and your care team can see it.'}</p>
-      <div class="helping"><b>What’s helping</b>${w.help}</div>${src(w.src)}`;
-  } else if (sh === 'weight'){
-    const s = sc();
-    title = 'Why the scale pauses';
-    body = `<p>Weight doesn’t fall in a straight line. Water, salt, hormones and digestion can hide fat loss for a week or two, and sometimes longer.</p>
-      <p>That’s why we look at your <strong>4-week trend</strong>${state.hideWeight ? '' : ` (${sgn(s.t4)}kg)`} and at wins like your waist, appetite and energy.</p>
-      <div class="helping"><b>When to worry</b>If your weight <em>and</em> your wins stay flat for a month, that’s a signal. We’ll flag it and get your care team involved, so you don’t have to wonder.</div>`;
-  } else if (sh === 'stall'){
-    title = 'Check in with your care team';
-    body = `<p>June, your care assistant, will ask a few quick questions (doses, side effects, appetite), then pass your answers to a prescriber or coach.</p>
-      <p class="muted">This hands off to the <strong>Proactive Check-In</strong>, a separate prototype. NSV never covers up a real stall.</p>
-      <button class="btn" data-act="close">Got it</button>`;
+  if (sh.type === 'care'){
+    title = 'Talk to your care team';
+    const notes = [`Weight: ${fmt(d.lost)}% lost, flat for ${d.flatWeeks} weeks (expected ${d.lo} to ${d.hi}% at week ${d.week})`, `Dose: ${d.dose}, ${d.week} of ${d.week} doses on time`]
+      .concat(d.wins.concat(d.noted).filter(w => ['side', 'appetite'].includes(w.id)).map(w => w.title.replace(/\.$/, '')));
+    body = state.sent
+      ? `<p class="sent">${ic('check', 18, 2.6)}<span><strong>Sent.</strong> Dr Lee has this and will reply within 1 business day. You’ll get a notification.</span></p><button class="btn soft" data-act="close">Done</button>`
+      : `<p style="margin:4px 0 0">We’ll review your dose, side effects and injection technique.</p>
+        <dl class="kv"><dt>What we’ll share with them</dt><dd><ul class="checks">${notes.map(n => `<li>${ic('check', 16, 2.6)}<span>${n}</span></li>`).join('')}</ul></dd>
+        <dt>Who</dt><dd>Your prescriber, Dr Lee. Usually replies within 1 business day.</dd></dl>
+        <button class="btn" data-act="send">Send to my care team</button>`;
+  } else {
+    const w = d.wins.concat(d.noted).find(x => x.id === sh.id);
+    if (!w){ state.sheet = null; return ''; }
+    title = w.type;
+    body = `<p style="font-family:var(--serif);font-size:22px;color:var(--brand);margin:6px 0 0;line-height:1.2">${w.title}</p>
+      <dl class="kv"><dt>What’s typical at this stage</dt><dd>${w.normal}</dd>${w.note ? `<dt>Good to know</dt><dd>${w.note}</dd>` : ''}${w.bars ? `<dt>Your last ${w.bars.length} weeks</dt><dd>${bars(w.bars, w.barsL)}</dd>` : ''}<dt>Where this comes from</dt><dd>${w.source}</dd></dl>`;
   }
-  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t"><div class="grab" aria-hidden="true"></div>
-    <div class="sheet-h"><h2 id="sheet-t">${title}</h2><button class="x" data-act="close" aria-label="Close">×</button></div>${body}</div></div>`;
+  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="grab"></div>
+    <div class="sheet-h"><h2 id="sh-t">${title}</h2><button class="x" data-act="close" aria-label="Close">×</button></div>${body}</div></div>`;
 }
 
-/* ===================== Explainer ===================== */
-function explain(){
-  const s = sc();
-  let q, txt, risk = false;
-  if (s.stall){ q = 'True stall · no false reassurance'; risk = true; txt = 'Weight and wins are both flat and below range. The hero stops celebrating and routes to care.'; }
-  else if (s.data === 'none' && !state.ciDone){ q = 'Infer before you ask'; txt = 'No tracking data, but orders show every dose on time, so the first win is a process win. Three taps unlock the rest.'; }
-  else if (state.scale === 'down'){ q = 'Good week'; txt = 'The weight leads, and a non-scale win sits one swipe away to back it up.'; }
-  else { q = 'Perception gap'; risk = s.below; txt = `The scale is ${state.scale === 'flat' ? 'flat' : 'up'} this week, so a non-scale win leads. The weight is still there, with context.`; }
-  $('#explain').innerHTML = `<span class="q ${risk ? 'risk' : ''}">${q}</span><p>${txt}</p>
-    <div class="vs"><div class="before"><b>Today</b>A “win” means kilos: “2.8kg away from your next win.” A plateau means weeks with nothing to celebrate.</div>
-    <div class="after"><b>This prototype</b>A win is anything that changed. Habits link to outcomes, and data you give is paid back straight away.</div></div>`;
-}
-
-/* ===================== Render + events ===================== */
+/* ===================== Render ===================== */
 const TABS = [['Today', 'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6'], ['Explore', 'M4 5h7v14H4zM13 5h7v14h-7z'], ['Progress', 'M4 20V14h5v-4h5V6h6v14z'], ['Care', 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z'], ['Shop', 'M5 6h15l-2 8H7zM5 6L4 3H2M8 20h.01M17 20h.01']];
-let opener = null;
-function render(){
-  const prev = $('#screen'), keep = prev ? prev.scrollTop : 0, winY = window.scrollY;
-  $('#app').innerHTML = `
-    <div class="floatbar"><button class="fbtn av" data-act="todo" aria-label="Profile">S</button><button class="fbtn" data-act="todo">Help</button></div>
-    <main class="screen" id="screen">${renderHero()}${renderRail()}${renderWeight()}${renderCheckin()}${renderPhotos()}${renderHabits()}
-      <p class="fine">Prototype · Sarah is a fictional patient and all data is illustrative.</p></main>
-    <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === 'Progress' ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === 'Progress' ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>
-    ${renderSheet()}`;
-  $('#screen').scrollTop = keep;
-  if (matchMedia('(max-width:860px)').matches) window.scrollTo(0, winY);
-  if (state.sheet){ const x = document.querySelector('.sheet .x'); x && x.focus(); }
-  explain();
+function caption(d){
+  if (d.stall) return ['Real stall', 'Flat while still below the expected range, on a steady dose, is a stall. The greeting doesn’t praise, nothing is reframed, and the main action is talking to the care team. From here the Pre-emptive Check-In takes over.', true];
+  if (d.plateau) return ['Plateau after loss', 'Flat after reaching the expected range is a plateau, not a stall. It’s reframed as maintenance. No language about regain.'];
+  if (d.noLogs) return ['No appetite or side-effect logs', 'The greeting uses only what Juniper already holds, and one question sits right under it, using the app’s own slider and chips. Answer it and the greeting, the wins and the trend all update.'];
+  if (d.wins[0] && d.wins[0].id === 'weight') return ['Good week on the scale', 'When the scale is down, weight leads the summary, always as a % next to the expected range.'];
+  return ['Slow week on the scale', 'The greeting never mentions what the scale didn’t do. It sums up the real changes her own logs show, and weight stays one tap away, in context.' + (d.below ? ' She’s under the range, which is common while the dose is still increasing.' : '')];
 }
-function syncRadios(){ for (const k of ['scale', 'stage', 'data', 'progress']) document.querySelectorAll(`input[name="${k}"]`).forEach(r => r.checked = r.value === state[k]); }
-function scrollToId(id){ const el = document.getElementById(id); if (!el) return; if (matchMedia('(max-width:860px)').matches) el.scrollIntoView({ behavior: 'smooth' }); else $('#screen').scrollTo({ top: el.offsetTop - 70, behavior: 'smooth' }); }
-function closeSheet(){
-  state.sheet = null; render();
-  // The DOM is re-rendered, so find the opener again by its action.
-  const back = opener && document.querySelector(`[data-act="${opener.dataset.act}"]`);
-  if (back) back.focus({ preventScroll: true });
+function render(){
+  const d = model(), prev = $('#screen'), keep = prev ? prev.scrollTop : 0;
+  if (state.step === 'trigger') $('#app').innerHTML = lock(d);
+  else $('#app').innerHTML = `<main class="screen" id="screen">${state.tab === 'today' ? afterToday(d) : afterProgress(d)}<div style="height:24px"></div></main>
+    <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, p]) => { const k = n.toLowerCase(), live = k === 'today' || k === 'progress', on = k === state.tab; return `<button class="tab" ${on ? 'aria-current="page"' : ''} ${live ? `data-act="tab" data-t="${k}"` : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${on ? 2.4 : 1.8}" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg>${n}</button>`; }).join('')}</nav>${sheet(d)}`;
+  const scr = $('#screen'); if (scr) scr.scrollTop = keep;
+  // control panel
+  const [t, x, risk] = caption(d);
+  $('#explain').innerHTML = `<span class="q ${risk ? 'risk' : ''}">${t}</span><p>${x}</p>${d.stall ? '<p><a href="../check-in/">Open the Pre-emptive Check-In →</a></p>' : ''}<p style="color:var(--muted)">Notification: ${trigger(d)[0]}.${d.reassure ? ' The week 12 trial line in the weight card is illustrative, to be replaced with Juniper’s own data.' : ''}</p>`;
+  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; el.innerHTML = CONTROLS[k].map(([v, l]) => `<label><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''}><span>${l}</span></label>`).join(''); });
+  $('#have').innerHTML = LOGS.map(([k, l]) => `<button class="tgb" role="switch" aria-checked="${!!state.have[k]}" data-act="have" data-k="${k}">${l}</button>`).join('');
+  const cur = Object.entries(PRESETS).find(([, [, p]]) => p.stage === state.stage && p.scale === state.scale && p.range === state.range && LOGS.every(([k]) => !!state.have[k] === p.have.includes(k)));
+  $('#presets').innerHTML = Object.entries(PRESETS).map(([k, [l]]) => `<button class="preset" data-act="preset" data-k="${k}" aria-pressed="${!!cur && cur[0] === k}" title="${l}">${k}</button>`).join('') + `<span class="preset-l">${cur ? cur[1][0] : 'Custom'}</span>`;
+  $('[data-act="stale"]').setAttribute('aria-checked', state.stale);
+  $('#steps').innerHTML = STEPS.map(([k, l], i) => `<button class="step" data-act="step" data-k="${k}" aria-current="${state.step === k ? 'step' : 'false'}">${l}</button>`).join('');
 }
 
-document.addEventListener('change', e => {
-  const r = e.target; if (!r.matches('.seg input')) return;
-  state[r.name] = r.value; state.slide = 0; state.sheet = null; render();
-});
+/* ===================== Flow ===================== */
+function freshVisit(){ state.ans = {}; state.just = []; state.chips = []; state.apl = 3; state.say = null; state.sheet = null; state.sent = false; state.kg = false; }
+// Any change to the data starts a fresh visit, but stays on the screen you're looking at.
+function dataChanged(){ freshVisit(); if (state.step !== 'trigger') state.step = 'home'; render(); if (state.step === 'home') todayOpened(); }
+function todayOpened(){ state.lastGreet = greeting(model())[0]; track('today_opened'); }
+const into = id => { const el = document.getElementById(id); el && el.scrollIntoView({ block: 'center' }); };
+function logged(keys){ state.just = keys; state.say = null; state.step = model().stall ? 'checkin' : 'outcome'; track('checkin_answered'); render();
+  const d = model(); toast(d.wins.some(w => keys.includes(w.id)) ? 'New win added' : 'Thanks, noted');
+  const n = document.querySelector('.row.new'); n && n.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' }); }
+// Jump to any step of the journey: Trigger → Today → Detail → Check-in → Outcome.
+function goStep(k){
+  const wasOut = state.step === 'trigger';
+  if (k === 'trigger'){ freshVisit(); state.step = 'trigger'; state.tab = 'today'; return render(); }
+  state.sheet = null; state.step = k; state.tab = 'today';
+  const d = model();
+  if (wasOut) todayOpened();
+  if (k === 'detail'){ if (d.stall) state.tab = 'progress'; else state.sheet = { type: 'win', id: d.wins[0].id }; }
+  if (k === 'outcome'){ if (d.stall) state.sheet = { type: 'care' }; else if (d.qKey && !state.just.length){ state.ans[d.qKey] = d.qKey === 'appetite' ? 2 : []; state.just = [d.qKey]; track('checkin_answered'); } }
+  render();
+  if (k === 'home'){ $('#screen').scrollTop = 0; window.scrollTo(0, 0); }
+  if (k === 'detail' && d.stall) into('wsec');
+  if (k === 'checkin') into(document.getElementById('ci') ? 'ci' : 'outcome');
+  if (k === 'outcome' && !d.stall) into('outcome');
+}
+let opener = null;
+function closeSheet(){ state.sheet = null; state.step = 'home'; render(); const b = opener && document.querySelector(opener); (b || $('#h1')).focus({ preventScroll: true }); }
+document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; dataChanged(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
+document.addEventListener('input', e => { if (e.target.id === 'apl'){ state.apl = +e.target.value; $('#aplv').textContent = APPETITE[state.apl - 1]; } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sheet) closeSheet(); });
 document.addEventListener('click', e => {
-  if (e.target.classList && e.target.classList.contains('scrim')) { closeSheet(); return; }
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
-  const a = el.dataset.act, v = el.dataset.v;
-  if (a.startsWith('sheet:')){ opener = el; state.sheet = a.slice(6); render(); return; }
-  if (a.startsWith('add:')){
-    const id = a.slice(4); state.added[id] = true; state.fresh = [...state.fresh, id]; render();
-    toast(id === 'photos' ? 'Photo added. Only you can see it.' : 'Added. A new win just unlocked.'); return;
-  }
-  if (a.startsWith('ci:')){ const [, k, val] = a.split(':'); state.ci[k] = val; render(); return; }
+  const a = el.dataset.act;
+  if (a === 'scrim' && e.target !== el) return;
   switch (a){
-    case 'slide': { const n = slides().length; state.slide = (state.slide + +v + n) % n; render(); break; }
-    case 'slide-to': state.slide = +v; render(); break;
-    case 'scroll': scrollToId('since'); break;
-    case 'scroll-ci': scrollToId('ci'); break;
-    case 'stall': opener = el; state.sheet = 'stall'; render(); break;
+    case 'enter': goStep('home'); $('#h1').focus({ preventScroll: true }); break;
+    case 'step': goStep(el.dataset.k); break;
+    case 'tab': state.tab = el.dataset.t; state.sheet = null; render(); $('#screen').scrollTop = 0; window.scrollTo(0, 0); if (state.tab === 'progress') track('weight_expanded'); break;
+    case 'preset': { const p = PRESETS[el.dataset.k][1]; state.stage = p.stage; state.scale = p.scale; state.range = p.range; LOGS.forEach(([k]) => state.have[k] = p.have.includes(k)); dataChanged(); break; }
+    case 'have': state.have[el.dataset.k] = !state.have[el.dataset.k]; dataChanged(); { const b = document.querySelector(`[data-act="have"][data-k="${el.dataset.k}"]`); b && b.focus(); } break;
+    case 'stale': state.stale = !state.stale; dataChanged(); break;
+    case 'win': opener = `[data-act="win"][data-id="${el.dataset.id}"]`; state.sheet = { type: 'win', id: el.dataset.id }; state.step = 'detail'; render(); $('.x').focus(); track('win_tapped'); break;
+    case 'weight': state.tab = 'progress'; render(); into('wsec'); track('weight_expanded'); break;
+    case 'kg': state.kg = !state.kg; render(); $('[data-act="kg"]').focus({ preventScroll: true }); break;
+    case 'chip': { const v = el.dataset.v; state.chips = v === 'none' ? (state.chips.includes('none') ? [] : ['none']) : state.chips.filter(c => c !== 'none' && c !== v).concat(state.chips.includes(v) ? [] : [v]); render(); const b = document.querySelector(`[data-act="chip"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); break; }
+    case 'ci-app': state.ans.appetite = state.apl; logged(['appetite']); break;
+    case 'ci-side': state.ans.side = state.chips.filter(c => c !== 'none'); logged(['side']); break;
+    case 'say': state.say = 'listening'; state.sayChips = model().missing.slice(); render(); setTimeout(() => { if (state.say === 'listening'){ state.say = 'confirm'; render(); const b = $('[data-act="say-ok"]'); b && b.focus({ preventScroll: true }); } }, 1500); break;
+    case 'say-x': state.sayChips = state.sayChips.filter(k => k !== el.dataset.k); render(); break;
+    case 'say-cancel': state.say = null; render(); break;
+    case 'say-ok': { const ks = state.sayChips.slice(); if (ks.includes('appetite')) state.ans.appetite = 2; if (ks.includes('side')) state.ans.side = []; logged(ks); break; }
+    case 'care': opener = '[data-act="care"]'; state.sheet = { type: 'care' }; state.step = 'outcome'; render(); $('.x').focus(); track('care_team_tapped'); break;
+    case 'send': state.sent = true; render(); $('.x').focus(); toast('Sent to your care team'); break;
     case 'close': case 'scrim': closeSheet(); break;
-    case 'ci-done': {
-      state.ciDone = true; const f = ['food'];
-      if (state.ci.clothes) f.push('clothes'); if (state.ci.energy === 'better') f.push('energy');
-      state.fresh = [...state.fresh, ...f]; state.slide = 0; render(); $('#screen').scrollTo({ top: 0 }); window.scrollTo(0, 0); toast('Your wins are updated'); break;
-    }
-    case 'ci-redo': state.ciDone = false; state.ci = {}; state.fresh = state.fresh.filter(x => !['food', 'clothes', 'energy'].includes(x)); render(); break;
-    case 'photos': state.photosOpen = !state.photosOpen; render(); break;
-    case 'hideweight': state.hideWeight = !state.hideWeight; render(); break;
-    case 'todo': toast('Only the Progress tab is part of this prototype'); break;
-    case 'reset': state = initial(); syncRadios(); render(); toast('Demo reset'); break;
+    case 'todo': toast('Not part of this prototype'); break;
+    case 'reset': state = initial(); renderEvents(); render(); toast('Demo reset'); break;
   }
-});
-// Swipe the hero on touch screens.
-let sx = null;
-document.addEventListener('touchstart', e => { if (e.target.closest('#hero')) sx = e.touches[0].clientX; }, { passive: true });
-document.addEventListener('touchend', e => {
-  if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
-  const n = slides().length; if (Math.abs(dx) > 40 && n > 1){ state.slide = (state.slide + (dx < 0 ? 1 : -1) + n) % n; render(); }
 });
 if (matchMedia('(max-width:860px)').matches) $('#demoDetails').open = false;
-render();
+renderEvents(); render();
 </script>
 </body>
 </html>

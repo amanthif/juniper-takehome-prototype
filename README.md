@@ -44,24 +44,33 @@ A monthly moment, a few days before renewal. It opens from a notification into a
 
 ## Prototype: Non-Scale Victories (`/nsv/`)
 
-A redesign of the in-app **Progress tab**. Today a "win" means kilos ("2.8kg away from your next win"), so a plateau means weeks with nothing to celebrate. Here, **a win is anything that changed**.
+**Not more tracking. The same data, used differently.** The current app already collects appetite, side effects, waist, steps and protein, but none of it comes back as progress, and a "win" means a weight milestone ("2.8kg away from your next win"). This prototype targets the **perception gap**: users who are on track for their dose and week but don't see it.
 
-- **Hero carousel:** on a good week the weight leads. On a flat or up week, a non-scale win leads and the weight follows with context.
-- **Since you started:** then-vs-now cards. Tap one for its monthly trend, where the data came from, and what's helping.
-- **What's changed?** A 3-tap check-in compared with intake answers. The answers instantly become new win cards.
-- **Habits → wins:** each habit links to the outcome it drives.
-- **Honesty guardrail:** below range and flat after month 1 → the hero stops celebrating and routes to the care team.
+It makes three changes: it **redefines a win** as any credible sign of progress, it **closes the loop** so existing logs become visible trends, and it **adds a yardstick** so every number sits next to what's expected for that dose and week.
+
+- **Today tab:** a greeting that sums up her real wins ("Hey Sarah, your appetite has settled, your nausea is easing and you haven't missed a dose in 6 weeks"), a dose-step strip with "you are here", her top wins, then the existing tasks and daily goals. The greeting reaches users who would never open a progress page.
+- **Progress tab:** "This week's wins" replaces the milestone gauge. Weight is shown as % of body weight on a chart with the expected-range band, with kilograms on tap. Appetite and side-effect logs appear as trends.
+- **Driven by data, not fixed screens.** The control panel sets the stage of treatment, this week's scale, weight overall, and what she already logs. Presets A to D jump to the main cases.
+- **One quick question, using the app's own inputs:** the five-point appetite slider or the side-effect chips. Answering adds a win straight away and starts a trend. Or she can say it in a sentence and confirm what was heard (scripted).
+- **Greeting rules:** specific and true, never generic praise, and never about what the scale didn't do. A down week leads with weight. If nothing is new, it falls back to the phase message.
+- **Plateau vs stall:** flat *after* reaching the expected range is reframed as maintenance. Flat while still *below* it on a steady dose is a stall: the greeting doesn't praise, nothing is reframed, and the main action is **Talk to your care team** (where the Pre-emptive Check-In takes over).
+- **A walkable journey:** notification → Today → look closer → give one thing → outcome. The control panel can jump to any step.
+- **What we'd measure:** Today opened (and which greeting was shown), win tapped, weight expanded, check-in answered, care team tapped. Counted live in the control panel.
 
 ## Prototype: Pre-emptive Check-In (`/check-in/`)
 
-Patients who are quietly stalling rarely ask for help. They feel fine until the day they decide "it's not working" and cancel. This acts on early signals instead.
+Users who are quietly stalling rarely ask for help. They feel fine until the day they decide "it's not working" and cancel. This acts on early signals instead.
 
-- **The system's view:** press play to watch Sarah's weeks. Small signals appear (a skipped dose step-up, nausea mentioned to June, a late refill, weigh-ins stopping). None is alarming alone. Together they cross a threshold, weeks before she'd likely cancel.
-- **Sarah's view:** an ordinary week, then a gentle notification that names what we noticed, without blame.
-- **The check-in:** June shows exactly what we noticed and where it came from, then asks only what data can't tell us.
+- **The system's view:** press play to watch Sarah's weeks. Small signals appear, none alarming alone. Together they cross a threshold, weeks before she'd likely cancel.
+- **Sarah's view:** an ordinary week, then a gentle notification from June.
+- **Tap to answer, or hold to talk.** One button in the chat. A tap gives quick answer buttons. Holding it lets her say it in her own words, and one sentence can answer everything June needs.
+- **"Here's what I heard":** June shows what she picked up as chips. Sarah removes anything that's wrong before it's saved, and June asks only for what's still missing. Her own words go to the care team with the case.
 - **Routing and closing the loop:** one tap sends a pre-drafted case to a prescriber or coach. The next day they reply and the treatment tracker updates.
 
-Scenarios: stuck on the starter dose, quietly drifting, and doing everything right but not responding.
+Scenarios:
+- **Stalled, feels fine:** she logs everything and feels good, but she's below the expected range and still on the starter dose. June leads with what's going well, then the gap.
+- **Gone quiet:** she's stopped logging, so there's nothing to see. June doesn't list what she hasn't done: "No need to log anything. How's it going?" What she says sorts her into one of three paths: fine and busy (a win is added to her home screen), avoiding the scale (weigh-in reminders paused, no weigh-in needed), or struggling (prescriber review).
+- **Doing it all, not responding:** a true stall at full dose, which goes to a prescriber.
 
 ## How I built it with AI
 
