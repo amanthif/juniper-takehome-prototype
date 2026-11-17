@@ -479,13 +479,14 @@ function tileSheet(s){
 function leadText(s){
   const a = state.qDone, pct = `${fmt(s.pct)}%`;
   if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg`, cta: s.stall ? 'Talk to my care team' : '' };
-  // When a check-in is due, it is an invitation. The copy never tells her something is going wrong; the care team makes that call with her.
+  // The check-in is an open door, not a verdict: if you need help, we are one tap away. The care team makes any clinical call with her.
+  const door = 'If you’d like a hand with anything, your care team is one tap away.';
   const talk = 'Talk to my care team';
-  if (s.stall) return { warm: 'Time for a check-in.', fact: `${s.data === 'none' ? '' : `You’re ${pct} down so far. `}Your care team would like to check in and make sure your plan still fits you.`, cta: talk, bar: s.data !== 'none' };
+  if (s.stall) return { warm: s.data === 'none' ? 'We’re here if you need us.' : `You’re ${pct} down so far.`, fact: door, cta: talk, bar: s.data !== 'none' };
   if (s.flags.length){ const f = s.flags[0];
-    return { cta: talk, ...(f === 'gain' ? { warm: 'We’re here to help.', fact: 'Thanks for your weigh-in today. Your care team would like to check in with you.' } : f === 'side' ? { warm: 'You shouldn’t have to push through this.', fact: 'Side effects most days is something your care team can ease.' } : { warm: 'Let’s check your dose is right for you.', fact: 'A quick review with your care team, whenever suits you.' }) }; }
-  if (s.risk) return { warm: 'A consistent month.', fact: `You took every dose, and you’re ${pct} down so far. Your dose review is ready when you are.`, cta: talk, bar: true };
-  if (s.slow) return { warm: 'You’re doing your part.', fact: `Every dose taken, and you’re ${pct} down so far. Your care team would like to check in on your plan.`, cta: talk, bar: true };
+    return { cta: talk, ...(f === 'gain' ? { warm: 'We’re here if you need us.', fact: `Thanks for your weigh-in today. ${door}` } : f === 'side' ? { warm: 'You shouldn’t have to push through side effects.', fact: 'Your care team can ease them, and they’re one tap away.' } : { warm: 'We’re here if you need us.', fact: 'If you’d like to talk through your dose, your care team is one tap away.' }) }; }
+  if (s.risk) return { warm: 'A consistent month.', fact: `You took every dose, and you’re ${pct} down so far. ${door}`, cta: talk, bar: true };
+  if (s.slow) return { warm: 'You’re doing your part.', fact: `Every dose taken, and you’re ${pct} down so far. ${door}`, cta: talk, bar: true };
   if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'From your answers today.' };
   if (s.stage === 'early') return { big: 'Month 1', cap: 'done', sub: s.below ? 'Weight usually moves after your first step up.' : 'Every dose taken. Side effects easing.' };
   if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
@@ -540,10 +541,10 @@ function cardPattern(s){
 function cardNote(s, full){
   const g = s.goal, clinical = s.concern, who = clinical ? ['Dr Lee', 'your prescriber', 'L'] : ['Priya', 'your coach', 'P'];
   let t;
-  if (s.stall) t = 'I’d like to check in and review your dose with you. It’s a quick conversation.';
-  else if (s.flags.length) t = 'Thank you for your answers. I’d like to check in with you this week.';
-  else if (s.slow) t = 'You’ve done everything we asked. I’d like to check in and look at your plan together.';
-  else if (s.risk) t = 'A consistent month. I’d like to look at your dose with you before your next order.';
+  if (s.stall) t = 'I’m here if you’d like to talk anything through, including your dose. It’s a quick conversation.';
+  else if (s.flags.length) t = 'Thank you for your answers. I’m here if you’d like to talk any of it through.';
+  else if (s.slow) t = 'You’ve done everything we asked. I’m here if you’d like to look at your plan together.';
+  else if (s.risk) t = 'A consistent month. I’m here if you’d like to look at your dose before your next order.';
   else if (s.data === 'none') t = `${state.qDone ? 'Thank you for telling us how it’s going.' : 'We don’t have much from you yet, and that’s okay.'} Your doses are on time, which matters most.`;
   else if (s.stage === 'early') t = 'Month 1 is the hardest, and you’ve done it. Nausea may return for a few days after your next step up, then settle.';
   else if (s.stage === 'middle') t = `A strong month, and not only on the scale.${g && g.close ? ` You’re ${g.left}kg from your goal.` : ''}`;
@@ -553,7 +554,7 @@ function cardNote(s, full){
   const rows = `<div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>`;
   if (full && !clinical) return rows;
   return `${full ? '' : `<p class="k">From ${who[1]}</p>`}<div class="note"><p ${full ? '' : 'id="lead" tabindex="-1"'}>${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}${full ? `, ${who[1]}` : ''}<small>Written with June, signed by ${who[0]}</small></span></p></div>
-    ${clinical && !full ? helpBtn(`Review it with ${who[0]}`) : ''}
+    ${clinical && !full ? helpBtn(`Talk to ${who[0]}`) : ''}
     ${full ? rows : ''}`;
 }
 
@@ -576,7 +577,7 @@ function cardFar(s){
 // Only dates that are actually scheduled. No predictions about how next month will feel.
 function nextSteps(s){
   const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'];
-  if (s.concern) return [['Now', 'A check-in with Dr Lee'], order];
+  if (s.concern) return [['Any time', 'Your care team, one tap away'], order];
   const first = s.stage === 'early' ? ['In 9 days', 'Step up to 5mg'] : s.stage === 'middle' ? ['In 9 days', 'Dose review'] : ['In 12 days', 'Your 6-month review'];
   return [first, order];
 }
@@ -590,8 +591,8 @@ function tip(s){
 }
 function cardNext(s){
   const t = s.concern ? null : tip(s);
-  const h = s.concern ? 'First, a check-in.' : 'Coming up.';
-  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Review it with Dr Lee') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
+  const h = 'Coming up.';
+  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Talk to my care team') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
 }
 
 /* ===================== Card 5. Is it worth it? ===================== */
@@ -654,7 +655,7 @@ function sheet(s){
 
 /* ===================== Render ===================== */
 function lock(s){
-  const line = s.stall ? 'Your care team would like to check in.' : s.risk || s.slow ? 'A consistent month. Come and see.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
+  const line = s.stall ? 'Come and see your month.' : s.risk || s.slow ? 'A consistent month. Come and see.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
   return `<div class="lock"><p>Monday 16 ${s.month}</p><div class="time">7:42</div><button class="notif" data-act="open"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>Your ${s.month} report is ready</b>${line}</button></div>`;
 }
 function goalStrip(s){
