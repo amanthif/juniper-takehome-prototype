@@ -219,12 +219,54 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .nav .btn:not(.soft){flex:1 1 0;width:auto}
 .nav.has-skip{flex-wrap:wrap;padding-bottom:8px}
 .nav .link{flex:1 0 100%;color:var(--green);text-align:center}
+/* story cards: one big number, one visual */
+#lead{font-weight:400;margin:0}
+.hero-num{display:block;font-family:var(--serif);font-size:72px;line-height:1;letter-spacing:-1.5px;color:var(--green);margin:10px 0 6px}
+.hero-num.sm{font-size:48px;margin:4px 0 8px}
+.hero-num small{font-family:var(--sans);font-size:15px;letter-spacing:0;color:var(--quiet);margin-left:8px}
+.hero-cap{display:block;font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--green)}
+.viz{background:rgba(255,255,255,.72);border-radius:18px;padding:16px;margin-top:22px}
+.viz svg{display:block;width:100%}
+.viz .range{margin-top:6px}
+.berries{display:flex;gap:6px;flex-wrap:wrap}
+.berries i{width:18px;height:18px;border-radius:50%;background:var(--berry)}
+.berries i.on{background:var(--green)}
+.pair{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:8px}
+.pair+.pair{margin-top:12px}
+.prow+.prow{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.prow svg{display:block;width:100%;margin-top:4px}
+.pg .quote{margin-top:20px;padding:0 4px}
+.tiles{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.tile{display:flex;flex-direction:column;gap:2px;min-height:90px;min-width:0;padding:10px 12px;border:0;border-radius:16px;background:var(--card);text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.tile .top{width:100%;display:flex;justify-content:space-between;gap:6px;font-size:13px;font-weight:500}
+.tile .top>span{white-space:nowrap}
+.tile .top .quiet{font-weight:400}
+.tile .new{color:var(--lilac-ink)}
+.tile .num{margin:0}
+.num small{font-family:var(--sans);font-size:13px;color:var(--quiet);margin-left:4px}
+.tile svg{display:block;width:100%;margin-top:auto}
+.tile .berries{margin-top:auto}
+.tile .berries i{width:14px;height:14px}
+.tile.warn .num::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber-dot);margin-right:6px;transform:translateY(-3px)}
+.tile.empty{background:none;border:1.5px dashed #D9CFE0;color:var(--quiet);justify-content:center;font-size:13px}
+.tile.empty .add{color:var(--lilac-ink);font-weight:500;font-size:15px}
+.chip{flex:none;font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--lilac);color:var(--lilac-ink)}
+.chip.amber{background:var(--amber);color:var(--amber-ink)}
+.goalrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wcard .lbl{display:block}
+.wcard .num{display:block;margin:0}
+.wcard .link{min-height:32px}
+.sumline{font-family:var(--serif);font-size:18px;line-height:1.3;color:var(--green)}
+.sum+.card{margin-top:8px}
+.full .card{margin-top:8px}
+.full .note{margin-top:8px;padding:16px;font-size:16px}
 /* the full report: everything from the story on one page */
 .pg.full{padding:20px 16px 28px}
 .full .top{padding:0 6px;margin-right:44px}
 .full .top .k{margin-bottom:2px}
 .full .top .lead{font-size:22px;line-height:1.25;margin-bottom:10px}
-.full .sum{padding:16px}
+.full .sum{padding:12px 14px}
+.full .sum .btn{min-height:42px;margin-top:8px}
 .full .sum+.sec{margin-top:16px}
 .sum{background:var(--lilac);border-radius:18px;padding:18px}
 .sum.amber{background:var(--amber)}
@@ -298,7 +340,7 @@ const WHY = [['side', 'Side effects'], ['dose', 'Not sure about my dose'], ['mis
 const FEEL = [['frus', 'Frustrated'], ['worried', 'Worried'], ['ok', 'Okay, I’d just like a hand']];
 
 /* ===================== State ===================== */
-const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', goal: 'far', opened: false, full: false, page: 0, monthIdx: 0, q: {}, qi: 0, qDone: false, wPrompt: false, wOk: false, worth: null, chart: false, help: null, helpSent: null });
+const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', goal: 'far', opened: false, full: false, page: 0, monthIdx: 0, q: {}, qi: 0, qDone: false, wPrompt: false, wOk: false, worth: null, chart: false, help: null, helpSent: null, tile: null });
 let state = initial();
 const fmt = n => n.toFixed(1).replace(/\.0$/, '');
 
@@ -336,32 +378,156 @@ function rangeBar(lost, b, amber){
 const helpBtn = label => state.helpSent ? `<p style="margin-top:16px;font-weight:500">${HELP[state.helpSent].sent}</p>` : `<button class="btn" data-act="help">${label}</button>`;
 
 /* The report is a story: six pages, one idea each. */
-/* The story lands on the full report, and every page can skip straight to it. */
-// The questions come last: the story gives first, then asks, and the answers update the full report she lands on.
-const PAGES = ['The answer', 'Then and now', 'Why', 'From your care team', 'Worth it?', 'A few questions'];
+/* The report is a short story (one visual and one line per card) that lands on a one-screen dashboard. Every card can skip straight to it. */
+// Rich-data users are not asked anything: we already have it. Everyone else gets a few questions as the last card.
+const asks = () => state.data !== 'rich';
+const since = s => s.stage === 'early' || s.data === 'none' ? 'at the start' : 'last month';
 
-/* ===================== Page 1. The answer ===================== */
+/* ===================== Small charts ===================== */
+// Four weekly points from then to now. Bars for counts of days, a step for dose, a line for the rest.
+const ser = (a, b, type) => [0, .4, .75, 1].map((t, i) => type === 'step' ? (i < 2 ? a : b) : type === 'bars' ? Math.round(a + (b - a) * t) : a + (b - a) * (t + (a !== b ? [0, .1, -.08, 0][i] : 0)));
+function mini(v, type, warn, W = 150, H = 30, label = ''){
+  const col = warn ? 'var(--amber-dot)' : 'var(--green)', n = v.length, open = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`;
+  if (type === 'bars'){ const max = Math.max(...v, 1), gap = W * .06, bw = (W - gap * (n - 1)) / n;
+    return open + v.map((x, i) => { const h = Math.max(3, x / max * (H - 2)); return `<rect x="${(i * (bw + gap)).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="4" fill="${col}" opacity="${i === n - 1 ? 1 : .3}"><title>Week ${i + 1}: ${fmt(x)}</title></rect>`; }).join('') + '</svg>'; }
+  const lo = Math.min(...v), hi = Math.max(...v), r = 5, X = i => r + 2 + i * (W - 2 * r - 4) / (n - 1), Y = x => hi === lo ? H / 2 : r + 2 + (H - 2 * r - 4) * (1 - (x - lo) / (hi - lo));
+  const d = v.map((x, i) => i === 0 ? `M${X(0).toFixed(1)},${Y(x).toFixed(1)}` : type === 'step' ? `H${X(i).toFixed(1)}V${Y(x).toFixed(1)}` : `L${X(i).toFixed(1)},${Y(x).toFixed(1)}`).join('');
+  return open + `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/><circle cx="${X(n - 1).toFixed(1)}" cy="${Y(v[n - 1]).toFixed(1)}" r="${r}" fill="${col}" stroke="#fff" stroke-width="2"><title>Now: ${fmt(v[n - 1])}</title></circle></svg>`;
+}
+const berries = (n, total, warn) => `<span class="berries ${warn ? 'warn' : ''}" role="img" aria-label="${n} of ${total}">${Array.from({ length: total }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
+function chart(s, cap = true, H = 130){
+  const W = 320, pl = 28, pr = 10, pt = 8, pb = 20, xs = s.week + 2, ymax = Math.ceil((band(xs).hi + 1) / 5) * 5;
+  const has = s.data !== 'none', pct = has ? s.pct : s.wPct === null ? null : Math.max(0, s.wPct);
+  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
+  let up = '', dn = ''; for (let w = 0; w <= xs; w++){ up += `${X(w).toFixed(1)},${Y(band(w).hi).toFixed(1)} `; dn = `${X(w).toFixed(1)},${Y(band(w).lo).toFixed(1)} ` + dn; }
+  const step = s.data === 'rich' ? 1 : Math.max(1, Math.floor(s.week / 2)), pts = []; if (has){ for (let w = 0; w < s.week; w += step) pts.push([w, pct * ease(w)]); pts.push([s.week, pct]); }
+  const col = s.stall || (s.below && s.stage !== 'early') ? 'var(--amber-dot)' : 'var(--green)';
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight against where we’d expect" style="width:100%;display:block;margin-top:8px">
+    <polygon points="${up}${dn}" fill="var(--berry)" opacity=".6"/>${pts.length ? `<path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
+    ${pts.slice(0, -1).map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="9" fill="transparent"><title>${p[0] ? `Week ${p[0]}` : 'Start'}: ${fmt(p[1])}% down</title></circle>`).join('')}
+    ${pct !== null ? `<circle cx="${X(s.week)}" cy="${Y(pct).toFixed(1)}" r="6" fill="${col}" stroke="#fff" stroke-width="3"><title>Week ${s.week}: ${fmt(pct)}% down</title></circle>` : ''}
+    <text x="${pl}" y="${H - 3}" font-size="11" fill="#5B655F">Start</text><text x="${X(s.week)}" y="${H - 3}" font-size="11" fill="#5B655F" text-anchor="middle">Week ${s.week}</text>
+    <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
+    ${cap ? `<p class="quiet">${has ? 'The shaded band is where we’d expect you to be.' : `The shaded band is where people at month ${s.n} usually are.`}</p>` : ''}`;
+}
+
+/* ===================== Her numbers ===================== */
+// Illustrative values by stage and case: [then, now].
+const T = {
+  early:   { on: { app: [8, 6], side: [4, 1], energy: [2, 3], waist: [100, 99], sleep: [6.4, 6.6], steps: [4.1, 4.4] }, below: { app: [8, 7], side: [4, 3], energy: [2, 2], waist: [100, 100], sleep: [6.4, 6.3], steps: [4.1, 4.0] } },
+  middle:  { on: { app: [5, 3], side: [2, 0], energy: [3, 4], waist: [99, 96], sleep: [6.6, 7.1], steps: [5.2, 6.8], hba: [5.9, 5.7] }, slow: { app: [5, 3], side: [2, 0], energy: [3, 4], waist: [99, 98], sleep: [6.6, 6.9], steps: [5.2, 6.1], hba: [5.9, 5.8] }, below: { app: [6, 6], side: [3, 3], energy: [2, 2], waist: [99, 99], sleep: [6.5, 6.4], steps: [4.0, 3.9], hba: [5.9, 5.9] } },
+  plateau: { on: { app: [3, 2], side: [0, 0], energy: [4, 4], waist: [94, 93], sleep: [7.2, 7.3], steps: [7.4, 7.6], hba: [5.9, 5.6] }, slow: { app: [3, 3], side: [0, 0], energy: [4, 4], waist: [97, 96], sleep: [7.0, 7.1], steps: [6.8, 7.0], hba: [5.9, 5.8] }, below: { app: [6, 6], side: [3, 3], energy: [2, 2], waist: [98, 98], sleep: [6.5, 6.4], steps: [4.0, 3.9], hba: [5.9, 5.9] } },
+};
+const vals = s => { const t = T[s.stage]; return t[s.slow ? 'slow' : s.below ? 'below' : 'on'] || t.on; };
+function metrics(s){
+  const v = vals(s), a = state.qDone, q = state.q, rich = s.data === 'rich', out = [];
+  const M = (k, label, pair, unit, type, src, o = {}) => out.push({ k, label, then: pair[0], now: pair[1], unit, type, src, ...o });
+  const E = (k, label) => out.push({ k, label, empty: true });
+  const ans = { app: { much: 3, bit: 5, same: 8 }[q.appetite], side: { none: 0, some: 2, most: 5 }[q.side], energy: { better: 4, same: 2, worse: 1 }[q.energy] }, today = 'From your answer today';
+  const app = () => a ? M('app', 'Food noise', [rich ? v.app[0] : null, ans.app], '/10', 'line', today, { isNew: true, warn: q.appetite === 'same' }) : rich ? M('app', 'Food noise', v.app, '/10', 'line', 'From your check-ins with June') : s.data === 'light' ? M('app', 'Food noise', [null, s.below ? 6 : 4], '/10', 'line', 'From what you told June') : E('app', 'Food noise');
+  const side = () => a ? M('side', 'Nausea', [rich ? v.side[0] : null, ans.side], 'days a week', 'bars', today, { isNew: true, warn: q.side === 'most' }) : rich ? M('side', 'Nausea', v.side, 'days a week', 'bars', 'From your side-effect log') : s.data === 'light' ? M('side', 'Nausea', [null, s.below ? 3 : 1], 'days a week', 'bars', 'From what you told June') : E('side', 'Side effects');
+  const energy = () => a ? M('energy', 'Energy', [rich ? v.energy[0] : null, ans.energy], '/5', 'line', today, { isNew: true, warn: q.energy === 'worse' }) : rich ? M('energy', 'Energy', v.energy, '/5', 'line', 'From your check-ins with June') : E('energy', 'Energy');
+  const dose = () => M('dose', 'Dose', [s.stuck || s.stage === 'early' ? s.dose : DOSES[Math.max(0, s.doseIdx - 1)], s.dose], 'mg', 'step', 'From your prescription', s.stuck ? { warn: true, note: 'Step up overdue' } : {});
+  const ontime = () => out.push({ k: 'ontime', label: 'Doses on time', then: null, now: 4, unit: 'of 4', berries: [4, 4], src: 'From your orders' });
+  app(); side(); energy();
+  if (rich){ M('waist', 'Waist', v.waist, 'cm', 'line', 'From your measurements'); M('sleep', 'Sleep', v.sleep, 'h a night', 'line', 'From your wearable'); M('steps', 'Steps', v.steps, 'k a day', 'line', 'From your wearable'); dose(); v.hba ? M('hba', 'Blood sugar', v.hba, '% HbA1c', 'line', 'From your blood tests') : ontime(); }
+  else { dose(); ontime(); E('waist', 'Waist'); E('sleep', 'Sleep'); E('steps', 'Steps'); }
+  return out;
+}
+function tile(m, s){
+  if (m.empty) return `<button class="tile empty" data-act="add"><span>${m.label}</span><span class="add">+ Add</span></button>`;
+  const viz = m.berries ? berries(...m.berries) : m.then === null ? '' : mini(ser(m.then, m.now, m.type), m.type, m.warn, 150, 30, `${m.label}: ${fmt(m.then)} to ${fmt(m.now)}`);
+  return `<button class="tile ${m.warn ? 'warn' : ''}" data-act="tile" data-k="${m.k}"><span class="top"><span>${m.label}</span>${m.isNew ? '<span class="new">New</span>' : m.then !== null && m.then !== m.now ? `<span class="quiet">was ${fmt(m.then)}</span>` : ''}</span><span class="num">${fmt(m.now)}<small>${m.unit}</small></span>${viz}</button>`;
+}
+// The source of every number is one tap away.
+function tileSheet(s){
+  const m = state.tile && metrics(s).find(x => x.k === state.tile); if (!m) return '';
+  return `<div class="scrim" data-act="h-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="sheet-in"><button class="x" data-act="h-close" aria-label="Close">×</button>
+    <p class="quiet" id="sh-t">${m.label}</p><p class="hero-num sm">${fmt(m.now)}<small>${m.unit}</small></p>
+    ${m.then !== null ? `<p>${m.then === m.now ? `The same as ${since(s)}.` : `${fmt(m.then)} ${since(s)}.`}</p>${m.berries ? '' : mini(ser(m.then, m.now, m.type), m.type, m.warn, 300, 70, m.label)}` : m.berries ? berries(...m.berries) : '<p>Your first reading. Next month shows the trend.</p>'}
+    ${m.note ? `<p class="flag">${m.note}.</p>` : ''}<p class="quiet" style="margin-top:12px">${m.src}. Weekly points are illustrative.</p></div></div></div>`;
+}
+
+/* ===================== Card 1. The headline ===================== */
 function leadText(s){
-  const a = state.qDone;
-  if (s.data === 'none' && !a) return { h: `Month ${s.n} on treatment.`, p: `${s.n === 1 ? 'Your first order arrived' : `${s.n} orders have arrived`} on time, and you’re on ${s.dose}mg.${s.stall ? ' We haven’t heard from you in a while.' : ''} A few questions at the end make next month’s about you.`, cta: s.stall ? 'Get help' : '' };
-  if (s.stall) return { amber: true, h: 'Things have slowed more than we’d expect.', p: s.data === 'none' ? 'Some of your answers suggest things have slowed. There’s usually a reason, and it’s often simple to fix.' : `You’re ${fmt(s.pct)}% down, which is below where we’d expect at month ${s.n}. There’s usually a reason, and it’s often simple to fix.`, cta: 'Get help' };
+  const a = state.qDone, pct = `${fmt(s.pct)}%`;
+  if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg${s.stall ? ' · We haven’t heard from you in a while' : ''}`, cta: s.stall ? 'Get help' : '' };
+  if (s.stall) return { amber: true, big: s.data === 'none' ? 'Slower' : pct, cap: s.data === 'none' ? 'than we’d expect' : 'down · below where we’d expect', sub: 'There’s usually a simple reason.', cta: 'Get help', bar: s.data !== 'none' };
   if (s.flags.length){ const f = s.flags[0];
-    return { amber: true, cta: 'Get help', ...(f === 'gain' ? { h: 'Your weight has gone up since you started.', p: 'That isn’t what we’d expect on treatment, so it’s worth a proper look.' }
-      : f === 'side' ? { h: 'Side effects most days isn’t something to push through.', p: 'There’s usually a fix, like a slower step up or small changes to meals.' }
-      : { h: 'Your appetite hasn’t changed yet.', p: `At month ${s.n} that’s worth a closer look, and it’s often the dose.` }) }; }
-  if (s.risk) return { h: 'A consistent month, and one thing to look at.', p: `You took every dose and kept logging. Your results are a little behind where we’d expect at month ${s.n}. It’s easier to sort out early.`, cta: 'Review it with my care team' };
-  if (s.slow) return { h: 'You’re doing your part. The scale is slower than we’d expect.', p: `You took every dose, stepped up on schedule, and your appetite has dropped. You’re ${fmt(s.pct)}% down, which is under where we’d expect at month ${s.n}. That’s worth a look with your prescriber.`, cta: 'Review it with my care team' };
-  if (s.data === 'none') return { h: 'Your appetite has changed.', p: 'This is often the first change. The scale tends to follow.' };
-  if (s.stage === 'early') return { h: 'Month 1 done. Your body is adjusting.', p: s.below ? 'The first weeks are for getting used to the medicine. Weight usually starts to move after your first step up.' : 'The first weeks are for getting used to the medicine. You took every dose, and your side effects are easing.' };
-  if (s.stage === 'middle') return { h: `You’re ${fmt(s.pct)}% down since you started.`, p: `That’s where we’d expect you to be at month ${s.n}.` };
-  return { h: 'A steady month. You’re holding your progress.', p: `You’re ${fmt(s.pct)}% down, and you’ve stayed there for 8 weeks. Holding steady is the result now.` };
+    return { amber: true, cta: 'Get help', ...(f === 'gain' ? { big: `+${fmt(-s.wPct)}%`, cap: 'since you started', sub: 'Worth a proper look.' } : f === 'side' ? { big: 'Most days', cap: 'with side effects', sub: 'Not something to push through.' } : { big: 'No change', cap: 'in appetite yet', sub: 'Often it’s the dose.' }) }; }
+  if (s.risk) return { big: pct, cap: 'down · a little behind', sub: 'Every dose taken. Easier to sort out early.', cta: 'Review it with my care team', bar: true };
+  if (s.slow) return { big: pct, cap: 'down · slower than we’d expect', sub: 'You’re doing your part. Worth a look.', cta: 'Review it with my care team', bar: true };
+  if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'The scale tends to follow.' };
+  if (s.stage === 'early') return { big: 'Month 1', cap: 'done', sub: s.below ? 'Weight usually moves after your first step up.' : 'Every dose taken. Side effects easing.' };
+  if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
+  return { big: '8 weeks', cap: `holding at ${pct} down`, sub: 'Holding steady is the result now.', bar: true };
 }
-function pageAnswer(s){
+function cardLead(s){
   const t = leadText(s);
-  return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.h}</h1><p class="lede">${t.p}</p>${t.cta ? helpBtn(t.cta) : ''}`;
+  return `<p class="k">${s.month} · Month ${s.n}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${t.big}</span><span class="hero-cap">${t.cap}</span></h1>
+    ${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, s.stall)}<p class="quiet" style="margin-top:12px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
 }
 
-/* ===================== Last page. One question at a time ===================== */
+/* ===================== Card 2. The biggest change ===================== */
+function cardChange(s){
+  const v = vals(s), big = (k, n, cap, viz) => `<p class="k">${k}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${n}</span><span class="hero-cap">${cap}</span></h1><div class="viz">${viz}</div>`;
+  const row = (l, x) => `<div class="pair"><span class="quiet">${l}</span>${x}</div>`;
+  if (s.data === 'none') return big('What we know', '4 of 4', 'doses on time', berries(4, 4));
+  if (s.data === 'light') return big('This month', '2', 'weigh-ins', berries(2, 4) + '<p class="quiet" style="margin-top:12px">Four would show your trend.</p>');
+  if (s.below && s.stage !== 'early') return big('What’s behind it', `${s.dose}mg`, 'no step up yet', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 70, 'Dose, unchanged') + '<p class="quiet">The most common reason progress slows.</p>');
+  if (s.stage === 'early') return big('Biggest change', `${v.side[1]} day${v.side[1] === 1 ? '' : 's'}`, `of nausea a week, from ${v.side[0]}`, mini(ser(...v.side, 'bars'), 'bars', false, 300, 80, 'Nausea days a week'));
+  const quote = s.stage === 'middle' ? 'I forgot to finish my lunch today.' : 'I don’t really think about it any more.';
+  return big(s.slow ? 'What’s working' : 'Biggest change', `${v.app[1]}/10`, v.app[0] === v.app[1] ? 'food noise, holding' : `food noise, from ${v.app[0]}`, row('Last month', berries(v.app[0], 10)) + row('This month', berries(v.app[1], 10))) + `<p class="quote">“${quote}”<small>You, this month</small></p>`;
+}
+
+/* ===================== Card 3. A pattern, or what more data would show ===================== */
+function pattern(s){
+  const v = vals(s), stuck = s.below && s.stage !== 'early', flat = [s.pct, s.pct, s.pct, s.pct];
+  if (stuck) return ['Same dose, same weight.', ['Dose', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 40, 'Dose')], ['Weight lost', mini(flat, 'line', true, 300, 40, 'Weight')]];
+  if (s.slow) return ['Appetite responded. The scale hasn’t yet.', ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')], ['Weight lost', mini(ser(s.pct - .6, s.pct, 'line'), 'line', false, 300, 40, 'Weight')]];
+  if (s.stage === 'early') return ['Both easing as your body adjusts.', ['Nausea days', mini(ser(...v.side, 'bars'), 'bars', false, 300, 40, 'Nausea')], ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')]];
+  if (s.stage === 'middle') return ['Your energy rose as nausea eased.', ['Energy', mini(ser(...v.energy, 'bars'), 'bars', false, 300, 40, 'Energy')], ['Nausea days', mini([2, 1, 1, 0], 'bars', false, 300, 40, 'Nausea')]];
+  return ['Weight steady, waist still shrinking.', ['Weight lost', mini(flat, 'line', false, 300, 40, 'Weight')], ['Waist', mini(ser(...v.waist, 'line'), 'line', false, 300, 40, 'Waist')]];
+}
+const patternViz = p => p.slice(1).map(([l, x]) => `<div class="prow"><span class="quiet">${l}</span>${x}</div>`).join('');
+function cardPattern(s){
+  if (s.data !== 'rich'){ const empty = metrics(s).filter(m => m.empty);
+    return `<p class="k">Next month could show</p><h1 class="lead" id="lead" tabindex="-1">${state.qDone ? 'More of you.' : 'A lot more of you.'}</h1><div class="tiles">${empty.slice(0, 4).map(m => tile(m, s)).join('')}</div><p class="quiet" style="margin-top:12px">${state.qDone ? 'A weigh-in each week adds the rest.' : 'A few taps at the end fill these in.'}</p>`; }
+  const p = pattern(s);
+  return `<p class="k">A pattern</p><h1 class="lead" id="lead" tabindex="-1">${p[0]}</h1><div class="viz">${patternViz(p)}</div>`;
+}
+
+/* ===================== Card 4. A note from her care team ===================== */
+function cardNote(s, full){
+  const g = s.goal, clinical = s.concern, who = clinical ? ['Dr Lee', 'your prescriber', 'L'] : ['Priya', 'your coach', 'P'];
+  let t;
+  if (s.stall) t = 'You’ve done your part, and your results should be further along. I’d like to review your dose with you.';
+  else if (s.flags.length) t = 'Thank you for your answers. They’re worth a proper look now, not next month.';
+  else if (s.slow) t = 'You’ve done everything we asked. Your weight hasn’t followed, and that isn’t down to you. Let’s find out why.';
+  else if (s.risk) t = 'A consistent month. Your results are a little behind, and I think your dose is why. Let’s look before your next order.';
+  else if (s.data === 'none') t = `${state.qDone ? 'Thank you for telling us how it’s going.' : 'We don’t have much from you yet, and that’s okay.'} Your doses are on time, which matters most.`;
+  else if (s.stage === 'early') t = 'Month 1 is the hardest, and you’ve done it. Nausea may return for a few days after your next step up, then settle.';
+  else if (s.stage === 'middle') t = `A strong month, and not only on the scale.${g && g.close ? ` You’re ${g.left}kg from your goal.` : ''}`;
+  else t = 'Eight weeks steady, and your blood results improved too. Holding is the goal now.';
+  const R = (l, v) => `<div class="kv"><span>${l}</span><span>${v}</span></div>`;
+  const first = s.stuck ? R('Dose review', 'Due now') : s.slow ? R('Review with Dr Lee', 'Ready when you are') : s.stage === 'early' ? R('Next step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Dose review', 'In 9 days') : R('6-month review', 'In 12 days');
+  return `${full ? '' : `<p class="k">From ${who[1]}</p>`}<div class="note"><p ${full ? '' : 'id="lead" tabindex="-1"'}>${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}${full ? `, ${who[1]}` : ''}<small>Written with June, signed by ${who[0]}</small></span></p></div>
+    ${clinical && !full ? helpBtn(`Review it with ${who[0]}`) : ''}
+    <div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>`;
+}
+
+/* ===================== Card 5. Is it worth it? ===================== */
+function pageWorth(s, full){
+  const w = state.worth;
+  const follow = w === 'yes' ? '<p class="lede">Glad to hear it. See you next month.</p>' : w ? `<p class="lede">Thanks for being honest. Your care team can help work out what would make it worth it.</p>${helpBtn('Talk to your care team')}` : '';
+  const opts = `<div class="opts col">${[['yes', 'Yes'], ['unsure', 'Not sure'], ['no', 'No']].map(([v, l]) => `<button class="opt" data-act="worth" data-v="${v}" aria-pressed="${w === v}">${l}</button>`).join('')}</div>${follow}`;
+  if (full) return `<h2 class="sec">One last thing</h2><div class="card"><p class="q">Is it worth it for you right now?</p>${opts}</div>`;
+  return `<p class="k">One last thing</p><h1 class="lead" id="lead" tabindex="-1">Is it worth it for you right now?</h1>
+    ${opts}`;
+}
+
+
+/* ===================== Last card, when we need more data. One question at a time ===================== */
 function pageQuestion(s){
   if (state.qDone) return `<p class="k">Thank you</p><h1 class="lead" id="lead" tabindex="-1">Your report is updated.</h1><p class="lede">${s.concern ? 'Your care team can see your answers.' : s.data === 'rich' ? 'Next month’s will stay accurate.' : 'Next month’s will have more of you in it.'}</p>`;
   const i = state.qi;
@@ -375,116 +541,6 @@ function pageQuestion(s){
     <button class="btn" data-act="qdone">Update my report</button>`;
 }
 
-/* ===================== Page 2. Then and now ===================== */
-function chart(s){
-  const W = 320, H = 130, pl = 28, pr = 10, pt = 8, pb = 20, xs = s.week + 2, ymax = Math.ceil((band(xs).hi + 1) / 5) * 5;
-  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
-  let up = '', dn = ''; for (let w = 0; w <= xs; w++){ up += `${X(w).toFixed(1)},${Y(band(w).hi).toFixed(1)} `; dn = `${X(w).toFixed(1)},${Y(band(w).lo).toFixed(1)} ` + dn; }
-  const step = s.data === 'rich' ? 1 : Math.max(1, Math.floor(s.week / 2)), pts = []; for (let w = 0; w < s.week; w += step) pts.push([w, s.pct * ease(w)]); pts.push([s.week, s.pct]);
-  const col = s.below && s.stage !== 'early' ? 'var(--amber-dot)' : 'var(--green)';
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Your weight against where we’d expect you to be" style="width:100%;display:block;margin-top:10px">
-    <polygon points="${up}${dn}" fill="var(--berry)" opacity=".6"/><path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    ${pts.slice(0, -1).map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="9" fill="transparent"><title>${p[0] ? `Week ${p[0]}` : 'Start'}: ${fmt(p[1])}% down</title></circle>`).join('')}
-    <circle cx="${X(s.week)}" cy="${Y(s.pct)}" r="6" fill="${col}" stroke="#fff" stroke-width="3"><title>Week ${s.week}: ${fmt(s.pct)}% down</title></circle>
-    <text x="${pl}" y="${H - 3}" font-size="11" fill="#5B655F">Start</text><text x="${X(s.week)}" y="${H - 3}" font-size="11" fill="#5B655F" text-anchor="middle">Week ${s.week}</text>
-    <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
-    <p class="quiet">The shaded band is where we’d expect you to be.</p>`;
-}
-// A small trend for one number: four weekly points from then to now. Bars for days, a step for dose, a line for the rest.
-function spark(label, then, now, warn){
-  const a = parseFloat(then), b = parseFloat(now), unit = x => String(x).replace(/^[\d.]+/, '').trim(), days = /day/.test(then) && /day/.test(now);
-  if (isNaN(a) || isNaN(b) || !(days || unit(then) === unit(now))) return '';
-  const W = 124, H = 48, col = warn ? 'var(--amber-dot)' : 'var(--green)', step = /mg$/.test(now), k = [0, .4, .75, 1], wob = [0, .1, -.08, 0];
-  const v = k.map((t, i) => step ? (i < 2 ? a : b) : a + (b - a) * (t + (a !== b ? wob[i] : 0)));
-  const open = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}, week by week: ${then} to ${now}"><title>${label}: ${then} to ${now}</title>`;
-  if (days){ const max = Math.max(...v, 1), bw = 18, gap = (W - 4 * bw) / 3;
-    return open + v.map((x, i) => { const h = Math.max(3, Math.round(x) / max * (H - 4)); return `<rect x="${(i * (bw + gap)).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" rx="4" fill="${col}" opacity="${i === 3 ? 1 : .3}"/>`; }).join('') + '</svg>'; }
-  const lo = Math.min(...v), hi = Math.max(...v), X = i => 7 + i * (W - 14) / 3, Y = x => hi === lo ? H / 2 : 8 + (H - 16) * (1 - (x - lo) / (hi - lo));
-  const d = v.map((x, i) => i === 0 ? `M${X(0)},${Y(x).toFixed(1)}` : step ? `H${X(i).toFixed(1)}V${Y(x).toFixed(1)}` : `L${X(i).toFixed(1)},${Y(x).toFixed(1)}`).join('');
-  return open + `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/><circle cx="${X(3)}" cy="${Y(v[3]).toFixed(1)}" r="5" fill="${col}" stroke="#fff" stroke-width="2"/></svg>`;
-}
-// Opinionated: four outcomes per phase, each shown as then and now. Sleep, activity and photos are left out.
-function compareRows(s, viz){
-  const q = state.q, a = state.qDone, b = s.below, rows = [], since = s.stage === 'early' || s.data === 'none' ? 'at the start' : 'last month';
-  const C = (label, src, then, now, cls = '') => viz ? `<div class="card metric ${cls}"><div><p class="lbl">${label}</p><p class="num">${now}</p><p class="quiet">${then === '—' ? 'First reading' : `${then} ${since}`}</p><p class="quiet">${src}</p></div>${spark(label, then, now, cls === 'warn')}</div>` : `<div class="cmp ${cls}"><span>${label}<small>${src}</small></span><span>${then}</span><span>${now}</span></div>`;
-  const stall = b && s.stage !== 'early';
-  const wStatus = s.stall ? 'Below where we’d expect' : s.slow ? 'Under where we’d expect' : b ? (s.stage === 'early' ? 'A little under, common early on' : 'A little under') : s.stage === 'plateau' ? 'Holding' : 'Where we’d expect';
-  const wThen = s.stage === 'early' ? `${START_KG}kg` : `${fmt(Math.max(0, s.pct - s.rate / START_KG * 100))}%`;
-  const weight = src => viz ? `<div class="card wcard"><p class="lbl">Weight</p><p class="num">${fmt(s.pct)}% down</p><p class="quiet">${wThen} ${since} · ${wStatus}</p>${chart(s)}<p class="quiet">${src}</p></div>` : `<div><div class="cmp ${s.stall ? 'warn' : ''}"><span>Weight<small>${src}</small></span><span>${s.stage === 'early' ? `${START_KG}kg` : `${fmt(Math.max(0, s.pct - s.rate / START_KG * 100))}%`}</span><span>${fmt(s.pct)}% down</span></div>${rangeBar(s.pct, s.band, stall)}
-    <div class="kv" style="margin-top:8px"><button class="link" data-act="chart" aria-expanded="${state.chart}">${state.chart ? 'Hide the chart' : 'See the chart'}</button><span class="quiet">${wStatus}</span></div>${state.chart ? chart(s) : ''}</div>`;
-  const dose = C('Dose', 'From your prescription', s.stuck || s.stage === 'early' ? `${s.dose}mg` : `${DOSES[Math.max(0, s.doseIdx - 1)]}mg`, s.stuck ? 'Step up overdue' : `${s.dose}mg`, s.stuck ? 'warn' : '');
-  const app = (then, now, src) => a ? C('Appetite', 'Food noise, from your answer today', then, { much: '3/10', bit: '5/10', same: '8/10' }[q.appetite], q.appetite === 'same' ? 'warn' : 'new') : C('Appetite', src, then, now);
-  const side = (then, now, src) => a ? C('Side effects', 'From your answer today', then, { none: 'None', some: 'Some', most: 'Most days' }[q.side], q.side === 'most' ? 'warn' : 'new') : C('Side effects', src, then, now);
-  const energy = (then, now, src) => a ? C('Energy', 'From your answer today', then, { better: '4/5', same: '2/5', worse: '1/5' }[q.energy], q.energy === 'worse' ? 'warn' : 'new') : now ? C('Energy', src, then, now) : '';
-  if (s.data === 'rich'){
-    const wr = weight('From your weekly weigh-ins'), ck = 'From your monthly check-ins';
-    if (s.stage === 'early') rows.push(dose, side('4 days a week', b ? '3 days' : '1 day', 'Nausea, from your side-effect log'), app('8/10', b ? '7/10' : '6/10', 'Food noise, ' + ck.toLowerCase()), wr, energy('2/5'));
-    else if (b) rows.push(wr, dose, side('3 days a week', '3 days', 'Nausea, from your side-effect log'), app('6/10', '6/10', 'Food noise, ' + ck.toLowerCase()), energy('2/5'));
-    else if (s.stage === 'middle') rows.push(wr, app('5/10', '3/10', 'Food noise, ' + ck.toLowerCase()), C('Waist', 'From your measurements', '99cm', s.slow ? '98cm' : '96cm'), energy('3/5', '4/5', ck));
-    else rows.push(wr, C('Blood sugar', 'HbA1c, from your blood tests', '5.9%', '5.6%'), C('Knee pain', 'A symptom you told us about', 'Some days', 'Rarely'), C('Waist', 'From your measurements', '94cm', '93cm'), energy('4/5'));
-  } else if (s.data === 'light'){
-    rows.push(weight('From 2 weigh-ins this month'), dose, side('—', b ? 'Some days' : 'Easing', 'From what you told June'), app('—', b ? '6/10' : '4/10', 'Food noise, from what you told June'), energy('—'));
-  } else {
-    rows.push(dose, C('Doses on time', 'From your orders', '4 of 4', '4 of 4'));
-    if (a){ rows.push(app('—'), side('—'), energy('—'));
-      if (q.weight) rows.push(C('Weight', 'From your weigh-in today', `${START_KG}kg`, s.wPct >= 0 ? `${fmt(s.wPct)}% down` : `Up ${fmt(-s.wPct)}%`, s.wPct >= 0 ? 'new' : 'warn')); }
-  }
-  return rows.filter(Boolean);
-}
-const TYPICAL = { early: 'a smaller appetite, some nausea that eases, and small early losses', middle: 'smaller portions, less thinking about food, and clothes fitting differently', plateau: 'weight levelling off, steadier energy, and habits that feel automatic' };
-function pageCompare(s, full){
-  const g = s.goal, first = s.stage === 'early' || s.data === 'none';
-  const title = first ? 'Since you started' : 'Last month and this month';
-  return `${full ? `<h2 class="sec">Your numbers</h2>${compareRows(s, true).join('')}` : `<h1 class="lead sm" id="lead" tabindex="-1">${title}</h1>
-    <div class="card rows"><div class="cmp head"><span></span><span>${first ? 'Start' : 'Last month'}</span><span>${first ? 'Now' : 'This month'}</span></div>${compareRows(s).join('')}</div>`}
-    ${g && g.close ? `<div class="card goal"><p class="k">Almost there</p><p class="big">${g.left}kg to the goal you set.</p><p>At this pace, you’re about ${g.weeks} weeks away.</p>
-      <div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div><div class="ends quiet" style="margin-top:10px"><span>Start · ${START_KG}kg</span><span>Goal · ${fmt(START_KG - g.total)}kg</span></div></div>` : ''}
-    ${s.data === 'none' && !state.qDone ? `<p class="quiet" style="margin-top:12px">People at month ${s.n} usually notice ${TYPICAL[s.stage]}. That’s not your data yet.</p>` : ''}`;
-}
-
-/* ===================== Page 3. Why ===================== */
-function pageWhy(s, full){
-  let t;
-  if (s.slow) t = s.data === 'rich' ? 'Your appetite has dropped and you’re on the dose we planned, so this isn’t about effort. When the scale still lags, there’s usually a reason your prescriber can find.' : 'You’re on the dose we planned and your doses are on time. A weigh-in each week would help your prescriber see why the scale is lagging.';
-  else if (s.data === 'rich') t = s.below && s.stage !== 'early' ? 'Your dose hasn’t stepped up yet. That’s the most common reason progress slows at this point, and it’s simple to fix.'
-    : { early: 'Your nausea peaked about 2 days after each dose and was gone by day 4. That’s the usual pattern, and it has got shorter each week.',
-        middle: 'Your energy has been highest in the weeks your nausea was lowest. Both have improved since you settled on this dose.',
-        plateau: 'Your weight has stayed within 0.5kg for 8 weeks, while your waist and blood results kept improving. The change is holding.' }[s.stage];
-  else if (s.data === 'light') t = 'We can see where you are, but not yet why. A weigh-in each week would let next month’s report show what’s driving your results.';
-  else t = state.qDone ? 'Your answers are the start of your story. Each one makes next month’s report more about you.' : 'We don’t know enough yet to say what’s driving your month. A few answers at the end change that.';
-  const words = s.data === 'rich' && !s.below && s.stage !== 'early' ? `<div class="card"><p class="quiet">In your words</p><p class="quote"><small>Week 1</small>“I think about food all day.”</p><p class="quote"><small>This month</small>“${s.stage === 'middle' ? 'I forgot to finish my lunch today.' : 'I don’t really think about it any more.'}”</p></div>` : '';
-  if (full) return `<h2 class="sec">What’s behind it</h2><div class="card"><p class="why">${t}</p></div>${words}`;
-  return `<p class="k">What’s behind it</p><h1 class="lead sm" id="lead" tabindex="-1">${t}</h1>${words}`;
-}
-
-/* ===================== Page 4. A note from her care team ===================== */
-function pageNote(s, full){
-  const g = s.goal, clinical = s.concern, who = clinical ? ['Dr Lee', 'your prescriber', 'L'] : ['Priya', 'your coach', 'P'];
-  let t;
-  if (s.stall) t = 'I’ve looked at your month. You’ve done your part, and your results should be further along by now. I’d like to review your dose with you. It’s usually a simple change.';
-  else if (s.flags.length) t = 'Thank you for your answers. What you’ve told us is worth a proper look, and I’d rather do that now than wait another month.';
-  else if (s.slow) t = 'You’ve done everything we asked: every dose, each step up, and your appetite has responded. Your weight hasn’t followed as I’d expect, and that isn’t down to you. I’d like to look at why with you.';
-  else if (s.risk) t = 'You’ve been really consistent this month. Your results are a little behind where I’d expect, and I think your dose is the reason. Let’s look at it before your next order.';
-  else if (s.data === 'none') t = state.qDone ? 'Thank you for telling us how it’s going. Your doses are on time, which matters most. One weigh-in a week would let me tell you a lot more next month.' : 'We don’t have much from you yet, and that’s okay. Your doses are on time, which matters most. One weigh-in a week would let me tell you a lot more next month.';
-  else if (s.stage === 'early') t = 'Month 1 is the hardest, and you’ve done it. Your next step up is in 9 days. Nausea may come back for a few days, then it settles.';
-  else if (s.stage === 'middle') t = `This was a strong month. Your appetite and energy are moving the right way, not only your weight.${g && g.close ? ` You’re ${g.left}kg from the goal you set, about ${g.weeks} weeks away at this pace.` : ''} Your dose review is in 9 days.`;
-  else t = 'You’ve held your weight for 8 weeks, and your blood results have improved too. Holding steady is the goal now. We’ll talk through your maintenance dose at your 6-month review.';
-  const R = (l, v) => `<div class="kv"><span>${l}</span><span>${v}</span></div>`;
-  const first = s.stuck ? R('Dose review', 'Due now') : s.slow ? R('Review with Dr Lee', 'Ready when you are') : s.stage === 'early' ? R('Next dose step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Next dose review', 'In 9 days') : R('Your 6-month review', 'In 12 days');
-  return `${full ? `<h2 class="sec">A note from ${who[1]}</h2>` : `<p class="k">A note from ${who[1]}</p>`}<div class="note"><p>Sarah,</p><p ${full ? '' : 'id="lead" tabindex="-1"'}>${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}<small>Written with help from June, read and signed by ${who[0]}</small></span></p></div>
-    ${clinical && !full ? helpBtn(`Review it with ${who[0]}`) : ''}
-    <div class="card rows">${first}${R('Next order ships', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}${g && !g.close ? R('The goal you set', g.reached ? 'Reached' : `${g.pc}% of the way`) : ''}</div>`;
-}
-
-/* ===================== Page 5. Is it worth it? ===================== */
-function pageWorth(s, full){
-  const w = state.worth;
-  const follow = w === 'yes' ? '<p class="lede">Glad to hear it. See you next month.</p>' : w ? `<p class="lede">Thanks for being honest. Your care team can help work out what would make it worth it.</p>${helpBtn('Talk to your care team')}` : '';
-  const opts = `<div class="opts col">${[['yes', 'Yes'], ['unsure', 'Not sure'], ['no', 'No']].map(([v, l]) => `<button class="opt" data-act="worth" data-v="${v}" aria-pressed="${w === v}">${l}</button>`).join('')}</div>${follow}`;
-  if (full) return `<h2 class="sec">One last thing</h2><div class="card"><p class="q">Is it worth it for you right now?</p>${opts}</div>`;
-  return `<p class="k">One last thing</p><h1 class="lead" id="lead" tabindex="-1">Is it worth it for you right now?</h1>
-    ${opts}`;
-}
 
 /* ===================== Get help ===================== */
 // Infer before you ask: what the report already knows.
@@ -523,28 +579,39 @@ function lock(s){
   const line = s.stall ? 'There’s one thing worth looking at together.' : s.risk || s.slow ? 'A consistent month, and one thing to look at.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
   return `<div class="lock"><p>Monday 16 ${s.month}</p><div class="time">7:42</div><button class="notif" data-act="open"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>Your ${s.month} report is ready</b>${line}</button></div>`;
 }
+function goalStrip(s){
+  const g = s.goal; if (!g) return '';
+  if (g.reached) return `<div class="card goalrow"><span>Your goal</span><span class="quiet">Reached</span></div>`;
+  return `<div class="card ${g.close ? 'goal' : ''}"><div class="goalrow"><span>${g.close ? `<b>${g.left}kg</b> to your goal` : 'Your goal'}</span><span class="quiet">${g.close ? `about ${g.weeks} weeks` : `${g.pc}%`}</span></div><div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div></div>`;
+}
+const pageFns = () => [cardLead, cardChange, cardPattern, cardNote, pageWorth].concat(asks() ? [pageQuestion] : []);
+const pageNames = () => ['Headline', 'Biggest change', 'Pattern', 'Care team', 'Worth it?'].concat(asks() ? ['Questions'] : []);
 function story(s){
-  const i = state.page, body = [pageAnswer, pageCompare, pageWhy, pageNote, pageWorth, pageQuestion][i](s);
+  const fns = pageFns(), names = pageNames(), i = Math.min(state.page, fns.length - 1), body = fns[i](s);
   const tint = i === 0 ? (leadText(s).amber ? 'amber' : 'lilac') : '';
-  const last = i === PAGES.length - 1, skip = last && !state.qDone;
-  const skipFull = last ? '' : '<button class="link" data-act="full">Skip to full report</button>';
-  return `<div class="story ${tint}"><div class="segs" role="progressbar" aria-valuemin="1" aria-valuemax="${PAGES.length}" aria-valuenow="${i + 1}" aria-label="Page ${i + 1} of ${PAGES.length}: ${PAGES[i]}">${PAGES.map((p, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
+  const last = i === fns.length - 1, skip = last && asks() && !state.qDone;
+  return `<div class="story ${tint}"><div class="segs" role="progressbar" aria-valuemin="1" aria-valuemax="${fns.length}" aria-valuenow="${i + 1}" aria-label="Card ${i + 1} of ${fns.length}: ${names[i]}">${fns.map((p, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
     <button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg" id="screen">${body}</main>
-    <div class="nav ${last ? '' : 'has-skip'}"><button class="btn soft" data-act="back" ${i === 0 ? 'disabled' : ''}>Back</button><button class="btn" data-act="next">${skip ? 'Skip to full report' : last ? 'See your full report' : 'Next'}</button>${skipFull}</div></div>${sheet(s)}`;
+    <div class="nav ${last ? '' : 'has-skip'}"><button class="btn soft" data-act="back" ${i === 0 ? 'disabled' : ''}>Back</button><button class="btn" data-act="next">${skip ? 'Skip to full report' : last ? 'See your full report' : 'Next'}</button>${last ? '' : '<button class="link" data-act="full">Skip to full report</button>'}</div></div>${sheet(s)}${tileSheet(s)}`;
 }
-// Where the story lands: the same content on one page, to come back to during the month.
+// Where the story lands: everything on one screen, to come back to during the month.
 function full(s){
-  const t = leadText(s);
+  const t = leadText(s), has = s.data !== 'none', w = has ? `${fmt(s.pct)}%` : s.wPct !== null ? (s.wPct >= 0 ? `${fmt(s.wPct)}%` : `+${fmt(-s.wPct)}%`) : '';
+  const status = s.stall ? 'Below expected' : s.slow ? 'Under expected' : s.below ? (s.stage === 'early' ? 'Early days' : 'A little under') : s.stage === 'plateau' ? 'Holding' : 'On track';
+  const p = s.data === 'rich' ? pattern(s) : null;
   return `<div class="story"><button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg full" id="screen">
-      <div class="top"><p class="k">Month ${s.n} on treatment</p><h1 class="lead" id="lead" tabindex="-1">Your ${s.month} report</h1></div>
-      <div class="sum ${t.amber ? 'amber' : ''}"><h2 class="lead sm">${t.h}</h2><p class="lede">${t.p}</p>${t.cta ? helpBtn(t.cta) : ''}</div>
-      ${pageCompare(s, true)}
-      ${state.qDone ? '' : `<div class="card ask"><span>Three quick questions<small class="quiet" style="display:block">${s.concern ? 'So your care team has the full picture.' : 'Your answers update this report.'}</small></span><button class="link" data-act="page" data-i="5">Answer</button></div>`}
-      ${pageWhy(s, true)}${pageNote(s, true)}${pageWorth(s, true)}
+      <div class="top"><p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">Your report</h1></div>
+      ${t.cta || t.amber ? `<div class="sum ${t.amber ? 'amber' : ''}"><p class="sumline">${t.big} ${t.cap}</p>${t.cta ? helpBtn(t.cta) : ''}</div>` : ''}
+      <div class="card wcard"><div class="goalrow"><span><span class="lbl">Weight</span><span class="num">${w ? `${w}<small>${w[0] === '+' ? 'up' : 'down'}</small>` : '<button class="link" data-act="ask">+ Add a weigh-in</button>'}</span></span>${has ? `<span class="chip ${s.stall ? 'amber' : ''}">${status}</span>` : ''}</div>${chart(s, !has, 104)}</div>
+      <div class="tiles">${metrics(s).map(m => tile(m, s)).join('')}</div>
+      ${goalStrip(s)}
+      ${asks() && !state.qDone ? `<div class="card ask"><span>Three quick questions<small class="quiet" style="display:block">${s.concern ? 'So your care team has the full picture.' : 'They fill in the empty tiles.'}</small></span><button class="link" data-act="ask">Answer</button></div>` : ''}
+      ${p ? `<div class="card"><p class="why">${p[0]}</p>${patternViz(p)}</div>` : ''}
+      ${cardNote(s, true)}${pageWorth(s, true)}
       <button class="btn soft" data-act="open">Replay the story</button>
-    </main></div>${sheet(s)}`;
+    </main></div>${sheet(s)}${tileSheet(s)}`;
 }
 function render(){
   const s = sc();
@@ -555,11 +622,12 @@ function render(){
   document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; const off = k === 'goal' && !(state.stage === 'middle' && state.progress === 'on' && state.data !== 'none');
     el.classList.toggle('wrap', k === 'progress');
     el.innerHTML = CONTROLS[k].map(([v, l]) => `<label ${off ? 'class="off"' : ''}><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${l}</span></label>`).join(''); });
-  $('#pages').innerHTML = PAGES.map((p, j) => `<button data-act="page" data-i="${j}" aria-pressed="${state.opened && !state.full && state.page === j}" title="${p}">${j + 1}</button>`).join('') + `<button data-act="full" aria-pressed="${state.opened && state.full}" title="The full report" style="flex:1.6">Full</button>`;
+  const names = pageNames(); if (state.page > names.length - 1) state.page = names.length - 1;
+  $('#pages').innerHTML = names.map((p, j) => `<button data-act="page" data-i="${j}" aria-pressed="${state.opened && !state.full && state.page === j}" title="${p}">${j + 1}</button>`).join('') + `<button data-act="full" aria-pressed="${state.opened && state.full}" title="The full report" style="flex:1.6">Full</button>`;
 }
-function freshVisit(){ state.q = {}; state.qi = 0; state.qDone = false; state.wPrompt = false; state.wOk = false; state.worth = null; state.chart = false; state.help = null; state.helpSent = null; }
+function freshVisit(){ state.q = {}; state.qi = 0; state.qDone = false; state.wPrompt = false; state.wOk = false; state.worth = null; state.chart = false; state.help = null; state.helpSent = null; state.tile = null; }
 function openFull(){ state.opened = true; state.full = true; state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
-function go(i){ if (i >= PAGES.length) return openFull(); state.opened = true; state.full = false; state.page = Math.max(0, Math.min(PAGES.length - 1, i)); state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
+function go(i){ const n = pageFns().length; if (i >= n) return openFull(); state.opened = true; state.full = false; state.page = Math.max(0, Math.min(n - 1, i)); state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
 // Every answer is paid back straight away: the next page is built from it.
 function finish(){ state.qDone = true; state.wPrompt = false; render(); toast('Your report is updated'); }
 // The flywheel: answering this month makes next month's report richer.
@@ -567,12 +635,12 @@ function nextMonth(){
   const did = state.qDone, up = { none: 'light', light: 'rich', rich: 'rich' }[state.data];
   if (did) state.data = up;
   state.monthIdx++; freshVisit(); state.opened = false; state.full = false; state.page = 0; render();
-  toast(did ? `${MONTHS[state.monthIdx % MONTHS.length]} report: her answers made it richer` : `${MONTHS[state.monthIdx % MONTHS.length]} report: no answers, so nothing new`);
+  { const mo = MONTHS[state.monthIdx % MONTHS.length]; toast(did ? `${mo} report: her answers made it richer` : state.data === 'rich' ? `${mo} report` : `${mo} report: no answers, so nothing new`); }
 }
-function closeHelp(){ state.help = null; render(); const b = $('[data-act="help"]') || $('#lead'); b && b.focus({ preventScroll: true }); }
+function closeHelp(){ state.help = null; state.tile = null; render(); const b = $('[data-act="help"]') || $('#lead'); b && b.focus({ preventScroll: true }); }
 document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; freshVisit(); render._k = null; render(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
 document.addEventListener('input', e => { if (e.target.id === 'wt'){ const v = parseFloat(e.target.value); state.q.weight = v >= 40 && v <= 250 ? v : null; state.wOk = false; if (state.wPrompt){ state.wPrompt = false; const c = $('.wcheck'); c && c.remove(); } } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.help) closeHelp(); else if (state.opened && !state.full && !state.help && e.target.tagName !== 'INPUT'){ if (e.key === 'ArrowRight') go(state.page + 1); if (e.key === 'ArrowLeft') go(state.page - 1); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && (state.help || state.tile)) closeHelp(); else if (state.opened && !state.full && !state.help && !state.tile && e.target.tagName !== 'INPUT'){ if (e.key === 'ArrowRight') go(state.page + 1); if (e.key === 'ArrowLeft') go(state.page - 1); } });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
   const a = el.dataset.act, v = el.dataset.v;
@@ -584,6 +652,8 @@ document.addEventListener('click', e => {
     case 'page': go(+el.dataset.i); break;
     case 'close': state.opened = false; state.full = false; state.page = 0; render(); break;
     case 'full': openFull(); break;
+    case 'tile': state.tile = el.dataset.k; render(); $('.x').focus(); break;
+    case 'ask': case 'add': if (asks() && !state.qDone) go(pageFns().length - 1); else toast('Log it once in the app and it appears here next month'); break;
     case 'q': state.q[el.dataset.k] = v; state.qi++; if (state.qi === QS.length && state.data !== 'none') finish(); else { render(); const b = $('.pg .opt') || $('#wt'); b && b.focus({ preventScroll: true }); } break;
     case 'w-ok': state.wOk = true; finish(); break;
     case 'w-fix': state.wPrompt = false; render(); $('#wt').focus(); $('#wt').select(); break;
