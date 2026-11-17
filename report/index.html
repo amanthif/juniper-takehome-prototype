@@ -4,263 +4,234 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Monthly Progress Report · Prototype</title>
-<meta name="description" content="Working prototype: a monthly progress report that adapts to how much data a user has, and pays every input back. Illustrative data only.">
+<meta name="description" content="Working prototype: a monthly progress report that answers the question a user has at each stage of GLP-1 treatment, and pays back every answer. Illustrative data only.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* Design rules: one thing leads each screen · one accent (lilac), amber only for a stall · dots for data ·
+   three text sizes (22 serif, 15 body, 13 quiet) · plain words · the source is always one tap away. */
 :root{
-  --page:#F1ECF2; --surface:#FFFFFF; --surface-2:#FAF5FB; --ink:#1F2A24; --muted:#56605A; --line:#E8E1EA;
-  --brand:#1E3B2C; --brand-soft:#E6EEE8; --accent:#7E52B8; --accent-soft:#EFE6F8;
-  --warn-ink:#7A4E00; --warn-soft:#FFF3D6; --amber:#C98A1B;
-  --radius:20px; --shadow:0 1px 2px rgba(31,42,36,.05),0 6px 20px rgba(31,42,36,.06);
+  --page:#F1ECF2; --bg:#FAF5FB; --card:#FFFFFF; --ink:#1F2A24; --quiet:#5B655F; --line:#ECE5EE;
+  --green:#1E3B2C; --lilac:#EFE6F8; --lilac-ink:#7E52B8; --berry:#CFC3F5; --amber:#FFF3D6; --amber-ink:#7A4E00; --amber-dot:#C98A1B;
   --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit}
-a{color:var(--brand)}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+:focus-visible{outline:3px solid var(--lilac-ink);outline-offset:2px;border-radius:8px}
+p{margin:0}
 
-.layout{display:grid;grid-template-columns:minmax(280px,360px) auto;gap:48px;justify-content:center;align-items:start;padding:36px 24px}
+/* layout */
+.layout{display:grid;grid-template-columns:300px auto;gap:56px;justify-content:center;align-items:start;padding:40px 24px}
 .stage{position:sticky;top:24px}
-.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px;box-shadow:0 30px 60px rgba(31,42,36,.25)}
-.app{position:relative;height:100%;background:var(--surface-2);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
+.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px}
+.app{position:relative;height:100%;background:var(--bg);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
 
-/* demo panel */
-.demo{font-size:14px}
-.demo h1{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:28px;line-height:1.15;margin:0 0 6px}
-.demo .intro{color:var(--muted);margin:0 0 18px}
+/* controls: toggles only */
+.demo{font-size:13.5px}
+.demo h1{font-family:var(--serif);font-weight:400;color:var(--green);font-size:24px;margin:0 0 18px}
 .demo summary{display:none}
-fieldset.seg{border:0;padding:0;margin:0 0 14px}
-fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding:0}
-.seg-row{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
-.seg-row label{flex:1;position:relative}
+fieldset{border:0;padding:0;margin:0 0 14px}
+legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--quiet);margin-bottom:6px;padding:0}
+.seg-row{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg-row.wrap{flex-wrap:wrap}
+.seg-row label{flex:1;position:relative;min-width:0}
 .seg-row input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
-.seg-row span{display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer}
-.seg-row input:checked+span{background:var(--brand);color:#fff}
-.seg-row input:focus-visible+span{outline:3px solid var(--accent);outline-offset:1px}
-.flybtn{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:52px;border-radius:12px;border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;padding:0 16px;cursor:pointer;margin:4px 0 14px}
-.explain{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
-.explain .q{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);margin-bottom:6px}
-.explain .q.risk{background:var(--warn-soft);color:var(--warn-ink)}
-.explain .q.fly{background:var(--accent-soft);color:var(--accent)}
-.explain p{margin:4px 0}
-.explain .small{color:var(--muted);font-size:13px}
-.link-btn{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;text-decoration:underline;text-underline-offset:3px}
-.foot{color:var(--muted);font-size:12px;margin-top:8px}
+.seg-row span,.seg-row button{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer;border:0;background:none;font-size:13px}
+.seg-row>button{flex:1}
+.seg-row.wrap>button{flex:1 1 30%}
+.seg-row input:checked+span,.seg-row button[aria-pressed="true"],.seg-row button[aria-current="step"]{background:var(--green);color:#fff}
+.seg-row input:focus-visible+span{outline:3px solid var(--lilac-ink);outline-offset:1px}
+.seg-row label.off span{opacity:.35;cursor:not-allowed}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tgb{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;padding:0 10px;text-align:left}
+.tgb::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid #B9B1BD;flex:none}
+.tgb[aria-checked="true"]::before{background:var(--green);border-color:var(--green)}
+.reset{background:none;border:0;color:var(--quiet);cursor:pointer;min-height:44px;padding:0;text-decoration:underline;text-underline-offset:3px}
+.foot{color:var(--quiet);font-size:12px}
 
-/* phone */
-.screen{flex:1;overflow-y:auto;position:relative}
-.floatbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:52px 16px 8px;z-index:3;pointer-events:none;transition:background .2s,box-shadow .2s}
-.floatbar .ttl{font-weight:600;font-size:15px;color:var(--brand);opacity:0;transition:opacity .2s}
-.floatbar.solid{background:rgba(250,245,251,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
-.floatbar.solid .ttl{opacity:1}
-.floatbar.solid .fbtn{box-shadow:none;background:transparent}
-.floatbar>*{pointer-events:auto}
-.fbtn{min-width:44px;height:44px;border-radius:99px;border:0;background:rgba(255,255,255,.88);box-shadow:0 2px 10px rgba(31,42,36,.1);display:inline-flex;align-items:center;justify-content:center;padding:0 14px;font-weight:600;font-size:14px;cursor:pointer}
-.fbtn.ic{padding:0;width:44px}
-.tabbar{flex:none;display:flex;justify-content:space-around;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:6px 4px 22px}
-.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--muted);min-height:48px;cursor:pointer;padding-top:4px}
-.tab[aria-current="page"]{color:var(--brand);font-weight:600}
+/* phone: shared */
+.screen{flex:1;overflow-y:auto;padding:44px 18px 24px}
+.hello{font-family:var(--serif);font-weight:400;color:var(--green);font-size:22px;line-height:1.2;margin:0 0 14px}
+.quiet{color:var(--quiet);font-size:13px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-top:10px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.kv+.kv{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.kv span:last-child{color:var(--quiet);font-size:13px;text-align:right}
+.tap{display:block;width:100%;text-align:left;border:0;background:none;padding:0;cursor:pointer}
+.card.tap{background:var(--card);padding:16px}
+.tabbar{flex:none;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px 20px}
+.tab{flex:1;border:0;background:none;font-size:12px;color:var(--quiet);min-height:48px;cursor:pointer}
+.tab[aria-current="page"]{color:var(--green);font-weight:600}
+
+/* hero: the one thing that leads */
+.hero{background:var(--lilac);border-radius:22px;padding:20px 18px 12px}
+.hero.stall{background:var(--amber);padding-bottom:18px}
+.hero .k{font-size:13px;font-weight:500;color:var(--lilac-ink)}
+.hero.stall .k{color:var(--amber-ink)}
+.hero .big{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:6px 0 8px}
+.hero .sub{color:#3E4A44}
+.hero.new{animation:fade .5s ease-out}
+@keyframes fade{from{opacity:.3}to{opacity:1}}
+.herofoot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.dots{display:flex;align-items:center;margin-left:-10px;min-height:44px}
+.dots button{width:28px;height:44px;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
+.dots i{width:6px;height:6px;border-radius:50%;background:#B9B1BD;transition:width .2s}
+.dots [aria-current="true"] i{width:18px;border-radius:3px;background:var(--green)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border-radius:12px;border:0;font-weight:600;cursor:pointer;padding:0 16px;background:var(--green);color:#fff;margin-top:16px}
+.btn.soft{background:var(--lilac);color:var(--green)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--lilac-ink);font-weight:500;cursor:pointer;min-height:44px;padding:0}
+
+/* berries: a dot shows where she is */
+.range{position:relative;height:8px;border-radius:4px;background:var(--line);margin-top:12px;display:block}
+.range s{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--berry)}
+.range u{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--green);border:3px solid var(--card)}
+.range.stall u{background:var(--amber-dot)}
+.steps{display:flex;margin-top:14px}
+.steps li{flex:1;list-style:none;text-align:center;font-size:13px;color:var(--quiet);position:relative;padding-top:20px}
+.steps li::before{content:"";position:absolute;top:0;left:50%;margin-left:-6px;width:12px;height:12px;border-radius:50%;border:2px solid #B9B1BD;background:var(--card)}
+.steps li.done::before{background:var(--berry);border-color:var(--berry)}
+.steps li.here::before{background:var(--green);border-color:var(--green)}
+.steps li.here{color:var(--green);font-weight:500}
+.plot{display:flex;gap:6px;height:56px;margin-top:10px}
+.plot span{flex:1;position:relative}
+.plot i{position:absolute;left:50%;margin-left:-5px;width:10px;height:10px;border-radius:50%;background:var(--berry)}
+.plot span:last-child i{background:var(--green)}
+
+/* lists */
+.win{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;padding:14px 0;min-height:52px;cursor:pointer;border-top:1px solid var(--line)}
+.win:first-child{border-top:0;padding-top:0}
+.win:last-child{padding-bottom:0}
+.win::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}
+.win.noted::before{background:#B9B1BD}
+.win.noted{color:var(--quiet)}
+.h2{font-family:var(--serif);font-weight:400;color:var(--green);font-size:22px;margin:26px 0 0}
+
+/* question */
+.q{font-weight:500;margin-bottom:12px}
+.slider{width:100%;min-height:44px;accent-color:var(--green)}
+.ends{display:flex;justify-content:space-between;margin-top:-4px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1.5px solid var(--line);background:var(--card);border-radius:99px;min-height:44px;padding:0 14px;cursor:pointer}
+.opt[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.said{font-family:var(--serif);font-size:22px;color:var(--green);line-height:1.25}
 
 /* lock screen */
-.lock{position:absolute;inset:0;background:linear-gradient(170deg,#2B2440 0%,#4A3B6E 45%,#8C79B9 100%);color:#fff;display:flex;flex-direction:column;align-items:center;padding:70px 14px 30px}
-.lock .date{font-size:17px;font-weight:500;opacity:.9}
-.lock .time{font-size:84px;font-weight:300;letter-spacing:-2px;line-height:1;margin:2px 0 30px}
-.notif{width:100%;background:rgba(255,255,255,.84);backdrop-filter:blur(20px);color:var(--ink);border-radius:20px;padding:12px 14px;text-align:left;border:0;cursor:pointer;animation:drop .5s ease-out}
-@keyframes drop{from{transform:translateY(-24px);opacity:0}to{transform:none;opacity:1}}
-.notif .top{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#555;margin-bottom:3px}
-.notif .appic{width:22px;height:22px;border-radius:6px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
-.notif b{display:block;font-size:15px}
-.notif .m{font-size:14.5px;line-height:1.35;display:block}
-.lock .hint{margin-top:auto;font-size:13px;opacity:.85}
+.lock{position:absolute;inset:0;background:#2F2845;color:#fff;display:flex;flex-direction:column;align-items:center;padding:76px 16px}
+.lock .time{font-size:80px;font-weight:300;letter-spacing:-2px;line-height:1.1;margin-bottom:32px}
+.notif{width:100%;background:rgba(255,255,255,.9);color:var(--ink);border-radius:20px;padding:14px 16px;text-align:left;border:0;cursor:pointer;min-height:64px;animation:fade .5s ease-out}
+.notif .who{display:flex;align-items:center;gap:8px;color:var(--quiet);font-size:13px;margin-bottom:6px}
+.notif .who i{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600}
+.notif .who span{margin-left:auto}
+.notif b{display:block;font-weight:600;font-size:16px}
 
-/* hero */
-.hero{background:linear-gradient(180deg,#C9BCF4 0%,#E4DCFA 55%,var(--surface-2) 100%);padding:108px 22px 24px}
-.hero.amber{background:linear-gradient(180deg,#F3DFB5 0%,#FBEFD6 55%,var(--surface-2) 100%)}
-.hero .eyebrow{font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);margin:0 0 10px;opacity:.85}
-.hero h1{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:34px;line-height:1.08;margin:0 0 12px;letter-spacing:-.015em}
-.hero p{margin:0;color:#3E4A44;font-size:15.5px}
-.hero .cta{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 20px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:600;cursor:pointer;margin-top:16px;text-decoration:none}
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(20,24,22,.35);z-index:5;display:flex;align-items:flex-end}
+.sheet{background:var(--card);width:100%;border-radius:26px 26px 0 0;padding:22px 20px 28px;max-height:86%;overflow-y:auto;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.sheet .big{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:0 44px 12px 0}
+.sheet p+p{margin-top:12px}
+.x{position:absolute;right:-6px;top:-8px;width:44px;height:44px;border-radius:50%;border:0;background:var(--bg);cursor:pointer;font-size:20px}
+.sheet-in{position:relative}
+.checks{list-style:none;padding:0;margin:14px 0 0}
+.checks li{display:flex;gap:10px;align-items:baseline;margin:8px 0}
+.checks li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);flex:none;transform:translateY(-1px)}
 
-.sec{padding:0 16px}
-.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:26px 2px 10px}
-.sec-h h2{font-family:var(--serif);font-weight:400;color:var(--brand);font-size:23px;margin:0}
-.sec-h span{font-size:13px;color:var(--muted)}
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:10px 0}
-.card h3{margin:0;font-size:16px;font-weight:600;color:var(--brand)}
-.muted{color:var(--muted)}
-.small{font-size:13.5px}
-.src{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start;margin:8px 0 0}
-.src svg{flex:none;margin-top:2px}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:8px;background:var(--brand-soft);color:var(--brand)}
-.chip.amber{background:var(--warn-soft);color:var(--warn-ink)}
-.chip.new{background:var(--accent-soft);color:var(--accent)}
-
-/* tiles */
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.tile{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:12px 10px;display:flex;flex-direction:column;gap:2px;min-height:112px}
-.tile .k{font-size:12px;color:var(--muted);line-height:1.25}
-.tile .v{font-family:var(--serif);font-size:24px;color:var(--brand);line-height:1.1;margin-top:auto}
-.tile .d{font-size:11.5px;color:var(--muted);line-height:1.25}
-.tile.new{box-shadow:0 0 0 2px var(--accent),var(--shadow)}
-.tile.warn{background:var(--warn-soft)}
-.tile.warn .v{color:var(--warn-ink)}
-.wcheck{background:var(--warn-soft);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14.5px;color:var(--warn-ink)}
-.wcheck p{margin:0 0 8px}
-.wcheck .opts{margin:0}
-
-/* drivers */
-.drv{padding:12px 0;border-top:1px solid var(--line)}
-.drv:first-of-type{border-top:0;padding-top:2px}
-.drv .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.drv .name{font-weight:600}
-.drv .val{font-size:13.5px;font-weight:600;color:var(--brand);text-align:right}
-.drv .val.amber{color:var(--warn-ink)}
-.drv .val.na{color:var(--muted);font-weight:500}
-.bar{height:8px;border-radius:99px;background:#EEEAF0;margin:8px 0 6px;overflow:hidden}
-.bar i{display:block;height:100%;border-radius:99px;background:var(--brand)}
-.bar i.amber{background:var(--amber)}
-.bar i.p{background:var(--accent)}
-.drv .why{font-size:12.5px;color:var(--muted)}
-.pips{display:flex;gap:3px;margin:8px 0 6px}
-.pips i{flex:1;height:8px;border-radius:3px;background:var(--brand)}
-.pips i.freeze{background:#9DC3E6}
-.pips i.off{background:#EEEAF0}
-
-/* changed */
-.chg{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
-.chg:first-of-type{border-top:0;padding-top:2px}
-.chg .ic{width:38px;height:38px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
-.chg .t{font-weight:600;font-size:15px}
-.chg .s{font-size:12.5px;color:var(--muted)}
-.chg .v{margin-left:auto;text-align:right;white-space:nowrap}
-.chg .v .then{font-size:12px;color:var(--muted);text-decoration:line-through}
-.chg .v .now{font-family:var(--serif);font-size:19px;color:var(--brand)}
-.quote{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:10px 0}
-.quote .when{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.quote p{margin:2px 0 0;font-family:var(--serif);font-size:18px;color:var(--brand);line-height:1.3}
-.normlist{margin:0;padding-left:18px}
-.normlist li{margin:6px 0}
-.expect{background:var(--surface-2);border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14.5px}
-.expect b{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-.getback{list-style:none;margin:8px 0 0;padding:10px 12px;background:var(--accent-soft);border-radius:12px;font-size:13.5px}
-.getback::before{content:"What you get back";display:block;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
-.getback li{margin:2px 0}
-.insight{background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px;margin:10px 0;font-size:15px}
-.insight b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
-.unlock{display:flex;gap:12px;align-items:center;border:1.5px dashed #CBBFD9;border-radius:var(--radius);padding:14px;margin:10px 0}
-.unlock .t{font-weight:600;font-size:15px}
-.unlock .s{font-size:13px;color:var(--muted)}
-
-/* next */
-.next{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.next .tile{min-height:120px}
-.ring{display:flex;align-items:center;gap:8px}
-.renew{font-size:13px;color:var(--muted);margin:10px 2px 0}
-
-/* check-in */
-.qc{border:2px solid var(--accent)}
-.qq{margin-top:14px}
-.qq p{margin:0 0 8px;font-weight:600;font-size:15px}
-.opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:500}
-.opt:hover{border-color:var(--accent)}
-.opt[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
-.wt{display:flex;gap:8px;align-items:center}
-.wt input{width:110px;min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;font:inherit}
-.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:10px;border:0;font-weight:600;font-size:16px;cursor:pointer;padding:0 16px;background:var(--brand);color:#fff;margin-top:14px;text-decoration:none;text-align:center}
-.btn[disabled]{opacity:.4;cursor:not-allowed}
-.btn.soft{background:var(--surface-2);color:var(--brand)}
-.payback{background:var(--accent-soft)}
-.payback ul{list-style:none;margin:8px 0 0;padding:0}
-.payback li{display:flex;gap:8px;margin:7px 0;font-size:14.5px}
-.payback li svg{flex:none;margin-top:3px;color:var(--accent)}
-.fine{font-size:12px;color:var(--muted);text-align:center;margin:20px 24px 28px}
-
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* get-help sheet */
-.scrim{position:absolute;inset:0;background:rgba(20,24,22,.42);z-index:6;display:flex;align-items:flex-end}
-.sheet{background:var(--surface);width:100%;border-radius:26px 26px 0 0;padding:10px 18px 26px;max-height:90%;overflow-y:auto;animation:up .25s ease-out}
-@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-.grab{width:40px;height:5px;border-radius:9px;background:#DDD6E0;margin:0 auto 10px}
-.sheet-h{display:flex;align-items:center;gap:10px}
-.sheet-h h2{flex:1;margin:0;font-family:var(--serif);font-weight:400;font-size:24px;color:var(--brand);line-height:1.15}
-.x{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;font-size:20px;flex:none}
-.stepper{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 8px}
-.seen{list-style:none;margin:10px 0 0;padding:0}
-.seen li{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px}
-.seen li:first-child{border-top:0}
-.seen .d{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;margin-top:7px}
-.seen small{display:block;font-size:12px;color:var(--muted)}
-.choice{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px;margin:10px 0 0;cursor:pointer}
-.choice:hover{border-color:var(--accent)}
-.choice.rec{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
-.choice .av{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;flex:none}
-.choice b{display:block;font-size:15.5px}
-.choice .s{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
-.choice .w{display:block;font-size:12.5px;color:var(--brand);font-weight:600;margin-top:4px}
-.redflag{background:#FBE4E1;color:#7A231D;border-radius:14px;padding:12px 14px;margin-top:14px;font-size:13.5px}
-.redflag b{display:block;font-size:14px}
-.sentnote{display:flex;gap:8px;align-items:flex-start;margin-top:14px;background:rgba(255,255,255,.75);border-radius:12px;padding:12px 14px;font-size:14.5px;color:var(--brand)}
-.sentnote svg{flex:none;margin-top:3px}
-.mean{list-style:none;margin:8px 0 0;padding:0}
-.mean li{display:flex;gap:8px;margin:7px 0;font-size:14.5px}
-.mean li svg{flex:none;margin-top:3px;color:var(--brand)}
-.needhelp{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--warn-soft);border-radius:16px;padding:12px 14px;margin-top:12px;font-size:14px}
-@media (prefers-reduced-motion:reduce){.notif{animation:none}.sheet{animation:none}}
-@media (max-width:860px){.scrim{position:fixed}}
+@media (prefers-reduced-motion:reduce){.sheet,.notif,.hero.new{animation:none}.dots i{transition:none}}
 
 @media (max-width:860px){
   .layout{display:block;padding:0}
-  .demo{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .demo{padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line)}
   .demo summary{display:flex;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
-  .demo h1{font-size:22px;margin-top:8px}
+  .demo h1{font-size:20px;margin:8px 0 14px}
   .stage{position:static}
-  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0;box-shadow:none}
+  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0}
   .app{border-radius:0;height:auto;min-height:100vh;overflow:visible}
-  .screen{overflow:visible}
-  .floatbar{position:sticky;top:0;padding-top:12px;margin-bottom:-64px}
-  .hero{padding-top:72px}
+  .screen{overflow:visible;padding-top:24px}
   .lock{position:relative;min-height:100vh}
   .tabbar{position:sticky;bottom:0;z-index:4}
+  .scrim{position:fixed}
 }
-.try{background:var(--accent-soft);border-radius:14px;padding:12px 16px;margin:0 0 16px}
-.try b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
-.try ol{margin:0;padding-left:18px}
-.try li{margin:3px 0}
-.more{margin:0 0 12px}
-.more>summary{display:flex!important;align-items:center;min-height:44px;font-weight:600;color:var(--brand);cursor:pointer}
+
+/* report additions */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.kv small{display:block;font-size:13px;color:var(--quiet);font-weight:400}
+.kv>span:first-child{min-width:0}
+.kv>span:last-child{color:var(--ink);font-size:15px;text-align:right;white-space:nowrap;flex:none}
+.kv.new>span:last-child{color:var(--lilac-ink);font-weight:500}
+.kv.warn>span:last-child{color:var(--amber-ink);font-weight:500}
+.rows>*+*{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.rows .kv+.kv{border-top:1px solid var(--line)}
+.goal{background:var(--lilac)}
+.goal .k{font-size:13px;font-weight:500;color:var(--lilac-ink)}
+.goal .big{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:6px 0 6px}
+.goal .range{background:#fff}
+.goal .range u{border-color:var(--lilac)}
+.wt{display:flex;gap:8px;align-items:center}
+.wt input{width:120px;min-height:44px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;font:inherit}
+.wcheck{background:var(--amber);color:var(--amber-ink);border-radius:14px;padding:12px 14px;margin-top:12px}
+.quote{font-family:var(--serif);font-size:18px;color:var(--green);line-height:1.3;margin-top:12px}
+.quote small{display:block;font-family:var(--sans);font-size:13px;color:var(--quiet)}
+.helpopt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:14px;margin-top:10px;cursor:pointer;min-height:44px}
+.helpopt.rec{border-color:var(--green)}
+.helpopt small{display:block;font-size:13px;color:var(--quiet)}
+.helpopt .tag{display:inline-block;margin-left:8px;color:var(--lilac-ink);font-weight:500}
+.flag{background:var(--amber);color:var(--amber-ink);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:13px}
+.seg-row>button{min-height:40px}
+
+/* the report as a story: one idea per page */
+.story{display:flex;flex-direction:column;height:100%;background:var(--bg)}
+.story.lilac{background:var(--lilac)}
+.story.amber{background:var(--amber)}
+.segs{display:flex;gap:5px;padding:22px 64px 0 20px}
+.segs i{flex:1;height:4px;border-radius:2px;background:rgba(30,59,44,.15)}
+.segs i.on{background:var(--green)}
+.close{position:absolute;right:10px;top:4px;width:44px;height:44px;border:0;background:none;font-size:24px;color:var(--green);cursor:pointer;z-index:2}
+.pg{flex:1;overflow-y:auto;padding:36px 22px 20px}
+.pg .k{font-size:13px;font-weight:500;color:var(--lilac-ink);margin-bottom:8px}
+.story.amber .pg .k{color:var(--amber-ink)}
+.lead{font-family:var(--serif);font-weight:400;color:var(--green);font-size:30px;line-height:1.15;margin:0 0 14px}
+.lead.sm{font-size:22px;line-height:1.25}
+.lede{color:#3E4A44;margin-bottom:6px}
+.nav{flex:none;display:flex;gap:10px;padding:12px 20px 24px}
+.nav .btn{margin:0}
+.nav .btn.soft{flex:0 0 96px;background:rgba(255,255,255,.7)}
+.opts.col{flex-direction:column;margin-top:8px}
+.opts.col .opt{border-radius:14px;min-height:52px;text-align:left;padding:0 16px;background:var(--card)}
+.cmp{display:grid;grid-template-columns:1fr 78px 86px;gap:8px;align-items:baseline}
+.cmp>span:nth-child(2){color:var(--quiet);font-size:13px;text-align:right}
+.cmp>span:nth-child(3){text-align:right;font-weight:500}
+.cmp small{display:block;font-size:13px;color:var(--quiet);font-weight:400}
+.cmp.head>span{font-size:13px;color:var(--quiet);font-weight:400}
+.cmp.new>span:nth-child(3){color:var(--lilac-ink)}
+.cmp.warn>span:nth-child(3){color:var(--amber-ink)}
+.note{background:var(--card);border-radius:22px;padding:22px 20px;font-family:var(--serif);font-size:18px;line-height:1.45;color:var(--green)}
+.note p+p{margin-top:12px}
+.note .sig{display:flex;align-items:center;gap:12px;font-family:var(--sans);font-size:15px;color:var(--ink);margin-top:18px}
+.note .sig i{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-style:normal;font-weight:600;flex:none}
+.note .sig small{display:block;font-size:13px;color:var(--quiet)}
+@media (max-width:860px){.story{min-height:100vh}.nav{position:sticky;bottom:0;background:inherit}}
 </style>
 </head>
 <body>
 <div class="layout">
-  <aside class="demo" aria-label="Prototype demo controls">
+  <aside class="demo" aria-label="Prototype controls">
     <details id="demoDetails" open>
-      <summary>Demo controls</summary>
+      <summary>Controls</summary>
       <h1>Monthly Progress Report</h1>
-      <p class="intro">Answers “Is this working, and is it worth it?” a few days before renewal, for every user, including those who log nothing. Each stage gets a different report, because the question changes. Flip the data level to watch it scale down, then press <strong>Next month</strong> to watch the flywheel turn. <strong>All data is illustrative.</strong></p>
-      <div class="try"><b>Try this</b><ol><li>Tap the notification on the phone.</li><li>Switch the journey stage. Each one is a different report.</li><li>Set data to <strong>None</strong>, answer the 30-second check-in, then press <strong>Next month</strong>.</li></ol></div>
-      <fieldset class="seg"><legend>Data we have</legend><div class="seg-row">
-        <label><input type="radio" name="data" value="rich" checked><span>Rich</span></label>
-        <label><input type="radio" name="data" value="light"><span>Light</span></label>
-        <label><input type="radio" name="data" value="none"><span>None</span></label></div></fieldset>
-      <fieldset class="seg"><legend>Journey stage</legend><div class="seg-row">
-        <label><input type="radio" name="stage" value="early"><span>Start · month 1</span></label>
-        <label><input type="radio" name="stage" value="middle" checked><span>Middle · month 3</span></label>
-        <label><input type="radio" name="stage" value="plateau"><span>Plateau · month 6</span></label></div></fieldset>
-      <fieldset class="seg"><legend>Progress</legend><div class="seg-row">
-        <label><input type="radio" name="progress" value="on" checked><span>On track</span></label>
-        <label><input type="radio" name="progress" value="risk"><span>Behind, feels fine</span></label>
-        <label><input type="radio" name="progress" value="below"><span>Stalled</span></label></div></fieldset>
-      <button class="flybtn" data-act="nextmonth"><span>Next month: watch the flywheel</span><span aria-hidden="true">→</span></button>
-      <div class="explain" id="explain" aria-live="polite"></div>
-      <button class="link-btn" data-act="reset">Reset demo</button>
-      <p class="foot">Fictional user (Sarah, Mounjaro). “Expected range” bands are illustrative, not clinical data.</p>
+      <fieldset><legend>Data we have</legend><div class="seg-row" data-k="data"></div></fieldset>
+      <fieldset><legend>Stage</legend><div class="seg-row" data-k="stage"></div></fieldset>
+      <fieldset><legend>Progress</legend><div class="seg-row" data-k="progress"></div></fieldset>
+      <fieldset><legend>Page</legend><div class="seg-row" id="pages"></div></fieldset>
+      <fieldset><legend>Her goal weight (on track, month 3)</legend><div class="seg-row" data-k="goal"></div></fieldset>
+      <fieldset><legend>Time</legend><div class="seg-row"><button data-act="nextmonth">Next month →</button></div></fieldset>
+      <button class="reset" data-act="reset">Reset</button>
+      <p class="foot">Sarah is fictional. All data and ranges are illustrative.</p>
     </details>
   </aside>
   <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
@@ -268,482 +239,289 @@ fieldset.seg legend{font-weight:600;font-size:12px;letter-spacing:.06em;text-tra
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* ===================== Model (illustrative) ===================== */
-const START_KG = 92;
-const MONTHS = ['October', 'November', 'December', 'January', 'February'];
-const NEXT_ORDER = ['20 Oct', '20 Nov', '20 Dec', '20 Jan', '20 Feb', '20 Mar'];
-const DOSES = [2.5, 5, 7.5, 10];
+/* ===================== Sample data (illustrative) ===================== */
+const START_KG = 92, DOSES = [2.5, 5, 7.5, 10];
+const MONTHS = ['October', 'November', 'December', 'January', 'February'], NEXT_ORDER = ['20 Nov', '20 Dec', '20 Jan', '20 Feb', '20 Mar'];
+// pct = % of body weight lost so far. "below" is used for both "behind, feels fine" and "stalled".
 const STAGES = {
-  early:   { n: 1, week: 3,  on: { pct: -1.9, chg: -1.7, last: null, doseIdx: 0 }, below: { pct: -0.4, chg: -0.4, last: null, doseIdx: 0 } },
-  middle:  { n: 3, week: 10, on: { pct: -7.4, chg: -2.1, last: -2.4, doseIdx: 2 }, below: { pct: -2.8, chg: -0.6, last: -0.9, doseIdx: 0, stuck: true } },
-  plateau: { n: 6, week: 26, on: { pct: -13.1, chg: -0.3, last: -0.6, doseIdx: 3 }, below: { pct: -5.2, chg: 0.1, last: -0.2, doseIdx: 1, stuck: true } },
+  early:   { n: 1, week: 3,  on: { pct: 1.9, doseIdx: 0, rate: 1.7 },  below: { pct: 0.4, doseIdx: 0, rate: 0.4 } },
+  middle:  { n: 3, week: 10, on: { pct: 7.4, doseIdx: 2, rate: 2.1 },  below: { pct: 2.8, doseIdx: 0, rate: 0.6, stuck: true } },
+  plateau: { n: 6, week: 26, on: { pct: 13.1, doseIdx: 3, rate: 0.3 }, below: { pct: 5.2, doseIdx: 1, rate: 0, stuck: true } },
 };
-const band = w => { const k = 1 - Math.exp(-w / 22); return { lo: -10 * k, hi: -22 * k }; };
-
-const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', opened: false, monthIdx: 0, q: {}, qDone: false, useful: null, worth: null, fresh: [], flyNote: null, help: null, helpSent: null, wPrompt: false, wOk: false });
-let state = initial();
-
-function sc(){
-  const st = STAGES[state.stage], below = state.progress !== 'on', p = st[below ? 'below' : 'on'];
-  const b = band(st.week);
-  return { ...st, ...p, below, stage: state.stage, data: state.data, kg: +(START_KG * -p.pct / 100).toFixed(1),
-    dose: DOSES[p.doseIdx], stuck: !!p.stuck, inRange: p.pct <= b.lo && p.pct >= b.hi, band: b,
-    // Below range in month 1 is expected (starter dose), so it isn't treated as a stall.
-    stall: state.progress === 'below' && state.stage !== 'early',
-    // Hidden risk: behind the expected range but she feels fine. An early warning, not an alarm.
-    risk: state.progress === 'risk' && state.stage !== 'early' && state.data !== 'none', month: MONTHS[state.monthIdx % MONTHS.length], ...answerFlags() };
-}
-// Concern also comes from what she tells us, not only the scale.
-function answerFlags(){
-  const q = state.q, flags = [];
-  if (state.qDone){
-    const wPct = q.weight ? (q.weight - START_KG) / START_KG * 100 : null;
-    if (wPct !== null && wPct > 1) flags.push('gain');
-    if (q.side === 'most') flags.push('side');
-    if (q.appetite === 'same' && state.stage !== 'early') flags.push('appetite');
-  }
-  return { flags, wPct: q.weight ? (q.weight - START_KG) / START_KG * 100 : null };
-}
-// A weight this far from intake is more often a typo than real, so confirm it first.
-const wImplausible = w => w && ((w - START_KG) / START_KG > .03 || (START_KG - w) / START_KG > .2);
-
-/* ===================== Helpers ===================== */
-const $ = s => document.querySelector(s);
-const sgn = n => (n < 0 ? '−' : n > 0 ? '+' : '±') + Math.abs(n).toFixed(1);
-function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2800); }
-const I = {
-  info: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>',
-  check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-  bowl: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 11h18a9 9 0 01-18 0zM8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/></svg>',
-  wave: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/></svg>',
-  bolt: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>',
-  tape: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 9h18v6H3zM7 9v3M11 9v3M15 9v3M19 9v3"/></svg>',
-  moon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
-  heart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
-  share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg>',
+// Expected % lost by week (illustrative curve).
+const band = w => { const k = 1 - Math.exp(-w / 22); return { lo: 10 * k, hi: 22 * k }; };
+const CONTROLS = {
+  data: [['rich', 'Rich'], ['light', 'Light'], ['none', 'None']],
+  stage: [['early', 'Month 1'], ['middle', 'Month 3'], ['plateau', 'Month 6']],
+  progress: [['on', 'On track'], ['risk', 'Behind, feels fine'], ['below', 'Stalled']],
+  goal: [['far', 'Far off'], ['close', 'Close']],
 };
-const src = t => `<p class="src">${I.info}<span>${t}</span></p>`;
-const answered = () => state.qDone;
-
-/* ===================== Sections ===================== */
-function hero(s){
-  const q = state.q;
-  let cls = '', h, p, cta = '';
-  if (s.data === 'none' && !answered()){
-    h = `Month ${s.n} on treatment: here’s what we know`;
-    p = `${s.n === 1 ? 'Your first order arrived' : `${s.n} orders arrived`} on time and you’re on ${s.dose}mg. ${s.stall ? 'We haven’t heard from you in a while, so we can’t see how it’s going.' : ''} Tell us 3 things below and the rest of this report becomes about you.`;
-    if (s.stall) cta = helpCta();
-  } else if (s.stall){
-    cls = 'amber';
-    h = 'This month was slower than we’d expect.';
-    p = s.data === 'none'
-      ? 'Thanks for telling us. Some of your answers suggest things have slowed. That’s usually fixable, often the dose. Let’s look at it together.'
-      : `You’re ${sgn(s.pct)}% since you started, which is below the expected range for month ${s.n}. That’s not a failure. It’s usually something fixable, often the dose. Let’s look at it together.`;
-    cta = helpCta();
-  } else if (s.risk && !s.flags.length){
-    h = 'A consistent month, and one thing to look at.';
-    p = `You took every dose and kept logging. Your results are a little behind where we’d expect at month ${s.n} (${sgn(s.pct)}%). It’s usually something simple, often the dose, and it’s easier to sort out early.`;
-    cta = state.helpSent ? helpCta() : `<button class="cta" data-act="help">Review it with my care team</button>`;
-  } else if (s.flags.length){
-    cls = 'amber'; cta = helpCta();
-    const f = s.flags[0];
-    if (f === 'gain'){
-      h = 'Your weight has gone up since you started.';
-      p = `You’re ${sgn(s.wPct)}% since intake${s.flags.includes('side') ? ', and you’ve had side effects most days' : ''}. That isn’t what we’d expect on treatment, and it’s worth a proper look. Your care team can see your answers.`;
-    } else if (f === 'side'){
-      h = 'Side effects most days isn’t something to push through.';
-      p = `${s.stage === 'early' ? 'Some side effects are common in month 1, but most days is more than we’d like.' : 'Most days is more than we’d expect at this stage.'} There’s usually a fix, like a slower step-up or simple changes to meals. Your care team can see your answers.`;
-    } else {
-      h = 'Thanks. That tells us something useful.';
-      p = `An unchanged appetite at month ${s.n} is worth a closer look, often the dose. Your care team can see your answers.`;
-    }
-  } else if (s.data === 'none'){
-    h = q.appetite === 'same' ? 'Thanks. That tells us something useful.' : 'Your appetite has changed. That’s the medicine working.';
-    p = q.appetite === 'same' ? `An unchanged appetite at month ${s.n} is worth a closer look. Your care team can see your answers.` : 'A smaller appetite is one of the clearest early signs, often before the scale shows it.';
-  } else if (s.stage === 'early'){
-    h = 'Month 1 done. Your body is adjusting.';
-    p = s.below ? `The scale has barely moved (${sgn(s.pct)}%). That’s common on the starter dose, and loss usually picks up after your first step up.` : `The first weeks are about getting used to the medicine, not big numbers. You took every dose and your side effects are easing. You’re ${sgn(s.pct)}% so far, right where we’d expect.`;
-  } else if (s.stage === 'middle'){
-    h = `${sgn(s.pct)}% since you started. It’s working.`;
-    p = `That’s within the expected range for month 3. You lost ${Math.abs(s.chg).toFixed(1)}kg this month, and your appetite and sleep are moving the right way too.`;
-  } else {
-    h = 'A steady month, and that’s a win.';
-    p = `You’re holding at ${sgn(s.pct)}%. Most people level off around month 6 as the body settles. Holding steady is the result now, and the changes below have lasted.`;
-  }
-  return `<section class="hero ${cls}"><p class="eyebrow">${s.month} report · Month ${s.n}</p><h1 id="h1" tabindex="-1">${h}</h1><p>${p}</p>${cta}</section>`;
-}
-
-function vsLastMonth(s){
-  const q = state.q, fresh = id => id === 'gain' ? 'warn' : state.fresh.includes(id) ? 'new' : '';
-  const t = (k, v, d, id = '') => `<div class="tile ${fresh(id)}"><span class="k">${k}</span><span class="v">${v}</span><span class="d">${d}</span></div>`;
-  const doseT = t('Doses on time', '4/4', s.data === 'rich' ? 'Same as last month' : 'From your orders');
-  let tiles;
-  if (s.data === 'rich') tiles = [t('Weight this month', `${sgn(s.chg)}kg`, s.last === null ? 'Your first month' : `Last month ${sgn(s.last)}kg`), t('Weigh-ins', '4/4', 'Last month 4/4'), doseT];
-  else if (s.data === 'light') tiles = [t('Weight this month', `${sgn(s.chg)}kg`, 'From 2 weigh-ins'), t('Weigh-ins', '2/4', 'Weekly shows your real trend'), doseT];
-  else {
-    const w = answered() && q.weight ? t('Since intake', `${sgn(s.wPct)}%`, s.wPct > 1 ? 'Up since you started' : 'From today’s weigh-in', s.wPct > 1 ? 'gain' : 'weight') : t('Weeks on treatment', String(s.week), 'From your prescription');
-    tiles = [doseT, t('Current dose', `${s.dose}mg`, `Step ${s.doseIdx + 1} of 4`), w];
-  }
-  return `<div class="sec"><div class="sec-h"><h2>This month</h2><span>vs last month</span></div><div class="tiles">${tiles.join('')}</div></div>`;
-}
-
-function chart(s){
-  if (s.data === 'none' || Math.abs(s.pct) < 1){
-    const t = { early: ['Appetite starting to shrink', 'Mild nausea that eases within weeks', 'Small early losses before a bigger drop after step-ups'], middle: ['Noticeably smaller portions', 'Less “food noise” between meals', 'Clothes fitting differently'], plateau: ['Weight loss slowing as the body settles', 'Steadier energy and sleep', 'Habits that feel automatic'] }[s.stage];
-    if (s.data !== 'none' || answered()) return ''; // benchmarks only until we know something about her
-    return `<div class="sec"><div class="sec-h"><h2>People at your stage</h2><span>Benchmark</span></div><div class="card"><p class="small muted" style="margin:0 0 8px">Not your data. Your check-in below makes this about you.</p><ul style="margin:0;padding-left:18px">${t.map(x => `<li style="margin:4px 0">${x}</li>`).join('')}</ul></div></div>`;
-  }
-  const W = 330, H = 170, L = 34, R = 10, T = 14, B = 24, maxW = s.week + 2;
-  const minV = Math.min(band(maxW).hi, s.pct) - 1.5;
-  const x = w => L + w / maxW * (W - L - R), y = v => T + v / minV * (H - T - B);
-  let up = '', dn = '';
-  for (let w = 0; w <= maxW; w += 0.5) up += `${x(w)},${y(band(w).lo)} `;
-  for (let w = maxW; w >= 0; w -= 0.5) dn += `${x(w)},${y(band(w).hi)} `;
-  const step = s.data === 'rich' ? 1 : 4, pts = [];
-  const ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
-  for (let w = 0; w <= s.week; w += step) pts.push([w, s.pct * ease(w) + (w && w < s.week ? Math.sin(w * 9.1) * 0.2 : 0)]);
-  if (pts[pts.length - 1][0] !== s.week) pts.push([s.week, s.pct]);
-  const col = s.inRange || !s.below ? '#1E3B2C' : '#C98A1B';
-  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ');
-  const last = pts[pts.length - 1];
-  const ticks = []; for (let v = 0; v >= minV; v -= 5) ticks.push(v);
-  return `<div class="sec"><div class="sec-h"><h2>Where you are</h2><span>${s.data === 'light' ? 'Monthly weigh-ins' : 'Weekly weigh-ins'}</span></div><div class="card">
-    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Your weight change of ${sgn(s.pct)} percent compared with an illustrative expected range at week ${s.week}.">
-      ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#E8E1EA"/><text x="${L - 6}" y="${y(v) + 4}" font-size="10.5" text-anchor="end" fill="#56605A">${v === 0 ? '0%' : '−' + Math.abs(v) + '%'}</text>`).join('')}
-      <polygon points="${up}${dn}" fill="#DCE8DF"/>
-      <path d="${d}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="${x(last[0])}" cy="${y(last[1])}" r="6.5" fill="${col}" stroke="#fff" stroke-width="3"/>
-      <text x="${Math.min(x(last[0]) - 4, W - R - 4)}" y="${y(last[1]) - 12}" font-size="11.5" font-weight="700" text-anchor="end" fill="#1F2A24">${sgn(s.pct)}% · you are here</text>
-      <text x="${L}" y="${H - 6}" font-size="10.5" fill="#56605A">Start</text><text x="${x(s.week)}" y="${H - 6}" font-size="10.5" text-anchor="middle" fill="#56605A">Week ${s.week}</text>
-    </svg>
-    <p class="small muted" style="margin:6px 0 0"><span style="display:inline-block;width:12px;height:9px;background:#DCE8DF;border-radius:2px;margin-right:5px"></span>Expected range. Where people usually are at your stage.</p></div></div>`;
-}
-
-function drivers(s){
-  const q = state.q;
-  // 1. Effective dose on schedule
-  const doseVal = s.stuck ? `<span class="val amber">Step ${s.doseIdx + 1} of 4 · step-up overdue</span>` : `<span class="val">Step ${s.doseIdx + 1} of 4 · ${s.doseIdx === 3 ? 'maintenance reached' : 'on schedule'}</span>`;
-  const dose = `<div class="drv"><div class="top"><span class="name">Reaching your effective dose</span>${doseVal}</div><div class="bar"><i class="${s.stuck ? 'amber' : ''}" style="width:${(s.doseIdx + 1) / 4 * 100}%"></i></div>
-    <div class="why">${s.stuck ? 'This is the biggest driver of results, and it’s the easiest thing to fix with your prescriber.' : `${s.doseIdx === 3 ? 'You’re on your full dose.' : s.stage === 'early' ? 'Next step: 5mg in 9 days.' : 'Next review in 9 days.'} The biggest driver of results.`}</div></div>`;
-  // 2. Side effects managed
-  let se;
-  if (s.data === 'rich') se = `<div class="drv"><div class="top"><span class="name">Side effects managed</span><span class="val">Nausea ${s.below ? '3' : '1'} day/wk · logged weekly</span></div><div class="bar"><i class="p" style="width:${s.below ? 45 : 85}%"></i></div><div class="why">Catching side effects early is what keeps people on track.</div></div>`;
-  else if (s.data === 'light' || answered()){
-    const v = answered() ? { none: 'None this month', some: 'Some, manageable', most: 'Most days' }[q.side] : 'Easing';
-    se = `<div class="drv"><div class="top"><span class="name">Side effects managed</span><span class="val ${q.side === 'most' ? 'amber' : ''}">${v}</span></div><div class="bar"><i class="${q.side === 'most' ? 'amber' : 'p'}" style="width:${q.side === 'most' ? 30 : 70}%"></i></div><div class="why">${answered() ? 'From your check-in just now.' : 'Based on what you told June. Catching side effects early keeps you on track.'}${q.side === 'most' ? ' Your care team can see this.' : ''}</div></div>`;
-  } else se = `<div class="drv"><div class="top"><span class="name">Side effects managed</span><span class="val na">Not tracked yet</span></div><div class="bar"><i style="width:0"></i></div><div class="why">Tell us in the 30-second check-in below.</div></div>`;
-  // 3. Weigh-ins (forgiving streak)
-  let wi;
-  if (s.data === 'rich') wi = `<div class="drv"><div class="top"><span class="name">Weekly weigh-ins</span><span class="val">${s.week}-week streak</span></div><div class="pips" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i === 6 ? 'freeze' : ''}"></i>`).join('')}</div><div class="why">1 streak freeze used. Still counts. Regular weigh-ins are linked to better results.</div></div>`;
-  else if (s.data === 'light') wi = `<div class="drv"><div class="top"><span class="name">Weekly weigh-ins</span><span class="val">2 this month</span></div><div class="pips" aria-hidden="true">${[1, 0, 1, 0].map(o => `<i class="${o ? '' : 'off'}"></i>`).join('')}</div><div class="why">Weekly shows your real trend, not just a dot. Streak freezes are built in.</div></div>`;
-  else wi = `<div class="drv"><div class="top"><span class="name">Weekly weigh-ins</span><span class="val ${answered() && q.weight ? '' : 'na'}">${answered() && q.weight ? '1 this month' : 'Start a streak'}</span></div><div class="pips" aria-hidden="true">${[answered() && q.weight, 0, 0, 0].map(o => `<i class="${o ? '' : 'off'}"></i>`).join('')}</div><div class="why">One a week is plenty, and streak freezes are built in.</div></div>`;
-  // Each phase rewards a different behaviour most, so it leads.
-  const hb = s.stage === 'plateau' && s.data === 'rich' ? `<div class="drv"><div class="top"><span class="name">Habits holding</span><span class="val">Protein target 5 days/wk</span></div><div class="bar"><i class="p" style="width:${s.below ? 50 : 72}%"></i></div><div class="why">For 3 months running. These are what keep results steady.</div></div>` : '';
-  const order = s.stage === 'early' ? [dose, se, wi] : s.stage === 'middle' ? [wi, dose, se] : [hb, wi, dose, se];
-  const [ttl, sub] = s.stage === 'early' ? ['Your treatment so far', 'What matters in month 1'] : s.stage === 'plateau' && !s.below ? ['What’s keeping you steady', 'The habits that matter'] : ['What you did', 'The habits that matter'];
-  return `<div class="sec"><div class="sec-h"><h2>${ttl}</h2><span>${sub}</span></div><div class="card">${order.join('')}</div>
-    <p class="small muted" style="margin:6px 4px 0">We reward what you do, not what the scale does.</p></div>`;
-}
-
-function changed(s){
-  const q = state.q, items = [];
-  const b = s.below, k = { early: 0.3, middle: 1, plateau: 1.4 }[s.stage] * (b ? 0.4 : 1);
-  if (s.data === 'rich'){
-    items.push(['bowl', 'Food noise', 'From your monthly check-ins', '8/10', `${b ? 6 : { early: 6, middle: 3, plateau: 2 }[s.stage]}/10`]);
-    items.push(['tape', 'Waist', 'From your measurements', '104cm', `${104 - Math.round(11 * k / 1.4)}cm`]);
-    items.push(['moon', 'Sleep', 'Average per night, from your watch', '6h 05m', `6h ${String(5 + Math.round(40 * k)).padStart(2, '0')}m`]);
-    if (s.stage !== 'early' && !answered()) items.push(['bolt', 'Energy', 'From your monthly check-ins', '2/5', `${b ? 3 : 4}/5`]);
-  } else if (s.data === 'light'){
-    items.push(['bowl', 'Food noise', 'Based on what you told June', '8/10', `${b ? 6 : 4}/10`]);
-    items.push(['wave', 'Nausea', 'Based on what you told June', '4 days/wk', `${b ? 3 : 1} day/wk`]);
-  }
-  if (answered()){
-    const fn = { much: 3, bit: 5, same: 8 }[q.appetite];
-    const i = items.findIndex(x => x[1] === 'Food noise');
-    const row = ['bowl', 'Food noise', 'From your intake and today’s check-in', '8/10', `${fn}/10`, 'new'];
-    if (i >= 0) items[i] = row; else items.unshift(row);
-    if (q.energy) items.push(['bolt', 'Energy', 'From your intake and today’s check-in', '2/5', { better: '4/5', same: '2/5', worse: '1/5' }[q.energy], 'new']);
-  }
-  if (!items.length){
-    return `<div class="sec"><div class="sec-h"><h2>What changed</h2><span>Since you started</span></div>
-      <div class="card"><p class="small" style="margin:0 0 8px">When you started, you told us you wanted to:</p>
-      <ul style="margin:0;padding-left:18px"><li>Sleep better</li><li>Keep up with the kids</li><li>Stop thinking about food all day</li></ul>
-      ${src('From your intake. Answer the check-in below and we’ll show your progress on each one.')}</div></div>`;
-  }
-  return `<div class="sec"><div class="sec-h"><h2>What changed</h2><span>Since you started</span></div><div class="card">
-    ${items.map(x => `<div class="chg"><span class="ic">${I[x[0]]}</span><div><div class="t">${x[1]} ${x[5] ? '<span class="chip new">New</span>' : ''}</div><div class="s">${x[2]}</div></div><div class="v"><div class="then">${x[3]}</div><div class="now">${x[4]}</div></div></div>`).join('')}
-    <a class="btn soft" href="../nsv/" style="margin-top:10px">See all your wins</a></div></div>`;
-}
-
-function insight(s){
-  if (s.data === 'rich' && !s.below){
-    const t = { early: ['A pattern in your month', 'Your nausea peaked about 2 days after each dose and was gone by day 4. That’s the usual pattern, and it has got shorter each week.'],
-      middle: ['What’s working for you', 'In weeks you got protein in at most meals, evening snacking dropped to once a week and your nausea was lower. Keep that going.'],
-      plateau: ['What has lasted', 'Your weight has stayed within 0.5kg for 8 weeks, while your sleep and waist kept improving. The change is holding without the scale having to move.'] }[s.stage];
-    return `<div class="sec"><div class="insight"><b>${t[0]}</b>${t[1]}</div></div>`;
-  }
-  if (s.data === 'rich' && s.below) return `<div class="sec"><div class="insight"><b>What we noticed</b>Your dose hasn’t stepped up yet. That’s the most common reason progress slows at this stage, and it’s very fixable.</div></div>`;
-  if (s.data === 'light') return `<div class="sec"><div class="unlock"><div><div class="t">Unlock “what’s working for you”</div><div class="s">Weigh in weekly next month and we’ll show which habits are moving your results.</div></div></div></div>`;
-  return '';
-}
-
-// START: set expectations before showing weight.
-function normalNow(s){
-  if (s.stage !== 'early' || s.data === 'none') return '';
-  return `<div class="sec"><div class="sec-h"><h2>What’s normal in month 1</h2><span>On 2.5mg</span></div><div class="card"><ul class="normlist">
-    <li><strong>Small losses.</strong> The starter dose is for getting used to the medicine. Loss usually picks up after the first step up.</li>
-    <li><strong>Some nausea that eases.</strong> Most common in the first weeks, and after each dose increase.</li>
-    <li><strong>Appetite changing first.</strong> Feeling full sooner often comes before the scale moves.</li></ul>
-    ${src('What people at this stage typically see, not your data.')}</div></div>`;
-}
-// PLATEAU: lead with what has been kept, not with a monthly change that looks like slowing.
-function kept(s){
-  const t = (k, v, d) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="d">${d}</span></div>`;
-  const tiles = [t('Weight held', '8 weeks', 'Within 0.5kg'), t('Since you started', `${sgn(s.pct)}%`, 'In the expected range'), s.data === 'rich' ? t('Waist', '93cm', 'Down 11cm, and holding') : t('Doses on time', '4/4', 'From your orders')];
-  return `<div class="sec"><div class="sec-h"><h2>What you’ve kept</h2><span>Month 6</span></div><div class="tiles">${tiles.join('')}</div></div>`;
-}
-function markers(s){
-  if (s.data !== 'rich') return '';
-  const rows = [['heart', 'HbA1c (blood sugar)', 'Intake vs your month-6 test', '5.9%', '5.6%'], ['heart', 'LDL cholesterol', 'Intake vs your month-6 test', '3.6', '3.1 mmol/L']];
-  return `<div class="sec"><div class="sec-h"><h2>Health markers</h2><span>From your blood tests</span></div><div class="card">
-    ${rows.map(x => `<div class="chg"><span class="ic">${I[x[0]]}</span><div><div class="t">${x[1]}</div><div class="s">${x[2]}</div></div><div class="v"><div class="then">${x[3]}</div><div class="now">${x[4]}</div></div></div>`).join('')}
-    ${src('These are the changes that matter most for long-term health. Your prescriber goes through them at your 6-month review.')}</div></div>`;
-}
-// Her own reflections, then and now.
-function words(s){
-  if (s.data !== 'rich' || s.below || s.stage === 'early') return '';
-  const now = s.stage === 'middle' ? 'I forgot to finish my lunch today. That has never happened.' : 'I don’t really think about it any more. I just eat when I’m hungry.';
-  return `<div class="sec"><div class="sec-h"><h2>In your words</h2><span>From your reflections</span></div><div class="card">
-    <div class="quote"><span class="when">Week 1</span><p>“I think about food all day.”</p></div><div class="quote"><span class="when">This month</span><p>“${now}”</p></div></div></div>`;
-}
-const EXPECT = { early: 'After your first step up, appetite usually drops further and loss picks up. Nausea can return for a few days, then settle again.',
-  middle: 'Loss usually continues at a steadier pace from here. Your dose review decides whether to step up or hold.',
-  plateau: 'Holding steady is the goal. Your 6-month review covers your maintenance dose and your blood results.' };
-function whatsNext(s){
-  const ring = f => `<svg width="40" height="40" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" fill="none" stroke="#E8E1EA" stroke-width="5"/><circle cx="22" cy="22" r="18" fill="none" stroke="#7E52B8" stroke-width="5" stroke-linecap="round" stroke-dasharray="${2 * Math.PI * 18}" stroke-dashoffset="${2 * Math.PI * 18 * (1 - f)}" transform="rotate(-90 22 22)"/></svg>`;
-  const tile = (big, unit, what, f) => `<div class="tile"><div class="ring">${ring(f)}<span class="v" style="margin:0">${big}${unit ? `<small style="font-family:var(--sans);font-size:12px;font-weight:600"> ${unit}</small>` : ''}</span></div><span class="d" style="font-size:12.5px;margin-top:auto">${what}</span></div>`;
-  let a, b;
-  if (s.stuck) a = tile('Now', '', 'Your dose is due for a review', 1);
-  else if (s.stage === 'early') a = tile('9', 'days', 'to your next dose step (5mg)', .68);
-  else if (s.stage === 'middle') a = tile('9', 'days', 'to your next dose review', .68);
-  else a = tile('12', 'days', 'to your 6-month review', .6);
-  if (s.data !== 'none' && !s.below){
-    let m = null; for (const p of [5, 10, 15, 20]){ if (s.kg < START_KG * p / 100){ m = { p, left: +(START_KG * p / 100 - s.kg).toFixed(1) }; break; } }
-    b = m ? tile(m.left, 'kg', `to your first ${m.p}%`, s.kg / (START_KG * m.p / 100)) : tile('6', 'days', 'until your next order ships', .8);
-  } else b = tile('3', 'taps', 'to personalise this report', answered() ? 1 : 0);
-  return `<div class="sec"><div class="sec-h"><h2>What’s next</h2></div><div class="next">${a}${b}</div>
-    ${s.stall ? '' : `<div class="expect"><b>What to expect next month</b>${EXPECT[s.stage]}</div>`}
-    <p class="renew">Your next order ships on ${NEXT_ORDER[state.monthIdx + 1]}. You can change or pause it any time in Shop.</p>
-    ${(s.stall || s.risk || s.flags.length) && !state.helpSent ? `<div class="needhelp"><span>Something not right? Your care team can help.</span><button class="link-btn" data-act="help">Get help</button></div>` : ''}</div>`;
-}
-
-function checkin(s){
-  if (answered()) return payback(s);
-  const q = state.q;
-  const opt = (k, v, l) => `<button class="opt" data-act="q:${k}:${v}" aria-pressed="${q[k] === v}">${l}</button>`;
-  const ready = q.appetite && q.side && q.energy;
-  return `<div class="sec" id="qc"><div class="sec-h"><h2>Your 30 seconds</h2><span>3 taps</span></div><div class="card qc">
-    <p class="small muted" style="margin:0">${s.data === 'rich' ? 'A quick monthly check so this stays accurate.' : 'Answer these and this report updates straight away.'}</p>
-    <ul class="getback"><li>Your headline, rewritten for you</li><li>Your side effects and energy added to this report</li><li>${s.data === 'rich' ? 'A sharper insight next month' : 'A fuller report next month'}</li></ul>
-    <div class="qq"><p>Appetite compared with before you started?</p><div class="opts">${opt('appetite', 'much', 'Much smaller')}${opt('appetite', 'bit', 'A bit smaller')}${opt('appetite', 'same', 'About the same')}</div></div>
-    <div class="qq"><p>Side effects this month?</p><div class="opts">${opt('side', 'none', 'None')}${opt('side', 'some', 'Some, manageable')}${opt('side', 'most', 'Most days')}</div></div>
-    <div class="qq"><p>Energy compared with when you started?</p><div class="opts">${opt('energy', 'better', 'Better')}${opt('energy', 'same', 'Same')}${opt('energy', 'worse', 'Worse')}</div></div>
-    ${s.data === 'none' ? `<div class="qq"><p>Today’s weight? <span class="muted" style="font-weight:400">(optional)</span></p><div class="wt"><label class="sr-only" for="wt">Weight in kg</label><input id="wt" type="number" inputmode="decimal" min="40" max="250" step="0.1" placeholder="kg" value="${q.weight || ''}"><span class="muted small">kg</span></div>${state.wPrompt ? wCheck(q.weight) : ''}</div>` : ''}
-    <button class="btn" data-act="qdone" ${ready ? '' : 'disabled'}>Update my report</button></div></div>`;
-}
-function wCheck(w){
-  const d = +(w - START_KG).toFixed(1);
-  return `<div class="wcheck" role="alert"><p><strong>Just checking:</strong> ${w.toFixed(1)}kg is ${Math.abs(d).toFixed(1)}kg ${d > 0 ? 'more' : 'less'} than when you started (${START_KG}kg). Is that right?</p>
-    <div class="opts"><button class="opt" data-act="w-ok">Yes, that’s right</button><button class="opt" data-act="w-fix">Let me fix it</button></div></div>`;
-}
-function payback(s){
-  const q = state.q, items = [];
-  items.push(q.appetite === 'same' ? 'Appetite unchanged: flagged for your care team, so you won’t need to repeat it' : 'Food noise added to “What changed”, compared with your intake answers');
-  items.push(q.side === 'most' ? 'Side effects: your care team can see this, and June will send tips today' : 'Side effects added to “What you did”');
-  if (q.energy) items.push('Energy added to “What changed”');
-  if (q.weight) items.push('Your weigh-in is now on this report');
-  items.push(s.data === 'rich' ? 'Next month’s report stays accurate' : 'Next month’s report will have more of you in it');
-  return `<div class="sec" id="qc"><div class="sec-h"><h2>Your 30 seconds</h2><span>Done</span></div><div class="card payback" role="status"><h3>Here’s what your answers just changed</h3><ul>${items.map(i => `<li>${I.check}<span>${i}</span></li>`).join('')}</ul></div></div>`;
-}
-
-function feedback(s){
-  const u = state.useful, w = state.worth;
-  const opt = (k, v, l) => `<button class="opt" data-act="fb:${k}:${v}" aria-pressed="${state[k] === v}">${l}</button>`;
-  let follow = '';
-  if (w === 'unsure' || w === 'no') follow = `<div class="insight" style="margin-top:12px"><b>Thanks for being honest</b>That matters more than any number in this report. Want to talk it through? Your care team can help work out what would make it worth it.${state.helpSent ? `<p style="margin:10px 0 0;color:var(--brand);font-weight:600">${I.check} ${HELP[state.helpSent].sent}</p>` : `<button class="btn" data-act="help" style="margin-top:10px">Get help</button>`}</div>`;
-  else if (w === 'yes') follow = `<p class="small" style="margin:10px 0 0;color:var(--brand)">Glad to hear it. See you next month.</p>`;
-  return `<div class="sec"><div class="sec-h"><h2>Two quick questions</h2></div><div class="card">
-    <div class="qq" style="margin-top:0"><p>Was this report useful?</p><div class="opts">${opt('useful', 'yes', 'Yes')}${opt('useful', 'no', 'Not really')}</div></div>
-    <div class="qq"><p>Is treatment worth it for you right now?</p><div class="opts">${opt('worth', 'yes', 'Yes')}${opt('worth', 'unsure', 'Not sure')}${opt('worth', 'no', 'No')}</div></div>
-    ${follow}</div></div>`;
-}
-
-/* ===================== Get-help flow ===================== */
+const QS = [
+  ['appetite', 'How’s your appetite compared with before you started?', [['much', 'Much smaller'], ['bit', 'A bit smaller'], ['same', 'About the same']]],
+  ['side', 'Any side effects this month?', [['none', 'None'], ['some', 'Some, manageable'], ['most', 'Most days']]],
+  ['energy', 'How’s your energy compared with before you started?', [['better', 'Better'], ['same', 'The same'], ['worse', 'Worse']]],
+];
 const HELP = {
-  prescriber: { av: 'L', title: 'Prescriber review', who: 'Dr Lee', desc: 'Reviews your dose and side effects, and whether anything should change.', when: 'Replies within 1 business day (illustrative)', sent: 'Dr Lee has your report and answers, and will reply within 1 business day.' },
-  coach: { av: 'P', title: 'Coach chat', who: 'Priya', desc: '10 minutes to make treatment fit your week: reminders, meals, protein.', when: 'Usually replies today', sent: 'Priya has your report and answers, and will message you today.' },
-  support: { av: 'S', title: 'Support team', who: 'the support team', desc: 'Your plan and payment options, including pausing. No pressure.', when: 'Mon–Fri, 9am–4pm', sent: 'The support team has your answers and will be in touch during business hours.' },
+  prescriber: { who: 'Dr Lee', title: 'Your prescriber', desc: 'Reviews your dose and side effects.', sent: 'Dr Lee has your report and usually replies within a day.' },
+  coach: { who: 'Priya', title: 'Your coach', desc: 'Ten minutes to make treatment fit your week.', sent: 'Priya has your report and usually replies the same day.' },
+  support: { who: 'the support team', title: 'The support team', desc: 'Your plan and payment options, including pausing.', sent: 'The support team has your answers and will be in touch.' },
 };
 const WHY = [['side', 'Side effects'], ['dose', 'Not sure about my dose'], ['missed', 'Missing doses'], ['cost', 'The cost'], ['unsure', 'Not sure']];
-const FEEL = [['frus', 'Frustrated'], ['worried', 'Worried'], ['ok', 'Okay, I just want a hand']];
-function helpCta(){
-  if (state.helpSent) return `<p class="sentnote">${I.check}<span><strong>Help is on the way.</strong> ${HELP[state.helpSent].sent}</span></p>`;
-  return `<button class="cta" data-act="help">Get help now</button>`;
+const FEEL = [['frus', 'Frustrated'], ['worried', 'Worried'], ['ok', 'Okay, I’d just like a hand']];
+
+/* ===================== State ===================== */
+const initial = () => ({ data: 'rich', stage: 'middle', progress: 'on', goal: 'far', opened: false, page: 0, monthIdx: 0, q: {}, qi: 0, qDone: false, wPrompt: false, wOk: false, worth: null, chart: false, help: null, helpSent: null });
+let state = initial();
+const fmt = n => n.toFixed(1).replace(/\.0$/, '');
+
+/* ===================== Model ===================== */
+function sc(){
+  const st = STAGES[state.stage], below = state.progress !== 'on', p = st[below ? 'below' : 'on'], q = state.q;
+  const stall = state.progress === 'below' && state.stage !== 'early';
+  // Hidden risk: behind where we'd expect, but she feels fine. An early warning, not an alarm.
+  const risk = state.progress === 'risk' && state.stage !== 'early' && state.data !== 'none';
+  // Concern also comes from what she tells us, not only the scale.
+  const wPct = state.qDone && q.weight ? (START_KG - q.weight) / START_KG * 100 : null, flags = [];
+  if (state.qDone){ if (wPct !== null && wPct < -1) flags.push('gain'); if (q.side === 'most') flags.push('side'); if (q.appetite === 'same' && state.stage !== 'early') flags.push('appetite'); }
+  // Goal weight: shown only to on-track users in active loss; emphasised when close and on pace. "Far off" is 15%, "Close" is 10%.
+  let goal = null;
+  if (!below && state.data !== 'none'){
+    const total = START_KG * (state.goal === 'close' ? 0.10 : 0.15), done = START_KG * p.pct / 100, left = +(total - done).toFixed(1);
+    if (left <= 0) goal = state.stage === 'plateau' ? { reached: true } : null;
+    else if (state.stage === 'middle') goal = { total, left, pc: Math.round(done / total * 100), close: left <= 3, weeks: Math.max(1, Math.round(left / (p.rate / 4.3))) };
+  }
+  return { ...st, ...p, below, stall, risk, flags, wPct, goal, data: state.data, stage: state.stage, dose: DOSES[p.doseIdx], stuck: !!p.stuck, band: band(st.week), month: MONTHS[state.monthIdx % MONTHS.length], concern: stall || risk || flags.length > 0 };
 }
+// A weight this far from her starting weight is more often a typo than real, so confirm it first.
+const wImplausible = w => w && ((w - START_KG) / START_KG > .03 || (START_KG - w) / START_KG > .2);
+/* What we'd measure (no real analytics): report_opened · question_answered · chart_opened · worth_it_answered · help_requested */
+
+/* ===================== Helpers ===================== */
+const $ = x => document.querySelector(x);
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2400); }
+function rangeBar(lost, b, amber){
+  const max = Math.max(b.hi * 1.35, lost * 1.1, 1), p = v => Math.max(0, Math.min(100, v / max * 100)).toFixed(1);
+  return `<div class="range ${amber ? 'stall' : ''}" role="img" aria-label="${fmt(lost)}% lost. We’d expect ${fmt(b.lo)} to ${fmt(b.hi)}%."><s style="left:${p(b.lo)}%;width:${p(b.hi - b.lo)}%"></s><u style="left:${p(lost)}%"></u></div>`;
+}
+const helpBtn = label => state.helpSent ? `<p style="margin-top:16px;font-weight:500">${HELP[state.helpSent].sent}</p>` : `<button class="btn" data-act="help">${label}</button>`;
+
+/* The report is a story: six pages, one idea each. */
+const PAGES = ['The answer', 'A question', 'Then and now', 'Why', 'From your care team', 'Worth it?'];
+
+/* ===================== Page 1. The answer ===================== */
+function leadText(s){
+  const a = state.qDone;
+  if (s.data === 'none' && !a) return { h: `Month ${s.n} on treatment.`, p: `${s.n === 1 ? 'Your first order arrived' : `${s.n} orders have arrived`} on time, and you’re on ${s.dose}mg.${s.stall ? ' We haven’t heard from you in a while.' : ''} One quick question, and the rest becomes about you.`, cta: s.stall ? 'Get help' : '' };
+  if (s.stall) return { amber: true, h: 'Things have slowed more than we’d expect.', p: s.data === 'none' ? 'Some of your answers suggest things have slowed. There’s usually a reason, and it’s often simple to fix.' : `You’re ${fmt(s.pct)}% down, which is below where we’d expect at month ${s.n}. There’s usually a reason, and it’s often simple to fix.`, cta: 'Get help' };
+  if (s.flags.length){ const f = s.flags[0];
+    return { amber: true, cta: 'Get help', ...(f === 'gain' ? { h: 'Your weight has gone up since you started.', p: 'That isn’t what we’d expect on treatment, so it’s worth a proper look.' }
+      : f === 'side' ? { h: 'Side effects most days isn’t something to push through.', p: 'There’s usually a fix, like a slower step up or small changes to meals.' }
+      : { h: 'Your appetite hasn’t changed yet.', p: `At month ${s.n} that’s worth a closer look, and it’s often the dose.` }) }; }
+  if (s.risk) return { h: 'A consistent month, and one thing to look at.', p: `You took every dose and kept logging. Your results are a little behind where we’d expect at month ${s.n}. It’s easier to sort out early.`, cta: 'Review it with my care team' };
+  if (s.data === 'none') return { h: 'Your appetite has changed.', p: 'This is often the first change. The scale tends to follow.' };
+  if (s.stage === 'early') return { h: 'Month 1 done. Your body is adjusting.', p: s.below ? 'The first weeks are for getting used to the medicine. Weight usually starts to move after your first step up.' : 'The first weeks are for getting used to the medicine. You took every dose, and your side effects are easing.' };
+  if (s.stage === 'middle') return { h: `You’re ${fmt(s.pct)}% down since you started.`, p: `That’s where we’d expect you to be at month ${s.n}.` };
+  return { h: 'A steady month. You’re holding your progress.', p: `You’re ${fmt(s.pct)}% down, and you’ve stayed there for 8 weeks. Holding steady is the result now.` };
+}
+function pageAnswer(s){
+  const t = leadText(s);
+  return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.h}</h1><p class="lede">${t.p}</p>${t.cta ? helpBtn(t.cta) : ''}`;
+}
+
+/* ===================== Page 2. One question at a time ===================== */
+function pageQuestion(s){
+  if (state.qDone) return `<p class="k">Thank you</p><h1 class="lead" id="lead" tabindex="-1">Your report is updated.</h1><p class="lede">${s.concern ? 'Your care team can see your answers.' : s.data === 'rich' ? 'Next month’s will stay accurate.' : 'Next month’s will have more of you in it.'}</p>`;
+  const i = state.qi;
+  if (i < QS.length){ const [k, text, opts] = QS[i];
+    return `<p class="k">Question ${i + 1} of ${QS.length} · ${s.concern ? 'so your care team has the full picture' : 'your answers shape the next pages'}</p><h1 class="lead sm" id="lead" tabindex="-1">${text}</h1>
+      <div class="opts col">${opts.map(([v, l]) => `<button class="opt" data-act="q" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`; }
+  const w = state.q.weight, d = w ? +(w - START_KG).toFixed(1) : 0;
+  return `<p class="k">Last one, if you’d like</p><h1 class="lead sm" id="lead" tabindex="-1">What’s your weight today?</h1>
+    <div class="wt"><label class="sr-only" for="wt">Weight in kilograms</label><input id="wt" type="number" inputmode="decimal" min="40" max="250" step="0.1" placeholder="kg" value="${w || ''}"><span class="quiet">kg</span></div>
+    ${state.wPrompt ? `<div class="wcheck" role="alert"><p>Just checking. ${w.toFixed(1)}kg is ${Math.abs(d).toFixed(1)}kg ${d > 0 ? 'more' : 'less'} than when you started. Is that right?</p><div class="opts" style="margin-top:8px"><button class="opt" data-act="w-ok">Yes, that’s right</button><button class="opt" data-act="w-fix">Let me fix it</button></div></div>` : ''}
+    <button class="btn" data-act="qdone">Update my report</button>`;
+}
+
+/* ===================== Page 3. Then and now ===================== */
+function chart(s){
+  const W = 320, H = 130, pl = 28, pr = 10, pt = 8, pb = 20, xs = s.week + 2, ymax = Math.ceil((band(xs).hi + 1) / 5) * 5;
+  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
+  let up = '', dn = ''; for (let w = 0; w <= xs; w++){ up += `${X(w).toFixed(1)},${Y(band(w).hi).toFixed(1)} `; dn = `${X(w).toFixed(1)},${Y(band(w).lo).toFixed(1)} ` + dn; }
+  const step = s.data === 'rich' ? 1 : Math.max(1, Math.floor(s.week / 2)), pts = []; for (let w = 0; w < s.week; w += step) pts.push([w, s.pct * ease(w)]); pts.push([s.week, s.pct]);
+  const col = s.below && s.stage !== 'early' ? 'var(--amber-dot)' : 'var(--green)';
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Your weight against where we’d expect you to be" style="width:100%;display:block;margin-top:10px">
+    <polygon points="${up}${dn}" fill="var(--berry)" opacity=".6"/><path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(s.week)}" cy="${Y(s.pct)}" r="6" fill="${col}" stroke="#fff" stroke-width="3"/>
+    <text x="${pl}" y="${H - 3}" font-size="11" fill="#5B655F">Start</text><text x="${X(s.week)}" y="${H - 3}" font-size="11" fill="#5B655F" text-anchor="middle">Week ${s.week}</text>
+    <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
+    <p class="quiet">The shaded band is where we’d expect you to be.</p>`;
+}
+// Opinionated: four outcomes per phase, each shown as then and now. Sleep, activity and photos are left out.
+function compareRows(s){
+  const q = state.q, a = state.qDone, b = s.below, rows = [];
+  const C = (label, src, then, now, cls = '') => `<div class="cmp ${cls}"><span>${label}<small>${src}</small></span><span>${then}</span><span>${now}</span></div>`;
+  const stall = b && s.stage !== 'early';
+  const wStatus = s.stall ? 'Below where we’d expect' : b ? (s.stage === 'early' ? 'A little under, common early on' : 'A little under') : s.stage === 'plateau' ? 'Holding' : 'Where we’d expect';
+  const weight = src => `<div><div class="cmp ${s.stall ? 'warn' : ''}"><span>Weight<small>${src}</small></span><span>${s.stage === 'early' ? `${START_KG}kg` : `${fmt(Math.max(0, s.pct - s.rate / START_KG * 100))}%`}</span><span>${fmt(s.pct)}% down</span></div>${rangeBar(s.pct, s.band, stall)}
+    <div class="kv" style="margin-top:8px"><button class="link" data-act="chart" aria-expanded="${state.chart}">${state.chart ? 'Hide the chart' : 'See the chart'}</button><span class="quiet">${wStatus}</span></div>${state.chart ? chart(s) : ''}</div>`;
+  const dose = C('Dose', 'From your prescription', s.stuck || s.stage === 'early' ? `${s.dose}mg` : `${DOSES[Math.max(0, s.doseIdx - 1)]}mg`, s.stuck ? 'Step up overdue' : `${s.dose}mg`, s.stuck ? 'warn' : '');
+  const app = (then, now, src) => a ? C('Appetite', 'Food noise, from your answer today', then, { much: '3/10', bit: '5/10', same: '8/10' }[q.appetite], q.appetite === 'same' ? 'warn' : 'new') : C('Appetite', src, then, now);
+  const side = (then, now, src) => a ? C('Side effects', 'From your answer today', then, { none: 'None', some: 'Some', most: 'Most days' }[q.side], q.side === 'most' ? 'warn' : 'new') : C('Side effects', src, then, now);
+  const energy = (then, now, src) => a ? C('Energy', 'From your answer today', then, { better: '4/5', same: '2/5', worse: '1/5' }[q.energy], q.energy === 'worse' ? 'warn' : 'new') : now ? C('Energy', src, then, now) : '';
+  if (s.data === 'rich'){
+    const wr = weight('From your weekly weigh-ins'), ck = 'From your monthly check-ins';
+    if (s.stage === 'early') rows.push(dose, side('4 days a week', b ? '3 days' : '1 day', 'Nausea, from your side-effect log'), app('8/10', b ? '7/10' : '6/10', 'Food noise, ' + ck.toLowerCase()), wr, energy('2/5'));
+    else if (b) rows.push(wr, dose, side('3 days a week', '3 days', 'Nausea, from your side-effect log'), app('6/10', '6/10', 'Food noise, ' + ck.toLowerCase()), energy('2/5'));
+    else if (s.stage === 'middle') rows.push(wr, app('5/10', '3/10', 'Food noise, ' + ck.toLowerCase()), C('Waist', 'From your measurements', '99cm', '96cm'), energy('3/5', '4/5', ck));
+    else rows.push(wr, C('Blood sugar', 'HbA1c, from your blood tests', '5.9%', '5.6%'), C('Knee pain', 'A symptom you told us about', 'Some days', 'Rarely'), C('Waist', 'From your measurements', '94cm', '93cm'), energy('4/5'));
+  } else if (s.data === 'light'){
+    rows.push(weight('From 2 weigh-ins this month'), dose, side('—', b ? 'Some days' : 'Easing', 'From what you told June'), app('—', b ? '6/10' : '4/10', 'Food noise, from what you told June'), energy('—'));
+  } else {
+    rows.push(dose, C('Doses on time', 'From your orders', '4 of 4', '4 of 4'));
+    if (a){ rows.push(app('—'), side('—'), energy('—'));
+      if (q.weight) rows.push(C('Weight', 'From your weigh-in today', `${START_KG}kg`, s.wPct >= 0 ? `${fmt(s.wPct)}% down` : `Up ${fmt(-s.wPct)}%`, s.wPct >= 0 ? 'new' : 'warn')); }
+  }
+  return rows.filter(Boolean);
+}
+const TYPICAL = { early: 'a smaller appetite, some nausea that eases, and small early losses', middle: 'smaller portions, less thinking about food, and clothes fitting differently', plateau: 'weight levelling off, steadier energy, and habits that feel automatic' };
+function pageCompare(s){
+  const g = s.goal, first = s.stage === 'early' || s.data === 'none';
+  return `<h1 class="lead sm" id="lead" tabindex="-1">${first ? 'Since you started' : 'Last month and this month'}</h1>
+    <div class="card rows"><div class="cmp head"><span></span><span>${first ? 'Start' : 'Last month'}</span><span>${first ? 'Now' : 'This month'}</span></div>${compareRows(s).join('')}</div>
+    ${g && g.close ? `<div class="card goal"><p class="k">Almost there</p><p class="big">${g.left}kg to the goal you set.</p><p>At this pace, you’re about ${g.weeks} weeks away.</p>
+      <div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div><div class="ends quiet" style="margin-top:10px"><span>Start · ${START_KG}kg</span><span>Goal · ${fmt(START_KG - g.total)}kg</span></div></div>` : ''}
+    ${s.data === 'none' && !state.qDone ? `<p class="quiet" style="margin-top:12px">People at month ${s.n} usually notice ${TYPICAL[s.stage]}. That’s not your data yet.</p>` : ''}`;
+}
+
+/* ===================== Page 4. Why ===================== */
+function pageWhy(s){
+  let t;
+  if (s.data === 'rich') t = s.below && s.stage !== 'early' ? 'Your dose hasn’t stepped up yet. That’s the most common reason progress slows at this point, and it’s simple to fix.'
+    : { early: 'Your nausea peaked about 2 days after each dose and was gone by day 4. That’s the usual pattern, and it has got shorter each week.',
+        middle: 'Your energy has been highest in the weeks your nausea was lowest. Both have improved since you settled on this dose.',
+        plateau: 'Your weight has stayed within 0.5kg for 8 weeks, while your waist and blood results kept improving. The change is holding.' }[s.stage];
+  else if (s.data === 'light') t = 'We can see where you are, but not yet why. A weigh-in each week would let next month’s report show what’s driving your results.';
+  else t = state.qDone ? 'Your answers are the start of your story. Each one makes next month’s report more about you.' : 'We don’t know enough yet to say what’s driving your month. One answer changes that.';
+  const words = s.data === 'rich' && !s.below && s.stage !== 'early' ? `<div class="card"><p class="quiet">In your words</p><p class="quote"><small>Week 1</small>“I think about food all day.”</p><p class="quote"><small>This month</small>“${s.stage === 'middle' ? 'I forgot to finish my lunch today.' : 'I don’t really think about it any more.'}”</p></div>` : '';
+  return `<p class="k">What’s behind it</p><h1 class="lead sm" id="lead" tabindex="-1">${t}</h1>${words}`;
+}
+
+/* ===================== Page 5. A note from her care team ===================== */
+function pageNote(s){
+  const g = s.goal, clinical = s.concern, who = clinical ? ['Dr Lee', 'your prescriber', 'L'] : ['Priya', 'your coach', 'P'];
+  let t;
+  if (s.stall) t = 'I’ve looked at your month. You’ve done your part, and your results should be further along by now. I’d like to review your dose with you. It’s usually a simple change.';
+  else if (s.flags.length) t = 'Thank you for your answers. What you’ve told us is worth a proper look, and I’d rather do that now than wait another month.';
+  else if (s.risk) t = 'You’ve been really consistent this month. Your results are a little behind where I’d expect, and I think your dose is the reason. Let’s look at it before your next order.';
+  else if (s.data === 'none') t = state.qDone ? 'Thank you for telling us how it’s going. Your doses are on time, which matters most. One weigh-in a week would let me tell you a lot more next month.' : 'We don’t have much from you yet, and that’s okay. Your doses are on time, which matters most. One weigh-in a week would let me tell you a lot more next month.';
+  else if (s.stage === 'early') t = 'Month 1 is the hardest, and you’ve done it. Your next step up is in 9 days. Nausea may come back for a few days, then it settles.';
+  else if (s.stage === 'middle') t = `This was a strong month. Your appetite and energy are moving the right way, not only your weight.${g && g.close ? ` You’re ${g.left}kg from the goal you set, about ${g.weeks} weeks away at this pace.` : ''} Your dose review is in 9 days.`;
+  else t = 'You’ve held your weight for 8 weeks, and your blood results have improved too. Holding steady is the goal now. We’ll talk through your maintenance dose at your 6-month review.';
+  const R = (l, v) => `<div class="kv"><span>${l}</span><span>${v}</span></div>`;
+  const first = s.stuck ? R('Dose review', 'Due now') : s.stage === 'early' ? R('Next dose step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Next dose review', 'In 9 days') : R('Your 6-month review', 'In 12 days');
+  return `<p class="k">A note from ${who[1]}</p><div class="note"><p>Sarah,</p><p id="lead" tabindex="-1">${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}<small>Written with help from June, read and signed by ${who[0]}</small></span></p></div>
+    ${clinical ? helpBtn(`Review it with ${who[0]}`) : ''}
+    <div class="card rows">${first}${R('Next order ships', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}${g && !g.close ? R('The goal you set', g.reached ? 'Reached' : `${g.pc}% of the way`) : ''}</div>`;
+}
+
+/* ===================== Page 6. Is it worth it? ===================== */
+function pageWorth(s){
+  const w = state.worth;
+  const follow = w === 'yes' ? '<p class="lede">Glad to hear it. See you next month.</p>' : w ? `<p class="lede">Thanks for being honest. Your care team can help work out what would make it worth it.</p>${helpBtn('Talk to your care team')}` : '';
+  return `<p class="k">One last thing</p><h1 class="lead" id="lead" tabindex="-1">Is it worth it for you right now?</h1>
+    <div class="opts col">${[['yes', 'Yes'], ['unsure', 'Not sure'], ['no', 'No']].map(([v, l]) => `<button class="opt" data-act="worth" data-v="${v}" aria-pressed="${w === v}">${l}</button>`).join('')}</div>${follow}`;
+}
+
+/* ===================== Get help ===================== */
 // Infer before you ask: what the report already knows.
 function seen(s){
   const L = [];
-  if (s.stuck) L.push([`Your dose hasn’t stepped up from ${s.dose}mg yet`, 'Prescription & orders']);
-  if (s.data === 'rich' && s.below) L.push(['Nausea 3 days a week', 'Your side-effect log']);
-  if (s.data === 'light' && s.below) L.push(['You mentioned nausea to June', 'June chat, AI-summarised']);
-  if (s.flags.includes('gain')) L.push([`Weight ${sgn(s.wPct)}% since intake (you confirmed ${state.q.weight.toFixed(1)}kg)`, 'This month’s check-in']);
-  if (answered() && state.q.side === 'most') L.push(['You told us side effects most days', 'This month’s check-in']);
-  if (s.flags.includes('appetite')) L.push([`Appetite unchanged at month ${s.n}`, 'This month’s check-in']);
-  if (s.data !== 'none' && s.below) L.push([`${sgn(s.pct)}% since you started, below the expected range for month ${s.n}`, 'Weigh-ins']);
-  if (s.data === 'none' && !answered()) L.push(['We haven’t heard from you in a few weeks', 'App activity']);
-  if (state.worth === 'unsure' || state.worth === 'no') L.push(['You told us treatment doesn’t feel worth it right now', 'This report']);
-  return L;
+  if (s.stuck) L.push(`Your dose hasn’t stepped up from ${s.dose}mg`);
+  if (s.data === 'rich' && s.below) L.push('Nausea 3 days a week');
+  if (s.data === 'light' && s.below) L.push('You mentioned nausea to June');
+  if (s.flags.includes('gain')) L.push(`Weight up ${fmt(-s.wPct)}% since you started`);
+  if (s.flags.includes('side')) L.push('Side effects most days');
+  if (s.flags.includes('appetite')) L.push(`Appetite unchanged at month ${s.n}`);
+  if (s.data !== 'none' && s.below) L.push(`${fmt(s.pct)}% down, below where we’d expect at month ${s.n}`);
+  if (s.data === 'none' && !state.qDone) L.push('We haven’t heard from you in a few weeks');
+  if (state.worth === 'unsure' || state.worth === 'no') L.push('Treatment doesn’t feel worth it right now');
+  return L.length ? L : ['Your doses have arrived on time'];
 }
-function recommend(why){ return why === 'cost' ? 'support' : why === 'missed' ? 'coach' : 'prescriber'; }
-function helpSheet(s){
+const recommend = why => why === 'cost' ? 'support' : why === 'missed' ? 'coach' : 'prescriber';
+function sheet(s){
   const h = state.help; if (!h) return '';
-  const opt = (k, v, l) => `<button class="opt" data-act="h:${k}:${v}" aria-pressed="${h[k] === v}">${l}</button>`;
-  let title, body;
-  if (h.step === 0){
-    const L = seen(s);
-    title = 'Let’s work out what’s going on';
-    body = `<p class="stepper">Step 1 of 3</p>
-      ${L.length ? `<p class="small muted" style="margin:0">Here’s what we can already see, so you don’t have to explain it:</p><ul class="seen">${L.map(x => `<li><span class="d"></span><span>${x[0]}<small>${x[1]}</small></span></li>`).join('')}</ul>`
-        : `<p class="small muted" style="margin:0">Nothing worrying in your data. You asked for help, and that’s reason enough.</p>`}
-      <div class="qq"><p>What’s getting in the way most?</p><div class="opts">${WHY.map(o => opt('why', o[0], o[1])).join('')}</div></div>
-      <div class="qq"><p>How are you feeling about it?</p><div class="opts">${FEEL.map(o => opt('feel', o[0], o[1])).join('')}</div></div>
-      <button class="btn" data-act="h-next" ${h.why && h.feel ? '' : 'disabled'}>Continue</button>`;
-  } else if (h.step === 1){
-    const rec = recommend(h.why);
-    const order = [rec, ...['prescriber', 'coach', 'support'].filter(k => k !== rec)];
-    title = 'Who can help';
-    body = `<p class="stepper">Step 2 of 3</p><p class="small muted" style="margin:0">${h.feel === 'ok' ? 'Here’s who’s best placed to help.' : 'That’s completely understandable. Here’s who’s best placed to help.'} They’ll see this report and your answers.</p>
-      ${order.map(k => { const o = HELP[k]; return `<button class="choice ${k === rec ? 'rec' : ''}" data-act="h-send" data-v="${k}"><span class="av">${o.av}</span><span><b>${o.title}${k === rec ? ' <span class="chip" style="margin-left:4px">Recommended</span>' : ''}</b><span class="s">${o.desc}</span><span class="w">${o.when}</span></span></button>`; }).join('')}
-      <div class="redflag"><b>Need help urgently?</b>Severe stomach pain, vomiting you can’t keep down, or feeling very unwell: call 000 or see a GP now. Don’t wait for us.</div>`;
-  } else {
-    const o = HELP[h.choice];
-    const tips = { side: 'Smaller meals, eating slowly and avoiding rich food on dose day can ease nausea.', dose: 'Your prescriber will tell you if your dose should change.', missed: 'Don’t double up on a missed dose. Your coach will help you get back on track.', cost: `Your next order isn’t until ${NEXT_ORDER[state.monthIdx + 1]}, so there’s time to talk through options first.`, unsure: 'You don’t need to have it figured out. That’s their job.' }[h.why];
-    title = `Sent to ${o.who}`;
-    body = `<p class="stepper">Step 3 of 3</p>
-      <div class="card" style="box-shadow:none;background:var(--brand-soft);margin:0"><h3>What they’ll see</h3><ul class="mean">${['This month’s report', `Your answers: “${WHY.find(w => w[0] === h.why)[1]}”, “${FEEL.find(f => f[0] === h.feel)[1]}”`, 'What we noticed in your data'].map(x => `<li>${I.check}<span>${x}</span></li>`).join('')}</ul></div>
-      <p style="margin:14px 0 4px;font-weight:600">${o.when.replace(' (illustrative)', '')}.</p><p class="small muted" style="margin:0">You’ll get a message in Care.</p>
-      <h3 style="margin:16px 0 4px;font-size:15px;color:var(--brand)">In the meantime</h3>
-      <ul class="mean"><li>${I.check}<span>${tips}</span></li><li>${I.check}<span>Keep taking your current dose unless your prescriber tells you otherwise.</span></li></ul>
-      <button class="btn" data-act="h-close">Done</button>`;
-  }
-  return `<div class="scrim" data-act="h-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="help-t"><div class="grab" aria-hidden="true"></div>
-    <div class="sheet-h"><h2 id="help-t">${title}</h2><button class="x" data-act="h-close" aria-label="Close">×</button></div>${body}</div></div>`;
+  const pill = (k, v, l) => `<button class="opt" data-act="h" data-k="${k}" data-v="${v}" aria-pressed="${h[k] === v}">${l}</button>`;
+  let body;
+  if (h.step === 0) body = `<p class="big" id="sh-t">Let’s get you some help.</p><p class="quiet">What we can already see, so you don’t have to explain it:</p><ul class="checks">${seen(s).map(x => `<li>${x}</li>`).join('')}</ul>
+    <p class="q" style="margin-top:18px">What’s getting in the way?</p><div class="opts">${WHY.map(([v, l]) => pill('why', v, l)).join('')}</div>
+    <p class="q" style="margin-top:18px">How are you feeling about it?</p><div class="opts">${FEEL.map(([v, l]) => pill('feel', v, l)).join('')}</div>
+    <button class="btn" data-act="h-next" ${h.why && h.feel ? '' : 'disabled'}>Next</button>`;
+  else if (h.step === 1){ const rec = recommend(h.why), order = [rec].concat(Object.keys(HELP).filter(k => k !== rec));
+    body = `<p class="big" id="sh-t">Who can help</p>${order.map(k => `<button class="helpopt ${k === rec ? 'rec' : ''}" data-act="h-send" data-v="${k}"><span>${HELP[k].title}${k === rec ? '<small class="tag">Best fit</small>' : ''}<small>${HELP[k].desc}</small></span></button>`).join('')}
+      <p class="flag">Severe stomach pain, vomiting that won’t stop, or trouble breathing? Call 000 or see a GP now.</p>`; }
+  else body = `<p class="big" id="sh-t">Sent to ${HELP[state.helpSent].who}.</p><p>${HELP[state.helpSent].sent}</p><p class="quiet">They can see your report and your answers. Keep taking your doses as prescribed in the meantime.</p><button class="btn soft" data-act="h-close">Done</button>`;
+  return `<div class="scrim" data-act="h-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="sheet-in"><button class="x" data-act="h-close" aria-label="Close">×</button>${body}</div></div></div>`;
 }
 
-/* ===================== Screens ===================== */
-const TABS = [['Today', 'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6'], ['Explore', 'M4 5h7v14H4zM13 5h7v14h-7z'], ['Progress', 'M4 20V14h5v-4h5V6h6v14z'], ['Care', 'M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z'], ['Shop', 'M5 6h15l-2 8H7zM5 6L4 3H2M8 20h.01M17 20h.01']];
-function lockScreen(s){
-  return `<div class="lock"><div class="date">Monday ${NEXT_ORDER[state.monthIdx + 1].replace('20', '16')}</div><div class="time">9:05</div>
-    <button class="notif" data-act="open" aria-label="Notification: your ${s.month} report is ready. Open.">
-      <span class="top"><span class="appic">J</span>Your care team<span style="margin-left:auto">now</span></span>
-      <b>Your ${s.month} report is ready</b><span class="m">Is it working? Here’s your month in 2 minutes.</span></button>
-    <p class="hint">Tap the notification to open</p></div>`;
+/* ===================== Render ===================== */
+function lock(s){
+  const line = s.stall ? 'There’s one thing worth looking at together.' : s.risk ? 'A consistent month, and one thing to look at.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
+  return `<div class="lock"><p>Monday 16 ${s.month}</p><div class="time">7:42</div><button class="notif" data-act="open"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>Your ${s.month} report is ready</b>${line}</button></div>`;
 }
-// Each phase answers a different question, so the order changes. A stalled user always gets the plain version.
-function body(s){
-  if (s.stage === 'early') return drivers(s) + normalNow(s) + vsLastMonth(s) + chart(s) + changed(s) + insight(s);        // "Is this normal?"
-  if (s.stage === 'plateau' && !s.below && s.data !== 'none') return kept(s) + markers(s) + changed(s) + words(s) + insight(s) + drivers(s) + chart(s);  // "Is it still worth it?"
-  return vsLastMonth(s) + chart(s) + changed(s) + words(s) + insight(s) + drivers(s);                                   // "Is it working?" (and any stall)
+function story(s){
+  const i = state.page, body = [pageAnswer, pageQuestion, pageCompare, pageWhy, pageNote, pageWorth][i](s);
+  const tint = i === 0 ? (leadText(s).amber ? 'amber' : 'lilac') : '';
+  const last = i === PAGES.length - 1, skip = i === 1 && !state.qDone;
+  return `<div class="story ${tint}"><div class="segs" role="progressbar" aria-valuemin="1" aria-valuemax="${PAGES.length}" aria-valuenow="${i + 1}" aria-label="Page ${i + 1} of ${PAGES.length}: ${PAGES[i]}">${PAGES.map((p, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
+    <button class="close" data-act="close" aria-label="Close the report">×</button>
+    <main class="pg" id="screen">${body}</main>
+    <div class="nav"><button class="btn soft" data-act="back" ${i === 0 ? 'disabled' : ''}>Back</button><button class="btn" data-act="${last ? 'close' : 'next'}">${last ? 'Done' : skip ? 'Skip' : 'Next'}</button></div></div>${sheet(s)}`;
 }
-function reportScreen(s){
-  return `<div class="floatbar"><button class="fbtn ic" data-act="lock" aria-label="Back to notification"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><span class="ttl" aria-hidden="true">${s.month} report</span><button class="fbtn ic" data-act="todo" aria-label="Share report">${I.share}</button></div>
-    <main class="screen" id="screen">${hero(s)}${body(s)}${whatsNext(s)}${checkin(s)}${feedback(s)}
-    <div style="height:24px"></div></main>
-    <nav class="tabbar" aria-label="App tabs">${TABS.map(([n, d]) => `<button class="tab" ${n === 'Progress' ? 'aria-current="page"' : 'data-act="todo"'}><svg width="24" height="24" viewBox="0 0 24 24" fill="${n === 'Progress' ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>${n}</button>`).join('')}</nav>
-    ${helpSheet(s)}`;
-}
-
-/* ===================== Explainer ===================== */
-function explain(){
-  const s = sc();
-  let q, txt, cls = '';
-  if (state.help){ q = 'Get help'; cls = 'risk'; txt = 'Infer first (show what we already see), ask two things, recommend the right human, then say exactly what happens next. Urgent symptoms go straight to 000 or a GP.'; }
-  else if (state.flyNote){ q = 'Flywheel'; cls = 'fly'; txt = state.flyNote; }
-  else if (s.flags.length && !s.stall){ q = 'Her answers raise concern'; cls = 'risk'; txt = state.helpSent ? 'Help requested. The headline now shows who has her answers and when they’ll reply.' : 'Concern comes from what she tells us, not just the demo’s progress setting: weight up since intake, side effects most days, or no appetite change after month 1. A weight far from intake is confirmed first, since it’s often a typo.'; }
-  else if (s.risk && !s.flags.length){ q = 'Early warning'; cls = 'risk'; txt = state.helpSent ? 'Review requested. The headline shows who has her report and when they’ll reply.' : 'Hidden risk: she’s behind the expected range but feels fine, so she wouldn’t ask. The report credits what she’s doing, names the gap calmly, and offers a review before it becomes a stall.'; }
-  else if (s.stall){ q = 'No false reassurance'; cls = 'risk'; txt = state.helpSent ? 'Help requested. The headline now shows who has her report and when they’ll reply, instead of another call to action.' : 'Below range, so the report doesn’t cheer. It says so plainly and offers a get-help flow right here.'; }
-  else if (s.data === 'none'){ q = answered() ? 'Every input paid back' : 'Infer before you ask'; txt = answered() ? 'Three taps, and the headline, “What you did” and “What changed” all updated straight away.' : 'No tracking data, but orders and the prescription still give a real report. Benchmarks are labelled as benchmarks. The 30-second check-in fills the gaps.'; }
-  else if (s.data === 'light'){ q = 'Scale-down: light data'; txt = 'Core report from 2 weigh-ins and June chats, with transparency lines, plus one ask to unlock more.'; }
-  else { q = 'Full report'; txt = 'Weekly weigh-ins, side-effect log and wearable. Standard monthly structure: headline → this month vs last → where you are → what you did → what changed → what’s next.'; }
-  const PHASE = { early: 'Start: the report answers “Is this normal?”. Treatment progress and what’s typical come before weight.', middle: 'Middle: the report answers “Is it working?”. Weight against the expected range leads, then what’s driving it.', plateau: 'Plateau: the report answers “Is it still worth it?”. What she has kept and her health markers lead, and a flat month is never shown as slowing.' }[s.stage];
-  $('#explain').innerHTML = `<span class="q ${cls}">${q}</span><p>${txt}</p><p>${s.stall ? 'Stalled, so the phase framing is dropped: plain facts and a route to help.' : s.risk ? 'The celebratory sections are held back until she’s back in range.' : PHASE}</p><p class="small">Rewards the process (dose on schedule, side effects managed, weigh-ins), never kilos. The last two questions are the success measures: useful, and worth it.</p>`;
-}
-
-/* ===================== Render + events ===================== */
 function render(){
-  const s = sc(), prev = $('#screen'), keep = prev ? prev.scrollTop : 0, winY = window.scrollY;
-  $('#app').innerHTML = state.opened ? reportScreen(s) : lockScreen(s);
-  const scr = $('#screen'); if (scr) scr.scrollTop = keep;
-  barState();
-  if (matchMedia('(max-width:860px)').matches) window.scrollTo(0, winY);
-  explain();
+  const s = sc();
+  $('#app').innerHTML = state.opened ? story(s) : lock(s);
+  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; const off = k === 'goal' && !(state.stage === 'middle' && state.progress === 'on' && state.data !== 'none');
+    el.innerHTML = CONTROLS[k].map(([v, l]) => `<label ${off ? 'class="off"' : ''}><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${l}</span></label>`).join(''); });
+  $('#pages').innerHTML = PAGES.map((p, j) => `<button data-act="page" data-i="${j}" aria-pressed="${state.opened && state.page === j}" title="${p}">${j + 1}</button>`).join('');
 }
-function syncRadios(){ for (const k of ['data', 'stage', 'progress']) document.querySelectorAll(`input[name="${k}"]`).forEach(r => r.checked = r.value === state[k]); }
+function freshVisit(){ state.q = {}; state.qi = 0; state.qDone = false; state.wPrompt = false; state.wOk = false; state.worth = null; state.chart = false; state.help = null; state.helpSent = null; }
+function go(i){ state.opened = true; state.page = Math.max(0, Math.min(PAGES.length - 1, i)); state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
+// Every answer is paid back straight away: the next page is built from it.
+function finish(){ state.qDone = true; state.wPrompt = false; render(); toast('Your report is updated'); }
+// The flywheel: answering this month makes next month's report richer.
 function nextMonth(){
-  const from = state.data, did = answered();
-  const up = { none: 'light', light: 'rich', rich: 'rich' }[from];
-  const nm = MONTHS[(state.monthIdx + 1) % MONTHS.length];
-  if (did && from !== 'rich'){
-    state.data = up;
-    state.flyNote = `Sarah answered her 30 seconds last month, so the ${nm} report has more of her in it: ${up === 'light' ? 'side effects, what changed and her trend, from her answers and June chats' : 'weekly trends, wearable data and a personal insight'}.`;
-  } else if (did) state.flyNote = `Sarah already has rich data. Her answers keep the ${nm} report accurate.`;
-  else state.flyNote = `Sarah skipped the check-in, so the ${nm} report looks the same. Next we’d try a different nudge: ask in a June chat instead, or infer it from her refills.`;
-  state.monthIdx++; state.q = {}; state.qDone = false; state.useful = null; state.worth = null; state.fresh = []; state.opened = false; state.wPrompt = false; state.wOk = false;
-  syncRadios(); render(); toast(`${nm} report ready`);
+  const did = state.qDone, up = { none: 'light', light: 'rich', rich: 'rich' }[state.data];
+  if (did) state.data = up;
+  state.monthIdx++; freshVisit(); state.opened = false; state.page = 0; render();
+  toast(did ? `${MONTHS[state.monthIdx % MONTHS.length]} report: her answers made it richer` : `${MONTHS[state.monthIdx % MONTHS.length]} report: no answers, so nothing new`);
 }
-
-function barState(){
-  const bar = document.querySelector('.floatbar'); if (!bar) return;
-  const scr = $('#screen'), mobile = matchMedia('(max-width:860px)').matches;
-  bar.classList.toggle('solid', (mobile ? window.scrollY - $('#app').offsetTop : scr.scrollTop) > 40);
-}
-document.addEventListener('scroll', barState, true);
-let helpOpener = null;
-function focusSheet(){ const sh = document.querySelector('.sheet'); if (sh){ sh.scrollTop = 0; const x = sh.querySelector('.x'); x && x.focus({ preventScroll: true }); } }
-function closeHelp(){
-  state.help = null; render();
-  const back = document.querySelector('[data-act="help"]') || $('#h1'); // the opener may be gone once help is sent
-  if (back) back.focus({ preventScroll: true });
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.help) closeHelp(); });
-document.addEventListener('change', e => { const r = e.target; if (r.matches('.seg input')){ state[r.name] = r.value; state.flyNote = null; state.help = null; state.helpSent = null; render(); } });
-document.addEventListener('input', e => { if (e.target.id === 'wt'){ const v = parseFloat(e.target.value); state.q.weight = v >= 40 && v <= 250 ? v : null; state.wOk = false; if (state.wPrompt){ state.wPrompt = false; const c = document.querySelector('.wcheck'); c && c.remove(); } } });
+function closeHelp(){ state.help = null; render(); const b = $('[data-act="help"]') || $('#lead'); b && b.focus({ preventScroll: true }); }
+document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; freshVisit(); render(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
+document.addEventListener('input', e => { if (e.target.id === 'wt'){ const v = parseFloat(e.target.value); state.q.weight = v >= 40 && v <= 250 ? v : null; state.wOk = false; if (state.wPrompt){ state.wPrompt = false; const c = $('.wcheck'); c && c.remove(); } } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.help) closeHelp(); else if (state.opened && !state.help && e.target.tagName !== 'INPUT'){ if (e.key === 'ArrowRight') go(state.page + 1); if (e.key === 'ArrowLeft') go(state.page - 1); } });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
-  const a = el.dataset.act;
-  if (a.startsWith('q:')){ const [, k, v] = a.split(':'); state.q[k] = v; render(); return; }
-  if (a.startsWith('fb:')){ const [, k, v] = a.split(':'); state[k] = v; render(); return; }
-  if (a.startsWith('h:')){ const [, k, v] = a.split(':'); state.help[k] = v; render(); return; }
-  if (a === 'h-scrim' && e.target !== el) return; // clicks inside the sheet aren't scrim clicks
+  const a = el.dataset.act, v = el.dataset.v;
+  if (a === 'h-scrim' && e.target !== el) return;
   switch (a){
-    case 'open': state.opened = true; render(); $('#screen').scrollTop = 0; break;
-    case 'lock': state.opened = false; render(); break;
-    case 'w-ok': state.wOk = true; state.wPrompt = false; // falls through to submit
-    case 'qdone': {
-      if (wImplausible(state.q.weight) && !state.wOk){ state.wPrompt = true; render(); const c = document.querySelector('.wcheck button'); c && c.focus(); break; }
-      state.qDone = true; state.flyNote = null;
-      state.fresh = state.q.weight ? ['weight'] : [];
-      render(); const scr = $('#screen'); scr.scrollTop = 0; window.scrollTo(0, 0);
-      toast('Report updated with your answers'); break;
-    }
-    case 'w-fix': { state.wPrompt = false; render(); const i = $('#wt'); i.focus(); i.select(); break; }
-    case 'help': helpOpener = el.dataset.act; state.help = { step: 0 }; render(); focusSheet(); break;
-    case 'h-next': state.help.step = 1; render(); focusSheet(); break;
-    case 'h-send': state.help.choice = el.dataset.v; state.help.step = 2; state.helpSent = el.dataset.v; render(); focusSheet(); toast(`Sent to ${HELP[el.dataset.v].who}`); break;
+    case 'open': go(0); break;
+    case 'next': go(state.page + 1); break;
+    case 'back': go(state.page - 1); break;
+    case 'page': go(+el.dataset.i); break;
+    case 'close': state.opened = false; state.page = 0; render(); break;
+    case 'q': state.q[el.dataset.k] = v; state.qi++; if (state.qi === QS.length && state.data !== 'none') finish(); else { render(); const b = $('.pg .opt') || $('#wt'); b && b.focus({ preventScroll: true }); } break;
+    case 'w-ok': state.wOk = true; finish(); break;
+    case 'w-fix': state.wPrompt = false; render(); $('#wt').focus(); $('#wt').select(); break;
+    case 'qdone': if (wImplausible(state.q.weight) && !state.wOk){ state.wPrompt = true; render(); const c = $('.wcheck button'); c && c.focus(); } else finish(); break;
+    case 'chart': state.chart = !state.chart; render(); $('[data-act="chart"]').focus({ preventScroll: true }); break;
+    case 'worth': state.worth = v; render(); { const b = $(`[data-act="worth"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); } break;
+    case 'help': state.help = { step: 0 }; render(); $('.x').focus(); break;
+    case 'h': state.help[el.dataset.k] = v; render(); { const b = $(`[data-act="h"][data-k="${el.dataset.k}"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); } break;
+    case 'h-next': state.help.step = 1; render(); $('.sheet').scrollTop = 0; $('.x').focus(); break;
+    case 'h-send': state.helpSent = v; state.help.step = 2; render(); $('.x').focus(); break;
     case 'h-close': case 'h-scrim': closeHelp(); break;
-    case 'nextmonth': state.help = null; state.helpSent = null; nextMonth(); break;
-    case 'todo': toast('Not part of this prototype'); break;
-    case 'reset': state = initial(); syncRadios(); render(); toast('Demo reset'); break;
+    case 'nextmonth': nextMonth(); break;
+    case 'reset': state = initial(); render(); break;
   }
 });
 if (matchMedia('(max-width:860px)').matches) $('#demoDetails').open = false;
