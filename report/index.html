@@ -571,10 +571,10 @@ function cardFar(s){
 /* ===================== Last card. What's next: curious, not pressured ===================== */
 // Only dates that are actually scheduled. No predictions about how next month will feel.
 function nextSteps(s){
-  const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'], report = [`16 ${MONTHS[(state.monthIdx + 1) % MONTHS.length]}`, 'Your next report'];
+  const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'];
   if (s.concern) return [['Now', `A review with Dr Lee${s.stuck ? ', starting with your dose' : ''}`], order];
   const first = s.stage === 'early' ? ['In 9 days', 'Step up to 5mg'] : s.stage === 'middle' ? ['In 9 days', 'Dose review'] : ['In 12 days', 'Your 6-month review'];
-  return [first, order, report];
+  return [first, order];
 }
 // One tip, only when her own numbers show something she is struggling with. Clinical concerns go to the care team instead.
 function tip(s){
