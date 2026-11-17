@@ -428,7 +428,7 @@ function chart(s, cap = true, H = 130){
   const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
   let up = '', dn = ''; for (let w = 0; w <= xs; w++){ up += `${X(w).toFixed(1)},${Y(band(w).hi).toFixed(1)} `; dn = `${X(w).toFixed(1)},${Y(band(w).lo).toFixed(1)} ` + dn; }
   const step = s.data === 'rich' ? 1 : Math.max(1, Math.floor(s.week / 2)), pts = []; if (has){ for (let w = 0; w < s.week; w += step) pts.push([w, pct * ease(w)]); pts.push([s.week, pct]); }
-  const col = s.stall || (s.below && s.stage !== 'early') ? 'var(--amber-dot)' : 'var(--green)';
+  const col = 'var(--green)'; // no warning colour on her own data
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight against where we’d expect" style="width:100%;display:block;margin-top:8px">
     <polygon points="${up}${dn}" fill="var(--berry)" opacity=".6"/>${pts.length ? `<path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
     ${pts.slice(0, -1).map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="9" fill="transparent"><title>${p[0] ? `Week ${p[0]}` : 'Start'}: ${fmt(p[1])}% down</title></circle>`).join('')}
@@ -454,7 +454,7 @@ function metrics(s){
   const app = () => a ? M('app', 'Food noise', [rich ? v.app[0] : null, ans.app], '/10', 'line', today, { isNew: true, warn: q.appetite === 'same' }) : rich ? M('app', 'Food noise', v.app, '/10', 'line', 'From your check-ins with June') : s.data === 'light' ? M('app', 'Food noise', [null, s.below ? 6 : 4], '/10', 'line', 'From what you told June') : E('app', 'Food noise');
   const side = () => a ? M('side', 'Nausea', [rich ? v.side[0] : null, ans.side], 'days a week', 'bars', today, { isNew: true, warn: q.side === 'most' }) : rich ? M('side', 'Nausea', v.side, 'days a week', 'bars', 'From your side-effect log') : s.data === 'light' ? M('side', 'Nausea', [null, s.below ? 3 : 1], 'days a week', 'bars', 'From what you told June') : E('side', 'Side effects');
   const energy = () => a ? M('energy', 'Energy', [rich ? v.energy[0] : null, ans.energy], '/5', 'line', today, { isNew: true, warn: q.energy === 'worse' }) : rich ? M('energy', 'Energy', v.energy, '/5', 'line', 'From your check-ins with June') : E('energy', 'Energy');
-  const dose = () => M('dose', 'Dose', [s.stuck || s.stage === 'early' ? s.dose : DOSES[Math.max(0, s.doseIdx - 1)], s.dose], 'mg', 'step', 'From your prescription', s.stuck ? { warn: true, note: 'Step up overdue' } : {});
+  const dose = () => M('dose', 'Dose', [s.stuck || s.stage === 'early' ? s.dose : DOSES[Math.max(0, s.doseIdx - 1)], s.dose], 'mg', 'step', 'From your prescription', s.stuck ? { note: 'A dose review is ready when you are' } : {});
   const ontime = () => out.push({ k: 'ontime', label: 'Doses on time', then: null, now: 4, unit: 'of 4', berries: [4, 4], src: 'From your orders' });
   app(); side(); energy();
   if (rich){ M('waist', 'Waist', v.waist, 'cm', 'line', 'From your measurements'); M('sleep', 'Sleep', v.sleep, 'h a night', 'line', 'From your wearable'); M('steps', 'Steps', v.steps, 'k a day', 'line', 'From your wearable'); dose(); v.hba ? M('hba', 'Blood sugar', v.hba, '% HbA1c', 'line', 'From your blood tests') : ontime(); }
@@ -478,14 +478,14 @@ function tileSheet(s){
 /* ===================== Card 1. The headline ===================== */
 function leadText(s){
   const a = state.qDone, pct = `${fmt(s.pct)}%`;
-  if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg${s.stall ? ' · We haven’t heard from you in a while' : ''}`, cta: s.stall ? 'Talk to my care team' : '' };
-  // When something needs a look, the tone is a warm check-in: we're here to help. No alarm colour, no big number.
+  if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg`, cta: s.stall ? 'Talk to my care team' : '' };
+  // When a check-in is due, it is an invitation. The copy never tells her something is going wrong; the care team makes that call with her.
   const talk = 'Talk to my care team';
-  if (s.stall) return { warm: 'Let’s look at this together.', fact: s.data === 'none' ? 'Some of your answers suggest things have slowed. There’s usually a simple reason, and we’re here to help.' : `You’re ${pct} down, a little under where we’d expect by now. There’s usually a simple reason, and we’re here to help.`, cta: talk, bar: s.data !== 'none' };
+  if (s.stall) return { warm: 'Time for a check-in.', fact: `${s.data === 'none' ? '' : `You’re ${pct} down so far. `}Your care team would like to check in and make sure your plan still fits you.`, cta: talk, bar: s.data !== 'none' };
   if (s.flags.length){ const f = s.flags[0];
-    return { cta: talk, ...(f === 'gain' ? { warm: 'We’re here to help.', fact: `Your weight is up ${fmt(-s.wPct)}% since you started. That can happen, and it’s worth looking at together.` } : f === 'side' ? { warm: 'You shouldn’t have to push through this.', fact: 'Side effects most days is something your care team can ease.' } : { warm: 'Let’s check your dose is right for you.', fact: 'Your appetite hasn’t changed yet. That’s often the dose, and it’s simple to review.' }) }; }
-  if (s.risk) return { warm: 'A consistent month.', fact: `You took every dose. You’re ${pct} down, a little behind where we’d expect, and it’s easier to sort out early.`, cta: talk, bar: true };
-  if (s.slow) return { warm: 'You’re doing your part.', fact: `You’re ${pct} down, slower than we’d expect, and that isn’t down to you. We’d like to help find out why.`, cta: talk, bar: true };
+    return { cta: talk, ...(f === 'gain' ? { warm: 'We’re here to help.', fact: 'Thanks for your weigh-in today. Your care team would like to check in with you.' } : f === 'side' ? { warm: 'You shouldn’t have to push through this.', fact: 'Side effects most days is something your care team can ease.' } : { warm: 'Let’s check your dose is right for you.', fact: 'A quick review with your care team, whenever suits you.' }) }; }
+  if (s.risk) return { warm: 'A consistent month.', fact: `You took every dose, and you’re ${pct} down so far. Your dose review is ready when you are.`, cta: talk, bar: true };
+  if (s.slow) return { warm: 'You’re doing your part.', fact: `Every dose taken, and you’re ${pct} down so far. Your care team would like to check in on your plan.`, cta: talk, bar: true };
   if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'From your answers today.' };
   if (s.stage === 'early') return { big: 'Month 1', cap: 'done', sub: s.below ? 'Weight usually moves after your first step up.' : 'Every dose taken. Side effects easing.' };
   if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
@@ -496,9 +496,9 @@ const richOn = s => s.data === 'rich' && !s.concern && !s.below;
 function cardLead(s){
   if (richOn(s)) return cardChange(s, `${s.month} · Month ${s.n}`);
   const t = leadText(s);
-  if (t.warm) return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.warm}</h1><p class="lede">${t.fact}</p>${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, s.stall)}</div>` : ''}${helpBtn(t.cta)}`;
+  if (t.warm) return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.warm}</h1><p class="lede">${t.fact}</p>${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, false)}</div>` : ''}${helpBtn(t.cta)}`;
   return `<p class="k">${s.month} · Month ${s.n}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${t.big}</span><span class="hero-cap">${t.cap}</span></h1>
-    ${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, s.stall)}<p class="quiet" style="margin-top:12px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
+    ${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, false)}<p class="quiet" style="margin-top:12px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
 }
 
 /* ===================== Card 2. The biggest change ===================== */
@@ -507,7 +507,7 @@ function cardChange(s, kicker){
   const row = (l, x) => `<div class="pair"><span class="quiet">${l}</span>${x}</div>`;
   if (s.data === 'none') return big('What we know', '4 of 4', 'doses on time', berries(4, 4));
   if (s.data === 'light') return big('This month', '2', 'weigh-ins', berries(2, 4) + '<p class="quiet" style="margin-top:12px">Four would show your trend.</p>');
-  if (s.below && s.stage !== 'early') return big('What’s behind it', `${s.dose}mg`, 'no step up yet', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 70, 'Dose, unchanged') + '<p class="quiet">The most common reason progress slows.</p>');
+  if (s.below && s.stage !== 'early') return big('Your dose', `${s.dose}mg`, 'your current dose', mini(ser(s.dose, s.dose, 'step'), 'step', false, 300, 70, 'Dose') + '<p class="quiet">A dose review is ready when you are.</p>');
   if (s.stage === 'early') return big('Biggest change', `${v.side[1]} day${v.side[1] === 1 ? '' : 's'}`, `of nausea a week, from ${v.side[0]}`, mini(ser(...v.side, 'bars'), 'bars', false, 300, 80, 'Nausea days a week'));
   const quote = s.stage === 'middle' ? 'I eat when I’m hungry, and stop when I’m full.' : 'I don’t really think about it any more.';
   const fromStart = s.stage === 'plateau' && !s.slow, was = fromStart ? START_V.app : v.app[0];
@@ -517,8 +517,8 @@ function cardChange(s, kicker){
 /* ===================== Card 3. A pattern, or what more data would show ===================== */
 function pattern(s){
   const v = vals(s), stuck = s.below && s.stage !== 'early', flat = [s.pct, s.pct, s.pct, s.pct];
-  if (stuck) return ['Same dose, same weight.', ['Dose', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 40, 'Dose')], ['Weight lost', mini(flat, 'line', true, 300, 40, 'Weight')]];
-  if (s.slow) return ['Appetite responded. The scale hasn’t yet.', ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')], ['Weight lost', mini(ser(s.pct - .6, s.pct, 'line'), 'line', false, 300, 40, 'Weight')]];
+  if (stuck) return ['Your dose and weight this month.', ['Dose', mini(ser(s.dose, s.dose, 'step'), 'step', false, 300, 40, 'Dose')], ['Weight lost', mini(flat, 'line', false, 300, 40, 'Weight')]];
+  if (s.slow) return ['Your appetite has changed.', ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')], ['Weight lost', mini(ser(s.pct - .6, s.pct, 'line'), 'line', false, 300, 40, 'Weight')]];
   if (s.stage === 'early') return ['Nausea eased, and so did the food noise.', ['Nausea days', mini(ser(...v.side, 'bars'), 'bars', false, 300, 40, 'Nausea')], ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')]];
   if (s.stage === 'middle') return ['You slept more, and had more energy.', ['Sleep', mini(ser(...v.sleep, 'line'), 'line', false, 300, 40, 'Sleep')], ['Energy', mini(ser(...v.energy, 'bars'), 'bars', false, 300, 40, 'Energy')]];
   return ['Weight steady, waist still shrinking.', ['Weight lost', mini(flat, 'line', false, 300, 40, 'Weight')], ['Waist', mini(ser(...v.waist, 'line'), 'line', false, 300, 40, 'Waist')]];
@@ -540,16 +540,16 @@ function cardPattern(s){
 function cardNote(s, full){
   const g = s.goal, clinical = s.concern, who = clinical ? ['Dr Lee', 'your prescriber', 'L'] : ['Priya', 'your coach', 'P'];
   let t;
-  if (s.stall) t = 'You’ve done your part, and your results should be further along. I’d like to review your dose with you.';
-  else if (s.flags.length) t = 'Thank you for your answers. They’re worth a proper look now, not next month.';
-  else if (s.slow) t = 'You’ve done everything we asked. Your weight hasn’t followed, and that isn’t down to you. Let’s find out why.';
-  else if (s.risk) t = 'A consistent month. Your results are a little behind, and I think your dose is why. Let’s look before your next order.';
+  if (s.stall) t = 'I’d like to check in and review your dose with you. It’s a quick conversation.';
+  else if (s.flags.length) t = 'Thank you for your answers. I’d like to check in with you this week.';
+  else if (s.slow) t = 'You’ve done everything we asked. I’d like to check in and look at your plan together.';
+  else if (s.risk) t = 'A consistent month. I’d like to look at your dose with you before your next order.';
   else if (s.data === 'none') t = `${state.qDone ? 'Thank you for telling us how it’s going.' : 'We don’t have much from you yet, and that’s okay.'} Your doses are on time, which matters most.`;
   else if (s.stage === 'early') t = 'Month 1 is the hardest, and you’ve done it. Nausea may return for a few days after your next step up, then settle.';
   else if (s.stage === 'middle') t = `A strong month, and not only on the scale.${g && g.close ? ` You’re ${g.left}kg from your goal.` : ''}`;
   else t = 'Eight weeks steady, and your blood results improved too. Holding is the goal now.';
   const R = (l, v) => `<div class="kv"><span>${l}</span><span>${v}</span></div>`;
-  const first = s.stuck ? R('Dose review', 'Due now') : s.slow ? R('Review with Dr Lee', 'Ready when you are') : s.stage === 'early' ? R('Next step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Dose review', 'In 9 days') : R('6-month review', 'In 12 days');
+  const first = s.stuck ? R('Dose review', 'Ready when you are') : s.slow ? R('Review with Dr Lee', 'Ready when you are') : s.stage === 'early' ? R('Next step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Dose review', 'In 9 days') : R('6-month review', 'In 12 days');
   const rows = `<div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>`;
   if (full && !clinical) return rows;
   return `${full ? '' : `<p class="k">From ${who[1]}</p>`}<div class="note"><p ${full ? '' : 'id="lead" tabindex="-1"'}>${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}${full ? `, ${who[1]}` : ''}<small>Written with June, signed by ${who[0]}</small></span></p></div>
@@ -576,7 +576,7 @@ function cardFar(s){
 // Only dates that are actually scheduled. No predictions about how next month will feel.
 function nextSteps(s){
   const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'];
-  if (s.concern) return [['Now', `A review with Dr Lee${s.stuck ? ', starting with your dose' : ''}`], order];
+  if (s.concern) return [['Now', 'A check-in with Dr Lee'], order];
   const first = s.stage === 'early' ? ['In 9 days', 'Step up to 5mg'] : s.stage === 'middle' ? ['In 9 days', 'Dose review'] : ['In 12 days', 'Your 6-month review'];
   return [first, order];
 }
@@ -590,7 +590,7 @@ function tip(s){
 }
 function cardNext(s){
   const t = s.concern ? null : tip(s);
-  const h = s.concern ? 'First, a proper look.' : 'Coming up.';
+  const h = s.concern ? 'First, a check-in.' : 'Coming up.';
   return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Review it with Dr Lee') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
 }
 
@@ -624,15 +624,15 @@ function pageQuestion(s){
 // Infer before you ask: what the report already knows.
 function seen(s){
   const L = [];
-  if (s.stuck) L.push(`Your dose hasn’t stepped up from ${s.dose}mg`);
+  if (s.stuck) L.push(`You’re on ${s.dose}mg`);
   if (s.data === 'rich' && s.below) L.push('Nausea 3 days a week');
   if (s.data === 'light' && s.below) L.push('You mentioned nausea to June');
-  if (s.flags.includes('gain')) L.push(`Weight up ${fmt(-s.wPct)}% since you started`);
+  if (s.flags.includes('gain')) L.push('Your weigh-in today');
   if (s.flags.includes('side')) L.push('Side effects most days');
-  if (s.flags.includes('appetite')) L.push(`Appetite unchanged at month ${s.n}`);
-  if (s.slow) L.push('Every dose taken, and stepped up on schedule', `${fmt(s.pct)}% down, under where we’d expect at month ${s.n}`);
-  if (s.data !== 'none' && s.below) L.push(`${fmt(s.pct)}% down, below where we’d expect at month ${s.n}`);
-  if (s.data === 'none' && !state.qDone) L.push('We haven’t heard from you in a few weeks');
+  if (s.flags.includes('appetite')) L.push('Your appetite answer today');
+  if (s.slow) L.push('Every dose taken, and stepped up on schedule', `${fmt(s.pct)}% down so far`);
+  if (s.data !== 'none' && s.below) L.push(`${fmt(s.pct)}% down so far`);
+  if (s.data === 'none' && !state.qDone) L.push('Your doses have arrived on time');
   if (state.worth === 'unsure' || state.worth === 'no') L.push('You’re not feeling good about your progress');
   return L.length ? L : ['Your doses have arrived on time'];
 }
@@ -654,7 +654,7 @@ function sheet(s){
 
 /* ===================== Render ===================== */
 function lock(s){
-  const line = s.stall ? 'There’s one thing worth looking at together.' : s.risk || s.slow ? 'A consistent month, and one thing to look at.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
+  const line = s.stall ? 'Your care team would like to check in.' : s.risk || s.slow ? 'A consistent month. Come and see.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
   return `<div class="lock"><p>Monday 16 ${s.month}</p><div class="time">7:42</div><button class="notif" data-act="open"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>Your ${s.month} report is ready</b>${line}</button></div>`;
 }
 function goalStrip(s){
@@ -664,10 +664,10 @@ function goalStrip(s){
 }
 // A care team note only appears when there is something for them to say: a concern they are following up.
 const pageFns = () => { const s = sc(); return (richOn(s) ? [cardLead, cardPattern, cardFar] : [cardLead, cardChange, cardPattern]).concat(s.concern ? [cardNote] : [], [cardNext], asks() ? [pageQuestion] : []); };
-const pageNames = () => { const s = sc(); return (richOn(s) ? ['Biggest change', 'Something new', 'How far'] : ['Headline', 'What’s behind it', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
+const pageNames = () => { const s = sc(); return (richOn(s) ? ['Biggest change', 'Something new', 'How far'] : ['Headline', 'Detail', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
 function story(s){
   const fns = pageFns(), names = pageNames(), i = Math.min(state.page, fns.length - 1), body = fns[i](s);
-  const tint = i === 0 ? (leadText(s).amber ? 'amber' : 'lilac') : '';
+  const tint = i === 0 ? (leadText(s).warm ? 'amber' : 'lilac') : '';
   const last = i === fns.length - 1, skip = last && asks() && !state.qDone;
   return `<div class="story ${tint}"><div class="segs" role="progressbar" aria-valuemin="1" aria-valuemax="${fns.length}" aria-valuenow="${i + 1}" aria-label="Card ${i + 1} of ${fns.length}: ${names[i]}">${fns.map((p, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
     <button class="close" data-act="close" aria-label="Close the report">×</button>
@@ -677,13 +677,13 @@ function story(s){
 // Where the story lands: everything on one screen, to come back to during the month.
 function full(s){
   const t = leadText(s), has = s.data !== 'none', w = has ? `${fmt(s.pct)}%` : s.wPct !== null ? (s.wPct >= 0 ? `${fmt(s.wPct)}%` : `+${fmt(-s.wPct)}%`) : '';
-  const status = s.stall ? 'Below expected' : s.slow ? 'Under expected' : s.below ? (s.stage === 'early' ? 'Early days' : 'A little under') : s.stage === 'plateau' ? 'Holding' : 'On track';
+  const status = s.stall || s.slow || s.risk ? '' : s.below ? (s.stage === 'early' ? 'Early days' : '') : s.stage === 'plateau' ? 'Holding' : 'On track';
   const p = s.data === 'rich' ? pattern(s) : null, ms = metrics(s);
   return `<div class="story"><button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg full" id="screen">
       <div class="top"><p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">Your report</h1></div>
-      ${t.cta ? `<div class="sum"><p class="sumline">${t.warm || `${t.big} ${t.cap}`}</p>${t.fact ? `<p class="sumfact">${t.fact}</p>` : ''}${helpBtn(t.cta)}</div>` : ''}
-      <div class="card wcard"><div class="goalrow"><span><span class="lbl">Weight</span><span class="num">${w ? `${w}<small>${w[0] === '+' ? 'up' : 'down'}</small>` : '<button class="link" data-act="ask">+ Add a weigh-in</button>'}</span></span>${has ? `<span class="chip ${s.stall ? 'amber' : ''}">${status}</span>` : ''}</div>${chart(s, !has, 92)}</div>
+      ${t.cta ? `<div class="sum ${t.warm ? 'amber' : ''}"><p class="sumline">${t.warm || `${t.big} ${t.cap}`}</p>${t.fact ? `<p class="sumfact">${t.fact}</p>` : ''}${helpBtn(t.cta)}</div>` : ''}
+      <div class="card wcard"><div class="goalrow"><span><span class="lbl">Weight</span><span class="num">${w ? `${w}<small>${w[0] === '+' ? 'up' : 'down'}</small>` : '<button class="link" data-act="ask">+ Add a weigh-in</button>'}</span></span>${has && status ? `<span class="chip">${status}</span>` : ''}</div>${chart(s, !has, 92)}</div>
       <p class="grp">How you feel</p><div class="tiles">${ms.slice(0, 4).map(m => tile(m, s)).join('')}</div>
       <p class="grp">Your body</p><div class="tiles">${ms.slice(4).map(m => tile(m, s)).join('')}</div>
       ${goalStrip(s)}
