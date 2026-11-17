@@ -233,11 +233,13 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .berries i.on{background:var(--green)}
 .pair{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:8px}
 .pair+.pair{margin-top:12px}
+.pair .berries{flex-wrap:nowrap;gap:5px}
+.pair .berries i{width:14px;height:14px;flex:none}
 .prow+.prow{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .prow svg{display:block;width:100%;margin-top:4px}
 .pg .quote{margin-top:20px;padding:0 4px}
 .tiles{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
-.tile{display:flex;flex-direction:column;gap:2px;min-height:90px;min-width:0;padding:10px 12px;border:0;border-radius:16px;background:var(--card);text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.tile{display:flex;flex-direction:column;gap:2px;min-height:84px;min-width:0;padding:9px 12px;border:0;border-radius:16px;background:var(--card);text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
 .tile .top{width:100%;display:flex;justify-content:space-between;gap:6px;font-size:13px;font-weight:500}
 .tile .top>span{white-space:nowrap}
 .tile .top .quiet{font-weight:400}
@@ -250,6 +252,28 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .tile.warn .num::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber-dot);margin-right:6px;transform:translateY(-3px)}
 .tile.empty{background:none;border:1.5px dashed #D9CFE0;color:var(--quiet);justify-content:center;font-size:13px}
 .tile.empty .add{color:var(--lilac-ink);font-weight:500;font-size:15px}
+.grp{font-size:13px;font-weight:500;color:var(--quiet);margin:12px 6px 0}
+.grp+.tiles{margin-top:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.db{display:grid;grid-template-columns:84px 1fr 84px;gap:10px;align-items:center;min-height:32px;font-size:13px}
+.db>span:last-child{text-align:right;white-space:nowrap}
+.track{position:relative;height:16px}
+.track::before{content:"";position:absolute;left:0;right:0;top:7px;height:2px;border-radius:1px;background:var(--line)}
+.track b{position:absolute;top:6px;height:4px;border-radius:2px;background:var(--berry)}
+.track i,.legend i{position:absolute;top:2px;width:12px;height:12px;margin-left:-6px;border-radius:50%;box-sizing:border-box}
+.track i.a,.legend i.a{background:#fff;border:2px solid #B5A6E8}
+.track i.b,.legend i.b{background:var(--green);border:2px solid #fff}
+.legend{display:flex;align-items:center;gap:6px;margin-top:8px}
+.legend i{position:static;margin:0 0 0 8px}
+.legend i:first-child{margin-left:0}
+.tl{list-style:none;padding:0;margin:20px 0 0}
+.tl li{position:relative;padding:0 0 22px 28px}
+.tl li .quiet{display:block}
+.tl li::before{content:"";position:absolute;left:0;top:4px;width:12px;height:12px;border-radius:50%;background:var(--berry)}
+.tl li:first-child::before{background:var(--green)}
+.tl li::after{content:"";position:absolute;left:5px;top:20px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::after{display:none}
+.wcard .lbl+.db{margin-top:8px}
 .chip{flex:none;font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--lilac);color:var(--lilac-ink)}
 .chip.amber{background:var(--amber);color:var(--amber-ink)}
 .goalrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -432,12 +456,12 @@ function metrics(s){
   app(); side(); energy();
   if (rich){ M('waist', 'Waist', v.waist, 'cm', 'line', 'From your measurements'); M('sleep', 'Sleep', v.sleep, 'h a night', 'line', 'From your wearable'); M('steps', 'Steps', v.steps, 'k a day', 'line', 'From your wearable'); dose(); v.hba ? M('hba', 'Blood sugar', v.hba, '% HbA1c', 'line', 'From your blood tests') : ontime(); }
   else { dose(); ontime(); E('waist', 'Waist'); E('sleep', 'Sleep'); E('steps', 'Steps'); }
-  return out;
+  return ['app', 'side', 'energy', 'sleep', 'waist', 'steps', 'dose', 'hba', 'ontime'].map(k => out.find(m => m.k === k)).filter(Boolean);
 }
 function tile(m, s){
   if (m.empty) return `<button class="tile empty" data-act="add"><span>${m.label}</span><span class="add">+ Add</span></button>`;
   const viz = m.berries ? berries(...m.berries) : m.then === null ? '' : mini(ser(m.then, m.now, m.type), m.type, m.warn, 150, 30, `${m.label}: ${fmt(m.then)} to ${fmt(m.now)}`);
-  return `<button class="tile ${m.warn ? 'warn' : ''}" data-act="tile" data-k="${m.k}"><span class="top"><span>${m.label}</span>${m.isNew ? '<span class="new">New</span>' : m.then !== null && m.then !== m.now ? `<span class="quiet">was ${fmt(m.then)}</span>` : ''}</span><span class="num">${fmt(m.now)}<small>${m.unit}</small></span>${viz}</button>`;
+  return `<button class="tile ${m.warn ? 'warn' : ''}" data-act="tile" data-k="${m.k}"><span class="top"><span>${m.label}</span>${m.isNew ? '<span class="new">New</span>' : m.then !== null && m.then !== m.now ? `<span class="quiet" aria-label="was ${fmt(m.then)}">${m.now < m.then ? '↓' : '↑'} ${fmt(Math.abs(m.now - m.then))}</span>` : ''}</span><span class="num">${fmt(m.now)}<small>${m.unit}</small></span>${viz}</button>`;
 }
 // The source of every number is one tap away.
 function tileSheet(s){
@@ -462,22 +486,26 @@ function leadText(s){
   if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
   return { big: '8 weeks', cap: `holding at ${pct} down`, sub: 'Holding steady is the result now.', bar: true };
 }
+// Weight is not the automatic hero. With full data and nothing to flag, the story opens on the change she can feel.
+const richOn = s => s.data === 'rich' && !s.concern && !s.below;
 function cardLead(s){
+  if (richOn(s)) return cardChange(s, `${s.month} · Month ${s.n}`);
   const t = leadText(s);
   return `<p class="k">${s.month} · Month ${s.n}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${t.big}</span><span class="hero-cap">${t.cap}</span></h1>
     ${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, s.stall)}<p class="quiet" style="margin-top:12px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
 }
 
 /* ===================== Card 2. The biggest change ===================== */
-function cardChange(s){
-  const v = vals(s), big = (k, n, cap, viz) => `<p class="k">${k}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${n}</span><span class="hero-cap">${cap}</span></h1><div class="viz">${viz}</div>`;
+function cardChange(s, kicker){
+  const v = vals(s), big = (k, n, cap, viz) => `<p class="k">${kicker || k}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${n}</span><span class="hero-cap">${cap}</span></h1><div class="viz">${viz}</div>`;
   const row = (l, x) => `<div class="pair"><span class="quiet">${l}</span>${x}</div>`;
   if (s.data === 'none') return big('What we know', '4 of 4', 'doses on time', berries(4, 4));
   if (s.data === 'light') return big('This month', '2', 'weigh-ins', berries(2, 4) + '<p class="quiet" style="margin-top:12px">Four would show your trend.</p>');
   if (s.below && s.stage !== 'early') return big('What’s behind it', `${s.dose}mg`, 'no step up yet', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 70, 'Dose, unchanged') + '<p class="quiet">The most common reason progress slows.</p>');
   if (s.stage === 'early') return big('Biggest change', `${v.side[1]} day${v.side[1] === 1 ? '' : 's'}`, `of nausea a week, from ${v.side[0]}`, mini(ser(...v.side, 'bars'), 'bars', false, 300, 80, 'Nausea days a week'));
   const quote = s.stage === 'middle' ? 'I forgot to finish my lunch today.' : 'I don’t really think about it any more.';
-  return big(s.slow ? 'What’s working' : 'Biggest change', `${v.app[1]}/10`, v.app[0] === v.app[1] ? 'food noise, holding' : `food noise, from ${v.app[0]}`, row('Last month', berries(v.app[0], 10)) + row('This month', berries(v.app[1], 10))) + `<p class="quote">“${quote}”<small>You, this month</small></p>`;
+  const fromStart = s.stage === 'plateau' && !s.slow, was = fromStart ? START_V.app : v.app[0];
+  return big(s.slow ? 'What’s working' : 'Biggest change', `${v.app[1]}/10`, was === v.app[1] ? 'food noise, holding' : `food noise, from ${was}`, row(fromStart ? 'Week 1' : 'Last month', berries(was, 10)) + row('This month', berries(v.app[1], 10))) + `<p class="quote">“${quote}”<small>You, this month</small></p>`;
 }
 
 /* ===================== Card 3. A pattern, or what more data would show ===================== */
@@ -485,16 +513,21 @@ function pattern(s){
   const v = vals(s), stuck = s.below && s.stage !== 'early', flat = [s.pct, s.pct, s.pct, s.pct];
   if (stuck) return ['Same dose, same weight.', ['Dose', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 40, 'Dose')], ['Weight lost', mini(flat, 'line', true, 300, 40, 'Weight')]];
   if (s.slow) return ['Appetite responded. The scale hasn’t yet.', ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')], ['Weight lost', mini(ser(s.pct - .6, s.pct, 'line'), 'line', false, 300, 40, 'Weight')]];
-  if (s.stage === 'early') return ['Both easing as your body adjusts.', ['Nausea days', mini(ser(...v.side, 'bars'), 'bars', false, 300, 40, 'Nausea')], ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')]];
-  if (s.stage === 'middle') return ['Your energy rose as nausea eased.', ['Energy', mini(ser(...v.energy, 'bars'), 'bars', false, 300, 40, 'Energy')], ['Nausea days', mini([2, 1, 1, 0], 'bars', false, 300, 40, 'Nausea')]];
+  if (s.stage === 'early') return ['Nausea eased, and so did the food noise.', ['Nausea days', mini(ser(...v.side, 'bars'), 'bars', false, 300, 40, 'Nausea')], ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')]];
+  if (s.stage === 'middle') return ['You slept more, and had more energy.', ['Sleep', mini(ser(...v.sleep, 'line'), 'line', false, 300, 40, 'Sleep')], ['Energy', mini(ser(...v.energy, 'bars'), 'bars', false, 300, 40, 'Energy')]];
   return ['Weight steady, waist still shrinking.', ['Weight lost', mini(flat, 'line', false, 300, 40, 'Weight')], ['Waist', mini(ser(...v.waist, 'line'), 'line', false, 300, 40, 'Waist')]];
+}
+const delta = (l, [a, b], unit) => `<span class="chip">${l} ${b === a ? 'steady' : `${b > a ? '+' : '−'}${fmt(Math.abs(b - a) * (unit === 'min' ? 60 : 1))}${unit ? ' ' + unit : ''}`}</span>`;
+function patternChips(s){
+  const v = vals(s); if (!richOn(s)) return '';
+  return `<p class="chips">${s.stage === 'early' ? delta('Nausea', v.side, 'days') + delta('Food noise', v.app, '') : s.stage === 'middle' ? delta('Sleep', v.sleep, 'min') + delta('Energy', v.energy, '') : '<span class="chip">Weight steady</span>' + delta('Waist', v.waist, 'cm')}</p>`;
 }
 const patternViz = p => p.slice(1).map(([l, x]) => `<div class="prow"><span class="quiet">${l}</span>${x}</div>`).join('');
 function cardPattern(s){
   if (s.data !== 'rich'){ const empty = metrics(s).filter(m => m.empty);
     return `<p class="k">Next month could show</p><h1 class="lead" id="lead" tabindex="-1">${state.qDone ? 'More of you.' : 'A lot more of you.'}</h1><div class="tiles">${empty.slice(0, 4).map(m => tile(m, s)).join('')}</div><p class="quiet" style="margin-top:12px">${state.qDone ? 'A weigh-in each week adds the rest.' : 'A few taps at the end fill these in.'}</p>`; }
   const p = pattern(s);
-  return `<p class="k">A pattern</p><h1 class="lead" id="lead" tabindex="-1">${p[0]}</h1><div class="viz">${patternViz(p)}</div>`;
+  return `<p class="k">Something you might not have noticed</p><h1 class="lead" id="lead" tabindex="-1">${p[0]}</h1>${patternChips(s)}<div class="viz">${patternViz(p)}</div>`;
 }
 
 /* ===================== Card 4. A note from her care team ===================== */
@@ -513,7 +546,36 @@ function cardNote(s, full){
   const first = s.stuck ? R('Dose review', 'Due now') : s.slow ? R('Review with Dr Lee', 'Ready when you are') : s.stage === 'early' ? R('Next step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Dose review', 'In 9 days') : R('6-month review', 'In 12 days');
   return `${full ? '' : `<p class="k">From ${who[1]}</p>`}<div class="note"><p ${full ? '' : 'id="lead" tabindex="-1"'}>${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}${full ? `, ${who[1]}` : ''}<small>Written with June, signed by ${who[0]}</small></span></p></div>
     ${clinical && !full ? helpBtn(`Review it with ${who[0]}`) : ''}
-    <div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>`;
+    ${full ? `<div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>` : ''}`;
+}
+
+/* ===================== How far she's come: start and now on one line each ===================== */
+const START_V = { app: 8, side: 4, energy: 2, hba: 6.1 };
+function farRows(s){
+  const v = vals(s), kg = START_KG * (1 - s.pct / 100), w0 = s.stage === 'early' ? 100 : 102;
+  const rows = [['Food noise', START_V.app, v.app[1], 0, 10, '/10'], ['Nausea days', START_V.side, v.side[1], 0, 7, ''], ['Energy', START_V.energy, v.energy[1], 0, 5, '/5'], ['Waist', w0, v.waist[1], 88, 104, 'cm']];
+  if (v.hba) rows.push(['Blood sugar', START_V.hba, v.hba[1], 5, 6.5, '%']);
+  rows.push(['Weight', START_KG, +kg.toFixed(1), 76, 94, 'kg']);
+  const pos = (x, lo, hi) => Math.max(4, Math.min(96, (x - lo) / (hi - lo) * 100));
+  return rows.map(([l, a, b, lo, hi, u]) => { const pa = pos(a, lo, hi), pb = pos(b, lo, hi);
+    return `<div class="db"><span>${l}</span><span class="track" role="img" aria-label="${l}: ${fmt(a)} at the start, ${fmt(b)} now"><b style="left:${Math.min(pa, pb)}%;width:${Math.abs(pa - pb)}%"></b><i class="a" style="left:${pa}%"></i><i class="b" style="left:${pb}%"></i></span><span><span class="quiet">${fmt(a)} →</span> ${fmt(b)}${u}</span></div>`; }).join('') + '<p class="quiet legend"><i class="a"></i>Week 1<i class="b"></i>Now</p>';
+}
+function cardFar(s){
+  return `<p class="k">How far you’ve come</p><h1 id="lead" tabindex="-1"><span class="hero-num">${s.week} weeks</span><span class="hero-cap">since you started</span></h1><div class="viz">${farRows(s)}</div>`;
+}
+
+/* ===================== Last card. What's next: curious, not pressured ===================== */
+function nextSteps(s){
+  const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'];
+  if (s.concern) return [['Now', `A review with Dr Lee${s.stuck ? ', starting with your dose' : ''}`], order];
+  if (s.data !== 'rich') return [[s.stage === 'early' ? 'In 9 days' : 'This month', s.stage === 'early' ? 'Step up to 5mg' : 'Your next dose review'], order, ['Next month', 'A weigh-in each week shows your trend']];
+  if (s.stage === 'early') return [['In 9 days', 'Step up to 5mg'], ['A few days after', 'Nausea may return, then settle'], order];
+  if (s.stage === 'middle') return [['In 9 days', 'Dose review'], order, ['Month 4, often', 'Clothes fit differently and energy steadies']];
+  return [['In 12 days', 'Your 6-month review'], order, ['Month 7, often', 'Habits start to feel automatic']];
+}
+function cardNext(s){
+  const h = s.concern ? 'First, a proper look.' : s.stage === 'early' ? 'Your first step up.' : s.stage === 'middle' ? 'More of the same, and a little easier.' : 'Keeping what you’ve built.';
+  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${s.concern ? helpBtn('Review it with Dr Lee') : '<p class="lede" style="margin-top:8px">See you next month.</p>'}`;
 }
 
 /* ===================== Card 5. Is it worth it? ===================== */
@@ -584,8 +646,8 @@ function goalStrip(s){
   if (g.reached) return `<div class="card goalrow"><span>Your goal</span><span class="quiet">Reached</span></div>`;
   return `<div class="card ${g.close ? 'goal' : ''}"><div class="goalrow"><span>${g.close ? `<b>${g.left}kg</b> to your goal` : 'Your goal'}</span><span class="quiet">${g.close ? `about ${g.weeks} weeks` : `${g.pc}%`}</span></div><div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div></div>`;
 }
-const pageFns = () => [cardLead, cardChange, cardPattern, cardNote, pageWorth].concat(asks() ? [pageQuestion] : []);
-const pageNames = () => ['Headline', 'Biggest change', 'Pattern', 'Care team', 'Worth it?'].concat(asks() ? ['Questions'] : []);
+const pageFns = () => (richOn(sc()) ? [cardLead, cardPattern, cardFar, cardNote, cardNext] : [cardLead, cardChange, cardPattern, cardNote, cardNext]).concat(asks() ? [pageQuestion] : []);
+const pageNames = () => (richOn(sc()) ? ['Biggest change', 'Something new', 'How far', 'Care team', 'What’s next'] : ['Headline', 'What’s behind it', 'Pattern', 'Care team', 'What’s next']).concat(asks() ? ['Questions'] : []);
 function story(s){
   const fns = pageFns(), names = pageNames(), i = Math.min(state.page, fns.length - 1), body = fns[i](s);
   const tint = i === 0 ? (leadText(s).amber ? 'amber' : 'lilac') : '';
@@ -599,16 +661,17 @@ function story(s){
 function full(s){
   const t = leadText(s), has = s.data !== 'none', w = has ? `${fmt(s.pct)}%` : s.wPct !== null ? (s.wPct >= 0 ? `${fmt(s.wPct)}%` : `+${fmt(-s.wPct)}%`) : '';
   const status = s.stall ? 'Below expected' : s.slow ? 'Under expected' : s.below ? (s.stage === 'early' ? 'Early days' : 'A little under') : s.stage === 'plateau' ? 'Holding' : 'On track';
-  const p = s.data === 'rich' ? pattern(s) : null;
+  const p = s.data === 'rich' ? pattern(s) : null, ms = metrics(s);
   return `<div class="story"><button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg full" id="screen">
       <div class="top"><p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">Your report</h1></div>
       ${t.cta || t.amber ? `<div class="sum ${t.amber ? 'amber' : ''}"><p class="sumline">${t.big} ${t.cap}</p>${t.cta ? helpBtn(t.cta) : ''}</div>` : ''}
-      <div class="card wcard"><div class="goalrow"><span><span class="lbl">Weight</span><span class="num">${w ? `${w}<small>${w[0] === '+' ? 'up' : 'down'}</small>` : '<button class="link" data-act="ask">+ Add a weigh-in</button>'}</span></span>${has ? `<span class="chip ${s.stall ? 'amber' : ''}">${status}</span>` : ''}</div>${chart(s, !has, 104)}</div>
-      <div class="tiles">${metrics(s).map(m => tile(m, s)).join('')}</div>
+      <div class="card wcard"><div class="goalrow"><span><span class="lbl">Weight</span><span class="num">${w ? `${w}<small>${w[0] === '+' ? 'up' : 'down'}</small>` : '<button class="link" data-act="ask">+ Add a weigh-in</button>'}</span></span>${has ? `<span class="chip ${s.stall ? 'amber' : ''}">${status}</span>` : ''}</div>${chart(s, !has, 92)}</div>
+      <p class="grp">How you feel</p><div class="tiles">${ms.slice(0, 4).map(m => tile(m, s)).join('')}</div>
+      <p class="grp">Your body</p><div class="tiles">${ms.slice(4).map(m => tile(m, s)).join('')}</div>
       ${goalStrip(s)}
       ${asks() && !state.qDone ? `<div class="card ask"><span>Three quick questions<small class="quiet" style="display:block">${s.concern ? 'So your care team has the full picture.' : 'They fill in the empty tiles.'}</small></span><button class="link" data-act="ask">Answer</button></div>` : ''}
-      ${p ? `<div class="card"><p class="why">${p[0]}</p>${patternViz(p)}</div>` : ''}
+      ${p ? `<div class="card"><p class="why">${p[0]}</p>${patternViz(p)}</div><div class="card wcard"><p class="lbl">Since week 1</p>${farRows(s)}</div>` : ''}
       ${cardNote(s, true)}${pageWorth(s, true)}
       <button class="btn soft" data-act="open">Replay the story</button>
     </main></div>${sheet(s)}${tileSheet(s)}`;
