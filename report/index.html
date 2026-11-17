@@ -510,6 +510,13 @@ function cardChange(s, kicker){
   if (s.data === 'none') return big('What we know', '4 of 4', 'doses on time', berries(4, 4));
   if (s.data === 'light') return big('This month', '2', 'weigh-ins', berries(2, 4) + '<p class="quiet" style="margin-top:12px">Four would show your trend.</p>');
   if (s.below && s.stage !== 'early') return big('Your dose', `${s.dose}mg`, 'your current dose', mini(ser(s.dose, s.dose, 'step'), 'step', false, 300, 70, 'Dose') + '<p class="quiet">A dose review is ready when you are.</p>');
+  // The opening is whichever number moved most this month, relative to its own scale. It is not always the same metric.
+  if (richOn(s)){
+    const scale = { app: [10, -1], side: [7, -1], energy: [5, 1], sleep: [3, 1], steps: [5, 1], waist: [15, -1], hba: [1.5, -1] };
+    const top = Object.keys(scale).filter(k => v[k]).map(k => ({ k, a: v[k][0], b: v[k][1], score: (v[k][1] - v[k][0]) * scale[k][1] / scale[k][0] })).sort((x, y) => y.score - x.score)[0];
+    const say = { side: [`${top.b} day${top.b === 1 ? '' : 's'}`, `of nausea a week, from ${top.a}`, 'bars'], steps: [`${fmt(top.b)}k`, `steps a day, from ${fmt(top.a)}k`, 'line'], hba: [`${fmt(top.b)}%`, `blood sugar (HbA1c), from ${fmt(top.a)}%`, 'line'], sleep: [`${fmt(top.b)}h`, `of sleep a night, from ${fmt(top.a)}h`, 'line'], energy: [`${top.b}/5`, `energy, from ${top.a}`, 'bars'], waist: [`${top.b}cm`, `waist, from ${top.a}cm`, 'line'] }[top.k];
+    if (say) return big('Biggest change', say[0], say[1], mini(ser(top.a, top.b, say[2]), say[2], false, 300, 80, say[1]) + `<p class="quiet" style="margin-top:8px">Week by week, ${s.stage === 'early' ? 'since you started' : 'this month'}.</p>`);
+  }
   if (s.stage === 'early') return big('Biggest change', `${v.side[1]} day${v.side[1] === 1 ? '' : 's'}`, `of nausea a week, from ${v.side[0]}`, mini(ser(...v.side, 'bars'), 'bars', false, 300, 80, 'Nausea days a week'));
   const quote = s.stage === 'middle' ? 'I eat when I’m hungry, and stop when I’m full.' : 'I don’t really think about it any more.';
   const fromStart = s.stage === 'plateau' && !s.slow, was = fromStart ? START_V.app : v.app[0];
@@ -638,21 +645,23 @@ function seen(s){
   if (state.worth === 'unsure' || state.worth === 'no') L.push('You’re not feeling good about your progress');
   return L.length ? L : ['Your doses have arrived on time'];
 }
+const TOPICS = ['Side effects', 'My dose', 'My progress', 'Something else'];
 function sheet(s){
   const h = state.help; if (!h) return '';
-  // No forms: she just says it. June listens; a person on her care team reads it, or June talks it through first. (Scripted.)
+  // Two ways in, like the rest of the app: tap a topic, or hold to talk to June. June listens; a person on her care team reads it, or June talks it through first. (Scripted.)
   const said = s.flags.includes('side') ? 'The nausea is most days now, and it’s wearing me down.' : s.flags.includes('gain') ? 'My weight’s gone up and I’m not sure why.' : s.stuck ? 'I’m still on the starter dose and I’m not sure it’s doing much.' : s.slow ? 'I’m doing everything, and I’d like to know if my plan is right.' : state.worth && state.worth !== 'yes' ? 'I’m not sure how I feel about my progress.' : 'I’d like to talk through how it’s going.';
   const mic = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   let body;
-  if (h.step === 0) body = `<p class="big" id="sh-t">Just say it.</p><p class="quiet">No forms. June listens, and Dr Lee reads it today.</p>
-    <button class="mic" data-act="h-talk" aria-label="Hold to talk">${mic}</button><p class="quiet" style="text-align:center">Hold to talk</p>
+  if (h.step === 0) body = `<p class="big" id="sh-t">What would you like help with?</p>
+    <div class="opts">${TOPICS.map(t => `<button class="opt" data-act="h-pick" data-v="${t}">${t}</button>`).join('')}</div>
+    <p class="quiet" style="text-align:center;margin-top:18px">or talk to June</p><button class="mic" data-act="h-talk" aria-label="Hold to talk to June">${mic}</button><p class="quiet" style="text-align:center">Hold to talk</p>
     <p class="quiet" style="margin-top:18px">Your care team can already see:</p><ul class="checks">${seen(s).map(x => `<li>${x}</li>`).join('')}</ul>
     <p class="flag">Severe stomach pain, vomiting that won’t stop, or trouble breathing? Call 000 or see a GP now.</p>`;
-  else if (h.step === 1) body = `<p class="quiet" id="sh-t">Here’s what I heard</p><p class="quote" style="margin-top:6px">“${said}”</p>
+  else if (h.step === 1) body = `<p class="quiet" id="sh-t">${h.pick ? 'You’d like help with' : 'Here’s what I heard'}</p><p class="quote" style="margin-top:6px">${h.pick ? h.pick : `“${said}”`}</p>
     ${h.june ? `<div class="junesays"><p class="quiet">June</p><p>Thank you for telling me. That’s a fair thing to want looked at, and Dr Lee can go through it with you. Shall I send it?</p></div>` : ''}
     <button class="btn" data-act="h-send" data-v="prescriber">Send to Dr Lee</button>
     ${h.june ? '' : '<button class="btn soft" data-act="h-june" style="margin-top:8px">Talk it through with June first</button>'}
-    <button class="link" data-act="h-back" style="display:block;margin:6px auto 0">Say it again</button>`;
+    <button class="link" data-act="h-back" style="display:block;margin:6px auto 0">${h.pick ? 'Change it' : 'Say it again'}</button>`;
   else body = `<p class="big" id="sh-t">Sent to ${HELP[state.helpSent].who}.</p><p>${HELP[state.helpSent].sent}</p><p class="quiet">They can see your report and your answers. Keep taking your doses as prescribed in the meantime.</p><button class="btn soft" data-act="h-close">Done</button>`;
   return `<div class="scrim" data-act="h-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="sheet-in"><button class="x" data-act="h-close" aria-label="Close">×</button>${body}</div></div></div>`;
 }
@@ -748,9 +757,10 @@ document.addEventListener('click', e => {
     case 'chart': state.chart = !state.chart; render(); $('[data-act="chart"]').focus({ preventScroll: true }); break;
     case 'worth': state.worth = v; render(); { const b = $(`[data-act="worth"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); } break;
     case 'help': state.help = { step: 0 }; render(); $('.x').focus(); break;
+    case 'h-pick': state.help = { step: 1, pick: v }; render(); $('[data-act="h-send"]').focus(); break;
     case 'h-talk': state.help.step = 1; render(); $('.sheet').scrollTop = 0; $('[data-act="h-send"]').focus(); break;
     case 'h-june': state.help.june = true; render(); $('[data-act="h-send"]').focus(); break;
-    case 'h-back': state.help = { step: 0 }; render(); $('.mic').focus(); break;
+    case 'h-back': state.help = { step: 0 }; render(); $('.x').focus(); break;
     case 'h-send': state.helpSent = v; state.help.step = 2; render(); $('.x').focus(); break;
     case 'h-close': case 'h-scrim': closeHelp(); break;
     case 'nextmonth': nextMonth(); break;
