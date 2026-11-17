@@ -282,6 +282,7 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .wcard .lbl{display:block}
 .wcard .num{display:block;margin:0}
 .wcard .link{min-height:32px}
+.sumfact{font-size:13px;color:#3E4A44;margin-top:4px}
 .sumline{font-family:var(--serif);font-size:18px;line-height:1.3;color:var(--green)}
 .sum+.card{margin-top:8px}
 .full .card{margin-top:8px}
@@ -477,12 +478,14 @@ function tileSheet(s){
 /* ===================== Card 1. The headline ===================== */
 function leadText(s){
   const a = state.qDone, pct = `${fmt(s.pct)}%`;
-  if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg${s.stall ? ' · We haven’t heard from you in a while' : ''}`, cta: s.stall ? 'Get help' : '' };
-  if (s.stall) return { amber: true, big: s.data === 'none' ? 'Slower' : pct, cap: s.data === 'none' ? 'than we’d expect' : 'down · below where we’d expect', sub: 'There’s usually a simple reason.', cta: 'Get help', bar: s.data !== 'none' };
+  if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg${s.stall ? ' · We haven’t heard from you in a while' : ''}`, cta: s.stall ? 'Talk to my care team' : '' };
+  // When something needs a look, the tone is a warm check-in: we're here to help. No alarm colour, no big number.
+  const talk = 'Talk to my care team';
+  if (s.stall) return { warm: 'Let’s look at this together.', fact: s.data === 'none' ? 'Some of your answers suggest things have slowed. There’s usually a simple reason, and we’re here to help.' : `You’re ${pct} down, a little under where we’d expect by now. There’s usually a simple reason, and we’re here to help.`, cta: talk, bar: s.data !== 'none' };
   if (s.flags.length){ const f = s.flags[0];
-    return { amber: true, cta: 'Get help', ...(f === 'gain' ? { big: `+${fmt(-s.wPct)}%`, cap: 'since you started', sub: 'Worth a proper look.' } : f === 'side' ? { big: 'Most days', cap: 'with side effects', sub: 'Not something to push through.' } : { big: 'No change', cap: 'in appetite yet', sub: 'Often it’s the dose.' }) }; }
-  if (s.risk) return { big: pct, cap: 'down · a little behind', sub: 'Every dose taken. Easier to sort out early.', cta: 'Review it with my care team', bar: true };
-  if (s.slow) return { big: pct, cap: 'down · slower than we’d expect', sub: 'You’re doing your part. Worth a look.', cta: 'Review it with my care team', bar: true };
+    return { cta: talk, ...(f === 'gain' ? { warm: 'We’re here to help.', fact: `Your weight is up ${fmt(-s.wPct)}% since you started. That can happen, and it’s worth looking at together.` } : f === 'side' ? { warm: 'You shouldn’t have to push through this.', fact: 'Side effects most days is something your care team can ease.' } : { warm: 'Let’s check your dose is right for you.', fact: 'Your appetite hasn’t changed yet. That’s often the dose, and it’s simple to review.' }) }; }
+  if (s.risk) return { warm: 'A consistent month.', fact: `You took every dose. You’re ${pct} down, a little behind where we’d expect, and it’s easier to sort out early.`, cta: talk, bar: true };
+  if (s.slow) return { warm: 'You’re doing your part.', fact: `You’re ${pct} down, slower than we’d expect, and that isn’t down to you. We’d like to help find out why.`, cta: talk, bar: true };
   if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'From your answers today.' };
   if (s.stage === 'early') return { big: 'Month 1', cap: 'done', sub: s.below ? 'Weight usually moves after your first step up.' : 'Every dose taken. Side effects easing.' };
   if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
@@ -493,6 +496,7 @@ const richOn = s => s.data === 'rich' && !s.concern && !s.below;
 function cardLead(s){
   if (richOn(s)) return cardChange(s, `${s.month} · Month ${s.n}`);
   const t = leadText(s);
+  if (t.warm) return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.warm}</h1><p class="lede">${t.fact}</p>${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, s.stall)}</div>` : ''}${helpBtn(t.cta)}`;
   return `<p class="k">${s.month} · Month ${s.n}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${t.big}</span><span class="hero-cap">${t.cap}</span></h1>
     ${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, s.stall)}<p class="quiet" style="margin-top:12px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
 }
@@ -678,7 +682,7 @@ function full(s){
   return `<div class="story"><button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg full" id="screen">
       <div class="top"><p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">Your report</h1></div>
-      ${t.cta || t.amber ? `<div class="sum ${t.amber ? 'amber' : ''}"><p class="sumline">${t.big} ${t.cap}</p>${t.cta ? helpBtn(t.cta) : ''}</div>` : ''}
+      ${t.cta ? `<div class="sum"><p class="sumline">${t.warm || `${t.big} ${t.cap}`}</p>${t.fact ? `<p class="sumfact">${t.fact}</p>` : ''}${helpBtn(t.cta)}</div>` : ''}
       <div class="card wcard"><div class="goalrow"><span><span class="lbl">Weight</span><span class="num">${w ? `${w}<small>${w[0] === '+' ? 'up' : 'down'}</small>` : '<button class="link" data-act="ask">+ Add a weigh-in</button>'}</span></span>${has ? `<span class="chip ${s.stall ? 'amber' : ''}">${status}</span>` : ''}</div>${chart(s, !has, 92)}</div>
       <p class="grp">How you feel</p><div class="tiles">${ms.slice(0, 4).map(m => tile(m, s)).join('')}</div>
       <p class="grp">Your body</p><div class="tiles">${ms.slice(4).map(m => tile(m, s)).join('')}</div>
