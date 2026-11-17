@@ -478,7 +478,7 @@ function tileSheet(s){
 /* ===================== Card 1. The headline ===================== */
 function leadText(s){
   const a = state.qDone, pct = `${fmt(s.pct)}%`;
-  if (s.data === 'none' && !a) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg`, cta: s.stall ? 'Talk to my care team' : '' };
+  if (s.data === 'none' && !a && !s.stall) return { big: `Month ${s.n}`, cap: 'on treatment', sub: `${s.n === 1 ? 'Your first order' : `${s.n} orders`} on time · ${s.dose}mg`, cta: s.stall ? 'Talk to my care team' : '' };
   // The check-in is an open door, not a verdict: if you need help, we are one tap away. The care team makes any clinical call with her.
   const door = 'If you’d like a hand with anything, your care team is one tap away.';
   const talk = 'Talk to my care team';
