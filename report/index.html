@@ -483,7 +483,7 @@ function leadText(s){
     return { amber: true, cta: 'Get help', ...(f === 'gain' ? { big: `+${fmt(-s.wPct)}%`, cap: 'since you started', sub: 'Worth a proper look.' } : f === 'side' ? { big: 'Most days', cap: 'with side effects', sub: 'Not something to push through.' } : { big: 'No change', cap: 'in appetite yet', sub: 'Often it’s the dose.' }) }; }
   if (s.risk) return { big: pct, cap: 'down · a little behind', sub: 'Every dose taken. Easier to sort out early.', cta: 'Review it with my care team', bar: true };
   if (s.slow) return { big: pct, cap: 'down · slower than we’d expect', sub: 'You’re doing your part. Worth a look.', cta: 'Review it with my care team', bar: true };
-  if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'The scale tends to follow.' };
+  if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'From your answers today.' };
   if (s.stage === 'early') return { big: 'Month 1', cap: 'done', sub: s.below ? 'Weight usually moves after your first step up.' : 'Every dose taken. Side effects easing.' };
   if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
   return { big: '8 weeks', cap: `holding at ${pct} down`, sub: 'Holding steady is the result now.', bar: true };
@@ -569,13 +569,12 @@ function cardFar(s){
 }
 
 /* ===================== Last card. What's next: curious, not pressured ===================== */
+// Only dates that are actually scheduled. No predictions about how next month will feel.
 function nextSteps(s){
-  const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'];
+  const order = [NEXT_ORDER[state.monthIdx % NEXT_ORDER.length], 'Next order ships'], report = [`16 ${MONTHS[(state.monthIdx + 1) % MONTHS.length]}`, 'Your next report'];
   if (s.concern) return [['Now', `A review with Dr Lee${s.stuck ? ', starting with your dose' : ''}`], order];
-  if (s.data !== 'rich') return [[s.stage === 'early' ? 'In 9 days' : 'This month', s.stage === 'early' ? 'Step up to 5mg' : 'Your next dose review'], order, ['Next month', 'A weigh-in each week shows your trend']];
-  if (s.stage === 'early') return [['In 9 days', 'Step up to 5mg'], ['A few days after', 'Nausea may return, then settle'], order];
-  if (s.stage === 'middle') return [['In 9 days', 'Dose review'], order, ['Month 4, often', 'Clothes fit differently and energy steadies']];
-  return [['In 12 days', 'Your 6-month review'], order, ['Month 7, often', 'Habits start to feel automatic']];
+  const first = s.stage === 'early' ? ['In 9 days', 'Step up to 5mg'] : s.stage === 'middle' ? ['In 9 days', 'Dose review'] : ['In 12 days', 'Your 6-month review'];
+  return [first, order, report];
 }
 // One tip, only when her own numbers show something she is struggling with. Clinical concerns go to the care team instead.
 function tip(s){
@@ -587,7 +586,7 @@ function tip(s){
 }
 function cardNext(s){
   const t = s.concern ? null : tip(s);
-  const h = s.concern ? 'First, a proper look.' : s.stage === 'early' ? 'Your first step up.' : s.stage === 'middle' ? 'More of the same, and a little easier.' : 'Keeping what you’ve built.';
+  const h = s.concern ? 'First, a proper look.' : 'Coming up.';
   return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Review it with Dr Lee') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
 }
 
