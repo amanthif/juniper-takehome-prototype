@@ -337,12 +337,13 @@ const helpBtn = label => state.helpSent ? `<p style="margin-top:16px;font-weight
 
 /* The report is a story: six pages, one idea each. */
 /* The story lands on the full report, and every page can skip straight to it. */
-const PAGES = ['The answer', 'A question', 'Then and now', 'Why', 'From your care team', 'Worth it?'];
+// The questions come last: the story gives first, then asks, and the answers update the full report she lands on.
+const PAGES = ['The answer', 'Then and now', 'Why', 'From your care team', 'Worth it?', 'A few questions'];
 
 /* ===================== Page 1. The answer ===================== */
 function leadText(s){
   const a = state.qDone;
-  if (s.data === 'none' && !a) return { h: `Month ${s.n} on treatment.`, p: `${s.n === 1 ? 'Your first order arrived' : `${s.n} orders have arrived`} on time, and you’re on ${s.dose}mg.${s.stall ? ' We haven’t heard from you in a while.' : ''} One quick question, and the rest becomes about you.`, cta: s.stall ? 'Get help' : '' };
+  if (s.data === 'none' && !a) return { h: `Month ${s.n} on treatment.`, p: `${s.n === 1 ? 'Your first order arrived' : `${s.n} orders have arrived`} on time, and you’re on ${s.dose}mg.${s.stall ? ' We haven’t heard from you in a while.' : ''} A few questions at the end make next month’s about you.`, cta: s.stall ? 'Get help' : '' };
   if (s.stall) return { amber: true, h: 'Things have slowed more than we’d expect.', p: s.data === 'none' ? 'Some of your answers suggest things have slowed. There’s usually a reason, and it’s often simple to fix.' : `You’re ${fmt(s.pct)}% down, which is below where we’d expect at month ${s.n}. There’s usually a reason, and it’s often simple to fix.`, cta: 'Get help' };
   if (s.flags.length){ const f = s.flags[0];
     return { amber: true, cta: 'Get help', ...(f === 'gain' ? { h: 'Your weight has gone up since you started.', p: 'That isn’t what we’d expect on treatment, so it’s worth a proper look.' }
@@ -360,12 +361,12 @@ function pageAnswer(s){
   return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.h}</h1><p class="lede">${t.p}</p>${t.cta ? helpBtn(t.cta) : ''}`;
 }
 
-/* ===================== Page 2. One question at a time ===================== */
+/* ===================== Last page. One question at a time ===================== */
 function pageQuestion(s){
   if (state.qDone) return `<p class="k">Thank you</p><h1 class="lead" id="lead" tabindex="-1">Your report is updated.</h1><p class="lede">${s.concern ? 'Your care team can see your answers.' : s.data === 'rich' ? 'Next month’s will stay accurate.' : 'Next month’s will have more of you in it.'}</p>`;
   const i = state.qi;
   if (i < QS.length){ const [k, text, opts] = QS[i];
-    return `<p class="k">Question ${i + 1} of ${QS.length} · ${s.concern ? 'so your care team has the full picture' : 'your answers shape the next pages'}</p><h1 class="lead sm" id="lead" tabindex="-1">${text}</h1>
+    return `<p class="k">Question ${i + 1} of ${QS.length} · ${s.concern ? 'so your care team has the full picture' : s.data === 'rich' ? 'your monthly check-in' : 'your answers update your report'}</p><h1 class="lead sm" id="lead" tabindex="-1">${text}</h1>
       <div class="opts col">${opts.map(([v, l]) => `<button class="opt" data-act="q" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`; }
   const w = state.q.weight, d = w ? +(w - START_KG).toFixed(1) : 0;
   return `<p class="k">Last one, if you’d like</p><h1 class="lead sm" id="lead" tabindex="-1">What’s your weight today?</h1>
@@ -374,7 +375,7 @@ function pageQuestion(s){
     <button class="btn" data-act="qdone">Update my report</button>`;
 }
 
-/* ===================== Page 3. Then and now ===================== */
+/* ===================== Page 2. Then and now ===================== */
 function chart(s){
   const W = 320, H = 130, pl = 28, pr = 10, pt = 8, pb = 20, xs = s.week + 2, ymax = Math.ceil((band(xs).hi + 1) / 5) * 5;
   const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
@@ -441,7 +442,7 @@ function pageCompare(s, full){
     ${s.data === 'none' && !state.qDone ? `<p class="quiet" style="margin-top:12px">People at month ${s.n} usually notice ${TYPICAL[s.stage]}. That’s not your data yet.</p>` : ''}`;
 }
 
-/* ===================== Page 4. Why ===================== */
+/* ===================== Page 3. Why ===================== */
 function pageWhy(s, full){
   let t;
   if (s.slow) t = s.data === 'rich' ? 'Your appetite has dropped and you’re on the dose we planned, so this isn’t about effort. When the scale still lags, there’s usually a reason your prescriber can find.' : 'You’re on the dose we planned and your doses are on time. A weigh-in each week would help your prescriber see why the scale is lagging.';
@@ -450,13 +451,13 @@ function pageWhy(s, full){
         middle: 'Your energy has been highest in the weeks your nausea was lowest. Both have improved since you settled on this dose.',
         plateau: 'Your weight has stayed within 0.5kg for 8 weeks, while your waist and blood results kept improving. The change is holding.' }[s.stage];
   else if (s.data === 'light') t = 'We can see where you are, but not yet why. A weigh-in each week would let next month’s report show what’s driving your results.';
-  else t = state.qDone ? 'Your answers are the start of your story. Each one makes next month’s report more about you.' : 'We don’t know enough yet to say what’s driving your month. One answer changes that.';
+  else t = state.qDone ? 'Your answers are the start of your story. Each one makes next month’s report more about you.' : 'We don’t know enough yet to say what’s driving your month. A few answers at the end change that.';
   const words = s.data === 'rich' && !s.below && s.stage !== 'early' ? `<div class="card"><p class="quiet">In your words</p><p class="quote"><small>Week 1</small>“I think about food all day.”</p><p class="quote"><small>This month</small>“${s.stage === 'middle' ? 'I forgot to finish my lunch today.' : 'I don’t really think about it any more.'}”</p></div>` : '';
   if (full) return `<h2 class="sec">What’s behind it</h2><div class="card"><p class="why">${t}</p></div>${words}`;
   return `<p class="k">What’s behind it</p><h1 class="lead sm" id="lead" tabindex="-1">${t}</h1>${words}`;
 }
 
-/* ===================== Page 5. A note from her care team ===================== */
+/* ===================== Page 4. A note from her care team ===================== */
 function pageNote(s, full){
   const g = s.goal, clinical = s.concern, who = clinical ? ['Dr Lee', 'your prescriber', 'L'] : ['Priya', 'your coach', 'P'];
   let t;
@@ -475,7 +476,7 @@ function pageNote(s, full){
     <div class="card rows">${first}${R('Next order ships', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}${g && !g.close ? R('The goal you set', g.reached ? 'Reached' : `${g.pc}% of the way`) : ''}</div>`;
 }
 
-/* ===================== Page 6. Is it worth it? ===================== */
+/* ===================== Page 5. Is it worth it? ===================== */
 function pageWorth(s, full){
   const w = state.worth;
   const follow = w === 'yes' ? '<p class="lede">Glad to hear it. See you next month.</p>' : w ? `<p class="lede">Thanks for being honest. Your care team can help work out what would make it worth it.</p>${helpBtn('Talk to your care team')}` : '';
@@ -523,14 +524,14 @@ function lock(s){
   return `<div class="lock"><p>Monday 16 ${s.month}</p><div class="time">7:42</div><button class="notif" data-act="open"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>Your ${s.month} report is ready</b>${line}</button></div>`;
 }
 function story(s){
-  const i = state.page, body = [pageAnswer, pageQuestion, pageCompare, pageWhy, pageNote, pageWorth][i](s);
+  const i = state.page, body = [pageAnswer, pageCompare, pageWhy, pageNote, pageWorth, pageQuestion][i](s);
   const tint = i === 0 ? (leadText(s).amber ? 'amber' : 'lilac') : '';
-  const last = i === PAGES.length - 1, skip = i === 1 && !state.qDone;
+  const last = i === PAGES.length - 1, skip = last && !state.qDone;
   const skipFull = last ? '' : '<button class="link" data-act="full">Skip to full report</button>';
   return `<div class="story ${tint}"><div class="segs" role="progressbar" aria-valuemin="1" aria-valuemax="${PAGES.length}" aria-valuenow="${i + 1}" aria-label="Page ${i + 1} of ${PAGES.length}: ${PAGES[i]}">${PAGES.map((p, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
     <button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg" id="screen">${body}</main>
-    <div class="nav ${last ? '' : 'has-skip'}"><button class="btn soft" data-act="back" ${i === 0 ? 'disabled' : ''}>Back</button><button class="btn" data-act="next">${last ? 'See your full report' : skip ? 'Skip' : 'Next'}</button>${skipFull}</div></div>${sheet(s)}`;
+    <div class="nav ${last ? '' : 'has-skip'}"><button class="btn soft" data-act="back" ${i === 0 ? 'disabled' : ''}>Back</button><button class="btn" data-act="next">${skip ? 'Skip to full report' : last ? 'See your full report' : 'Next'}</button>${skipFull}</div></div>${sheet(s)}`;
 }
 // Where the story lands: the same content on one page, to come back to during the month.
 function full(s){
@@ -540,7 +541,7 @@ function full(s){
       <div class="top"><p class="k">Month ${s.n} on treatment</p><h1 class="lead" id="lead" tabindex="-1">Your ${s.month} report</h1></div>
       <div class="sum ${t.amber ? 'amber' : ''}"><h2 class="lead sm">${t.h}</h2><p class="lede">${t.p}</p>${t.cta ? helpBtn(t.cta) : ''}</div>
       ${pageCompare(s, true)}
-      ${state.qDone ? '' : `<div class="card ask"><span>Three quick questions<small class="quiet" style="display:block">${s.concern ? 'So your care team has the full picture.' : 'Your answers update this report.'}</small></span><button class="link" data-act="page" data-i="1">Answer</button></div>`}
+      ${state.qDone ? '' : `<div class="card ask"><span>Three quick questions<small class="quiet" style="display:block">${s.concern ? 'So your care team has the full picture.' : 'Your answers update this report.'}</small></span><button class="link" data-act="page" data-i="5">Answer</button></div>`}
       ${pageWhy(s, true)}${pageNote(s, true)}${pageWorth(s, true)}
       <button class="btn soft" data-act="open">Replay the story</button>
     </main></div>${sheet(s)}`;

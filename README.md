@@ -32,7 +32,7 @@ Non-Scale Victories and the Monthly Report make real progress visible. The Pre-e
 
 ## Prototype: Monthly Progress Report (`/report/`)
 
-A monthly moment, a few days before renewal, told as a six-page story she taps through: the answer, one question, last month and this month, why, a signed note from her care team, and "Is it worth it for you right now?". The story lands on a full report with a graph for each number, and every page can skip straight to it. Use the toggles on the left to change how much data we have, the stage and how she's progressing.
+A monthly moment, a few days before renewal, told as a six-page story she taps through: the answer, last month and this month, why, a signed note from her care team, "Is it worth it for you right now?", and a few questions at the end. The story lands on a full report with a graph for each number, and every page can skip straight to it. Use the toggles on the left to change how much data we have, the stage and how she's progressing.
 
 ## Prototype: Non-Scale Victories (`/nsv/`)
 
