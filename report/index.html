@@ -273,6 +273,8 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .tl li:first-child::before{background:var(--green)}
 .tl li::after{content:"";position:absolute;left:5px;top:20px;bottom:0;width:2px;background:var(--line)}
 .tl li:last-child::after{display:none}
+.tl li:last-child{padding-bottom:6px}
+.tip b{font-weight:600}
 .wcard .lbl+.db{margin-top:8px}
 .chip{flex:none;font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--lilac);color:var(--lilac-ink)}
 .chip.amber{background:var(--amber);color:var(--amber-ink)}
@@ -544,9 +546,11 @@ function cardNote(s, full){
   else t = 'Eight weeks steady, and your blood results improved too. Holding is the goal now.';
   const R = (l, v) => `<div class="kv"><span>${l}</span><span>${v}</span></div>`;
   const first = s.stuck ? R('Dose review', 'Due now') : s.slow ? R('Review with Dr Lee', 'Ready when you are') : s.stage === 'early' ? R('Next step, to 5mg', 'In 9 days') : s.stage === 'middle' ? R('Dose review', 'In 9 days') : R('6-month review', 'In 12 days');
+  const rows = `<div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>`;
+  if (full && !clinical) return rows;
   return `${full ? '' : `<p class="k">From ${who[1]}</p>`}<div class="note"><p ${full ? '' : 'id="lead" tabindex="-1"'}>${t}</p><p class="sig"><i aria-hidden="true">${who[2]}</i><span>${who[0]}${full ? `, ${who[1]}` : ''}<small>Written with June, signed by ${who[0]}</small></span></p></div>
     ${clinical && !full ? helpBtn(`Review it with ${who[0]}`) : ''}
-    ${full ? `<div class="card rows">${first}${R('Next order', NEXT_ORDER[state.monthIdx % NEXT_ORDER.length])}</div>` : ''}`;
+    ${full ? rows : ''}`;
 }
 
 /* ===================== How far she's come: start and now on one line each ===================== */
@@ -573,9 +577,18 @@ function nextSteps(s){
   if (s.stage === 'middle') return [['In 9 days', 'Dose review'], order, ['Month 4, often', 'Clothes fit differently and energy steadies']];
   return [['In 12 days', 'Your 6-month review'], order, ['Month 7, often', 'Habits start to feel automatic']];
 }
+// One tip, only when her own numbers show something she is struggling with. Clinical concerns go to the care team instead.
+function tip(s){
+  const m = Object.fromEntries(metrics(s).filter(x => !x.empty).map(x => [x.k, x.now]));
+  if (m.side >= 1 && m.side < 5) return ['Nausea still shows up', 'Smaller meals on dose day usually ease it.'];
+  if (m.energy <= 2) return ['Energy is low', 'Protein at breakfast and water through the day usually help.'];
+  if (m.sleep < 6.5) return ['Sleep is short', 'A regular bedtime tends to help appetite too.'];
+  return null;
+}
 function cardNext(s){
+  const t = s.concern ? null : tip(s);
   const h = s.concern ? 'First, a proper look.' : s.stage === 'early' ? 'Your first step up.' : s.stage === 'middle' ? 'More of the same, and a little easier.' : 'Keeping what you’ve built.';
-  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${s.concern ? helpBtn('Review it with Dr Lee') : '<p class="lede" style="margin-top:8px">See you next month.</p>'}`;
+  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Review it with Dr Lee') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
 }
 
 /* ===================== Card 5. Is it worth it? ===================== */
@@ -646,8 +659,9 @@ function goalStrip(s){
   if (g.reached) return `<div class="card goalrow"><span>Your goal</span><span class="quiet">Reached</span></div>`;
   return `<div class="card ${g.close ? 'goal' : ''}"><div class="goalrow"><span>${g.close ? `<b>${g.left}kg</b> to your goal` : 'Your goal'}</span><span class="quiet">${g.close ? `about ${g.weeks} weeks` : `${g.pc}%`}</span></div><div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div></div>`;
 }
-const pageFns = () => (richOn(sc()) ? [cardLead, cardPattern, cardFar, cardNote, cardNext] : [cardLead, cardChange, cardPattern, cardNote, cardNext]).concat(asks() ? [pageQuestion] : []);
-const pageNames = () => (richOn(sc()) ? ['Biggest change', 'Something new', 'How far', 'Care team', 'What’s next'] : ['Headline', 'What’s behind it', 'Pattern', 'Care team', 'What’s next']).concat(asks() ? ['Questions'] : []);
+// A care team note only appears when there is something for them to say: a concern they are following up.
+const pageFns = () => { const s = sc(); return (richOn(s) ? [cardLead, cardPattern, cardFar] : [cardLead, cardChange, cardPattern]).concat(s.concern ? [cardNote] : [], [cardNext], asks() ? [pageQuestion] : []); };
+const pageNames = () => { const s = sc(); return (richOn(s) ? ['Biggest change', 'Something new', 'How far'] : ['Headline', 'What’s behind it', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
 function story(s){
   const fns = pageFns(), names = pageNames(), i = Math.min(state.page, fns.length - 1), body = fns[i](s);
   const tint = i === 0 ? (leadText(s).amber ? 'amber' : 'lilac') : '';
@@ -672,7 +686,7 @@ function full(s){
       ${goalStrip(s)}
       ${asks() && !state.qDone ? `<div class="card ask"><span>Three quick questions<small class="quiet" style="display:block">${s.concern ? 'So your care team has the full picture.' : 'They fill in the empty tiles.'}</small></span><button class="link" data-act="ask">Answer</button></div>` : ''}
       ${p ? `<div class="card"><p class="why">${p[0]}</p>${patternViz(p)}</div><div class="card wcard"><p class="lbl">Since week 1</p>${farRows(s)}</div>` : ''}
-      ${cardNote(s, true)}${pageWorth(s, true)}
+      ${cardNote(s, true)}${!s.concern && tip(s) ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${tip(s)[0]}.</b> ${tip(s)[1]}</p></div>` : ''}${pageWorth(s, true)}
       <button class="btn soft" data-act="open">Replay the story</button>
     </main></div>${sheet(s)}${tileSheet(s)}`;
 }
@@ -692,7 +706,7 @@ function freshVisit(){ state.q = {}; state.qi = 0; state.qDone = false; state.wP
 function openFull(){ state.opened = true; state.full = true; state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
 function go(i){ const n = pageFns().length; if (i >= n) return openFull(); state.opened = true; state.full = false; state.page = Math.max(0, Math.min(n - 1, i)); state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
 // Every answer is paid back straight away: the next page is built from it.
-function finish(){ state.qDone = true; state.wPrompt = false; render(); toast('Your report is updated'); }
+function finish(){ state.qDone = true; state.wPrompt = false; state.page = pageFns().length - 1; render(); toast('Your report is updated'); }
 // The flywheel: answering this month makes next month's report richer.
 function nextMonth(){
   const did = state.qDone, up = { none: 'light', light: 'rich', rich: 'rich' }[state.data];
