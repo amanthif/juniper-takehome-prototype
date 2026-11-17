@@ -509,7 +509,7 @@ function cardChange(s, kicker){
   if (s.data === 'light') return big('This month', '2', 'weigh-ins', berries(2, 4) + '<p class="quiet" style="margin-top:12px">Four would show your trend.</p>');
   if (s.below && s.stage !== 'early') return big('What’s behind it', `${s.dose}mg`, 'no step up yet', mini(ser(s.dose, s.dose, 'step'), 'step', true, 300, 70, 'Dose, unchanged') + '<p class="quiet">The most common reason progress slows.</p>');
   if (s.stage === 'early') return big('Biggest change', `${v.side[1]} day${v.side[1] === 1 ? '' : 's'}`, `of nausea a week, from ${v.side[0]}`, mini(ser(...v.side, 'bars'), 'bars', false, 300, 80, 'Nausea days a week'));
-  const quote = s.stage === 'middle' ? 'I forgot to finish my lunch today.' : 'I don’t really think about it any more.';
+  const quote = s.stage === 'middle' ? 'I eat when I’m hungry, and stop when I’m full.' : 'I don’t really think about it any more.';
   const fromStart = s.stage === 'plateau' && !s.slow, was = fromStart ? START_V.app : v.app[0];
   return big(s.slow ? 'What’s working' : 'Biggest change', `${v.app[1]}/10`, was === v.app[1] ? 'food noise, holding' : `food noise, from ${was}`, row(fromStart ? 'Week 1' : 'Last month', berries(was, 10)) + row('This month', berries(v.app[1], 10))) + `<p class="quote">“${quote}”<small>You, this month</small></p>`;
 }
