@@ -594,10 +594,10 @@ function cardNext(s){
 /* ===================== Card 5. Is it worth it? ===================== */
 function pageWorth(s, full){
   const w = state.worth;
-  const follow = w === 'yes' ? '<p class="lede">Glad to hear it. See you next month.</p>' : w ? `<p class="lede">Thanks for being honest. Your care team can help work out what would make it worth it.</p>${helpBtn('Talk to your care team')}` : '';
-  const opts = `<div class="opts col">${[['yes', 'Yes'], ['unsure', 'Not sure'], ['no', 'No']].map(([v, l]) => `<button class="opt" data-act="worth" data-v="${v}" aria-pressed="${w === v}">${l}</button>`).join('')}</div>${follow}`;
-  if (full) return `<h2 class="sec">One last thing</h2><div class="card"><p class="q">Is it worth it for you right now?</p>${opts}</div>`;
-  return `<p class="k">One last thing</p><h1 class="lead" id="lead" tabindex="-1">Is it worth it for you right now?</h1>
+  const follow = w === 'yes' ? '<p class="lede">Glad to hear it. See you next month.</p>' : w ? `<p class="lede">Thanks for telling us. Your care team can help with what isn’t working.</p>${helpBtn('Talk to your care team')}` : '';
+  const opts = `<div class="opts col">${[['yes', 'Good'], ['unsure', 'Mixed'], ['no', 'Not great']].map(([v, l]) => `<button class="opt" data-act="worth" data-v="${v}" aria-pressed="${w === v}">${l}</button>`).join('')}</div>${follow}`;
+  if (full) return `<h2 class="sec">One last thing</h2><div class="card"><p class="q">How are you feeling about your progress?</p>${opts}</div>`;
+  return `<p class="k">One last thing</p><h1 class="lead" id="lead" tabindex="-1">How are you feeling about your progress?</h1>
     ${opts}`;
 }
 
@@ -630,7 +630,7 @@ function seen(s){
   if (s.slow) L.push('Every dose taken, and stepped up on schedule', `${fmt(s.pct)}% down, under where we’d expect at month ${s.n}`);
   if (s.data !== 'none' && s.below) L.push(`${fmt(s.pct)}% down, below where we’d expect at month ${s.n}`);
   if (s.data === 'none' && !state.qDone) L.push('We haven’t heard from you in a few weeks');
-  if (state.worth === 'unsure' || state.worth === 'no') L.push('Treatment doesn’t feel worth it right now');
+  if (state.worth === 'unsure' || state.worth === 'no') L.push('You’re not feeling good about your progress');
   return L.length ? L : ['Your doses have arrived on time'];
 }
 const recommend = why => why === 'cost' ? 'support' : why === 'missed' ? 'coach' : 'prescriber';
