@@ -482,7 +482,7 @@ function leadText(s){
   // The check-in is an open door, not a verdict: if you need help, we are one tap away. The care team makes any clinical call with her.
   const door = 'If you’d like a hand with anything, your care team is one tap away.';
   const talk = 'Talk to my care team';
-  if (s.stall) return { warm: s.data === 'none' ? 'We’re here if you need us.' : `You’re ${pct} down so far.`, fact: door, cta: talk, bar: s.data !== 'none' };
+  if (s.stall) return { warm: 'You’re doing your part.', fact: `${s.data === 'none' ? 'Your doses are on time.' : `Every dose taken, and you’re ${pct} down so far.`} ${door}`, cta: talk, bar: s.data !== 'none' };
   if (s.flags.length){ const f = s.flags[0];
     return { cta: talk, ...(f === 'gain' ? { warm: 'We’re here if you need us.', fact: `Thanks for your weigh-in today. ${door}` } : f === 'side' ? { warm: 'You shouldn’t have to push through side effects.', fact: 'Your care team can ease them, and they’re one tap away.' } : { warm: 'We’re here if you need us.', fact: 'If you’d like to talk through your dose, your care team is one tap away.' }) }; }
   if (s.risk) return { warm: 'A consistent month.', fact: `You took every dose, and you’re ${pct} down so far. ${door}`, cta: talk, bar: true };
