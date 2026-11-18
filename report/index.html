@@ -179,6 +179,15 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .quote small{display:block;font-family:var(--sans);font-size:13px;color:var(--quiet)}
 .mic{display:grid;place-items:center;width:84px;height:84px;margin:20px auto 8px;border:0;border-radius:50%;background:var(--green);color:#fff;cursor:pointer;transition:transform .15s,background .15s}
 .mic.on{transform:scale(1.12);background:var(--lilac-ink)}
+.confetti{position:relative;height:40px;margin-bottom:4px}
+.confetti i{position:absolute;border-radius:50%;background:var(--lilac-ink);animation:pop .7s cubic-bezier(.2,1.4,.4,1) both}
+.confetti i.g{background:var(--green)}
+.confetti i.w{background:#fff}
+@keyframes pop{from{transform:translateY(14px) scale(.6)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.confetti i{animation:none}}
+.or{display:flex;align-items:center;gap:12px;color:var(--quiet);font-size:13px;margin:14px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.junesays b{font-weight:600}
 .junesays{background:var(--lilac);border-radius:16px;padding:12px 14px;margin-top:14px}
 .helpopt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:14px;margin-top:10px;cursor:pointer;min-height:44px}
 .helpopt.rec{border-color:var(--green)}
@@ -337,7 +346,7 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
       <fieldset><legend>Stage</legend><div class="seg-row" data-k="stage"></div></fieldset>
       <fieldset><legend>Progress</legend><div class="seg-row" data-k="progress"></div></fieldset>
       <fieldset><legend>Page</legend><div class="seg-row" id="pages"></div></fieldset>
-      <fieldset><legend>Her goal weight (on track, month 3)</legend><div class="seg-row" data-k="goal"></div></fieldset>
+      <fieldset><legend>Her goal weight (on track, month 3 or 6)</legend><div class="seg-row" data-k="goal"></div></fieldset>
       <fieldset><legend>Time</legend><div class="seg-row"><button data-act="nextmonth">Next month →</button></div></fieldset>
       <button class="reset" data-act="reset">Reset</button>
       <p class="foot">Sarah is fictional. All data and ranges are illustrative.</p>
@@ -371,6 +380,9 @@ const QS = [
   ['side', 'Any side effects this month?', [['none', 'None'], ['some', 'Some, manageable'], ['most', 'Most days']]],
   ['energy', 'How’s your energy compared with before you started?', [['better', 'Better'], ['same', 'The same'], ['worse', 'Worse']]],
 ];
+const MIC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="margin-right:8px"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+// What June picks up when she says it out loud: the three questions, plus everything on the empty tiles.
+const HEARD = [['Appetite', 'appetite', 'much', 'Much smaller'], ['Side effects', 'side', 'none', 'None'], ['Energy', 'energy', 'better', 'Better'], ['Sleep', 'sleep', 7, 'About 7 hours'], ['Steps', 'steps', 6, 'About 6,000 a day'], ['Waist', 'waist', 96, '96 cm']];
 const HELP = {
   prescriber: { who: 'Dr Lee', title: 'Your prescriber', desc: 'Reviews your dose and side effects.', sent: 'Dr Lee has your report and usually replies within a day.' },
   coach: { who: 'Priya', title: 'Your coach', desc: 'Ten minutes to make treatment fit your week.', sent: 'Priya has your report and usually replies the same day.' },
@@ -393,11 +405,11 @@ function sc(){
   // Concern also comes from what she tells us, not only the scale.
   const wPct = state.qDone && q.weight ? (START_KG - q.weight) / START_KG * 100 : null, flags = [];
   if (state.qDone){ if (wPct !== null && wPct < -1) flags.push('gain'); if (q.side === 'most') flags.push('side'); if (q.appetite === 'same' && state.stage !== 'early') flags.push('appetite'); }
-  // Goal weight: shown only to on-track users in active loss; emphasised when close and on pace. "Far off" is 15%, "Close" is 10%.
+  // Goal weight: shown only to on-track users in active loss with nothing flagged. The "about N weeks" line appears only when she is close and on pace to reach it, where a date pulls her forward and never one she is likely to miss. "Far off" is 15%, "Close" is 10%.
   let goal = null;
-  if (!below && !slow && state.data !== 'none'){
+  if (state.progress === 'on' && !flags.length && state.data !== 'none'){
     const total = START_KG * (state.goal === 'close' ? 0.10 : 0.15), done = START_KG * p.pct / 100, left = +(total - done).toFixed(1);
-    if (left <= 0) goal = state.stage === 'plateau' ? { reached: true } : null;
+    if (left <= 0) goal = state.stage === 'plateau' ? { reached: true, kg: +done.toFixed(1), goalKg: +(START_KG - total).toFixed(1), nowKg: +(START_KG - done).toFixed(1) } : null;
     else if (state.stage === 'middle') goal = { total, left, pc: Math.round(done / total * 100), close: left <= 3, weeks: Math.max(1, Math.round(left / (p.rate / 4.3))) };
   }
   return { ...st, ...p, below, slow, stall, risk, flags, wPct, goal, data: state.data, stage: state.stage, dose: DOSES[p.doseIdx], stuck: !!p.stuck, band: band(st.week), month: MONTHS[state.monthIdx % MONTHS.length], concern: stall || risk || slow || flags.length > 0 };
@@ -409,10 +421,6 @@ const wImplausible = w => w && ((w - START_KG) / START_KG > .03 || (START_KG - w
 /* ===================== Helpers ===================== */
 const $ = x => document.querySelector(x);
 function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2400); }
-function rangeBar(lost, b, amber){
-  const max = Math.max(b.hi * 1.35, lost * 1.1, 1), p = v => Math.max(0, Math.min(100, v / max * 100)).toFixed(1);
-  return `<div class="range ${amber ? 'stall' : ''}" role="img" aria-label="${fmt(lost)}% lost. We’d expect ${fmt(b.lo)} to ${fmt(b.hi)}%."><s style="left:${p(b.lo)}%;width:${p(b.hi - b.lo)}%"></s><u style="left:${p(lost)}%"></u></div>`;
-}
 const helpBtn = label => state.helpSent ? `<p style="margin-top:16px;font-weight:500">${HELP[state.helpSent].sent}</p>` : `<button class="btn" data-act="help">${label}</button>`;
 
 /* The report is a story: six pages, one idea each. */
@@ -434,19 +442,18 @@ function mini(v, type, warn, W = 150, H = 30, label = ''){
 }
 const berries = (n, total, warn) => `<span class="berries ${warn ? 'warn' : ''}" role="img" aria-label="${n} of ${total}">${Array.from({ length: total }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
 function chart(s, cap = true, H = 130){
-  const W = 320, pl = 28, pr = 10, pt = 8, pb = 20, xs = s.week + 2, ymax = Math.ceil((band(xs).hi + 1) / 5) * 5;
-  const has = s.data !== 'none', pct = has ? s.pct : s.wPct === null ? null : Math.max(0, s.wPct);
-  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
-  let up = '', dn = ''; for (let w = 0; w <= xs; w++){ up += `${X(w).toFixed(1)},${Y(band(w).hi).toFixed(1)} `; dn = `${X(w).toFixed(1)},${Y(band(w).lo).toFixed(1)} ` + dn; }
+  const W = 320, pl = 36, pr = 10, pt = 8, pb = 20, xs = s.week + 2;
+  const has = s.data !== 'none', pct = has ? s.pct : s.wPct === null ? null : Math.max(0, s.wPct), ymax = Math.max(5, Math.ceil(((pct || 0) + 1) / 5) * 5);
+  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (v / ymax), ease = w => (1 - Math.exp(-w / 22)) / (1 - Math.exp(-s.week / 22));
   const step = s.data === 'rich' ? 1 : Math.max(1, Math.floor(s.week / 2)), pts = []; if (has){ for (let w = 0; w < s.week; w += step) pts.push([w, pct * ease(w)]); pts.push([s.week, pct]); }
   const col = 'var(--green)'; // no warning colour on her own data
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight against where we’d expect" style="width:100%;display:block;margin-top:8px">
-    <polygon points="${up}${dn}" fill="var(--berry)" opacity=".6"/>${pts.length ? `<path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Your weight, week by week" style="width:100%;display:block;margin-top:8px">
+    <line x1="${pl}" y1="${Y(0)}" x2="${W - pr}" y2="${Y(0)}" stroke="var(--line)" stroke-width="1.5"/>${pts.length ? `<path d="${pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
     ${pts.slice(0, -1).map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="9" fill="transparent"><title>${p[0] ? `Week ${p[0]}` : 'Start'}: ${fmt(p[1])}% down</title></circle>`).join('')}
     ${pct !== null ? `<circle cx="${X(s.week)}" cy="${Y(pct).toFixed(1)}" r="6" fill="${col}" stroke="#fff" stroke-width="3"><title>Week ${s.week}: ${fmt(pct)}% down</title></circle>` : ''}
     <text x="${pl}" y="${H - 3}" font-size="11" fill="#5B655F">Start</text><text x="${X(s.week)}" y="${H - 3}" font-size="11" fill="#5B655F" text-anchor="middle">Week ${s.week}</text>
-    <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
-    ${cap ? `<p class="quiet">${has ? 'The shaded band is where we’d expect you to be.' : `The shaded band is where people at month ${s.n} usually are.`}</p>` : ''}`;
+    <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">−${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
+    ${cap && !has ? '<p class="quiet">A weigh-in each week draws your line here.</p>' : ''}`;
 }
 
 /* ===================== Her numbers ===================== */
@@ -469,7 +476,8 @@ function metrics(s){
   const ontime = () => out.push({ k: 'ontime', label: 'Doses on time', then: null, now: 4, unit: 'of 4', berries: [4, 4], src: 'From your orders' });
   app(); side(); energy();
   if (rich){ M('waist', 'Waist', v.waist, 'cm', 'line', 'From your measurements'); M('sleep', 'Sleep', v.sleep, 'h a night', 'line', 'From your wearable'); M('steps', 'Steps', v.steps, 'k a day', 'line', 'From your wearable'); dose(); v.hba ? M('hba', 'Blood sugar', v.hba, '% HbA1c', 'line', 'From your blood tests') : ontime(); }
-  else { dose(); ontime(); E('waist', 'Waist'); E('sleep', 'Sleep'); E('steps', 'Steps'); }
+  else { const told = (k, label, unit) => a && q[k] ? M(k, label, [null, q[k]], unit, 'line', 'From what you told June today', { isNew: true }) : E(k, label);
+    dose(); ontime(); told('waist', 'Waist', 'cm'); told('sleep', 'Sleep', 'h a night'); told('steps', 'Steps', 'k a day'); }
   return ['app', 'side', 'energy', 'sleep', 'waist', 'steps', 'dose', 'hba', 'ontime'].map(k => out.find(m => m.k === k)).filter(Boolean);
 }
 function tile(m, s){
@@ -500,7 +508,7 @@ function leadText(s){
   if (s.slow) return { warm: 'You’re doing your part.', fact: `Every dose taken, and you’re ${pct} down so far. ${door}`, cta: talk, bar: true };
   if (s.data === 'none') return { big: 'It’s started', cap: 'your appetite has changed', sub: 'From your answers today.' };
   if (s.stage === 'early') return { big: 'Month 1', cap: 'done', sub: s.below ? 'Weight usually moves after your first step up.' : 'Every dose taken. Side effects easing.' };
-  if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
+  if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: 'Week by week, since you started.', bar: true };
   return { big: '8 weeks', cap: `holding at ${pct} down`, sub: 'Holding steady is the result now.', bar: true };
 }
 // Weight is not the automatic hero. With full data and nothing to flag, the story opens on a link between two of her numbers: something only a month of data can show, and something the everyday home screen does not.
@@ -508,9 +516,20 @@ const richOn = s => s.data === 'rich' && !s.concern && !s.below;
 function cardLead(s){
   if (richOn(s)) return cardPattern(s, `${s.month} · Month ${s.n}`);
   const t = leadText(s);
-  if (t.warm) return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.warm}</h1><p class="lede">${t.fact}</p>${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, false)}</div>` : ''}${helpBtn(t.cta)}`;
+  if (t.warm) return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.warm}</h1><p class="lede">${t.fact}</p>${t.bar ? `<div class="viz">${chart(s, false, 100)}</div>` : ''}${helpBtn(t.cta)}`;
   return `<p class="k">${s.month} · Month ${s.n}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${t.big}</span><span class="hero-cap">${t.cap}</span></h1>
-    ${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, false)}<p class="quiet" style="margin-top:12px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
+    ${t.bar ? `<div class="viz">${chart(s, false, 100)}<p class="quiet" style="margin-top:8px">${t.sub}</p></div>` : `<p class="lede">${t.sub}</p>`}${t.cta ? helpBtn(t.cta) : ''}`;
+}
+
+/* ===================== Goal reached: celebrate it, then point at what comes next ===================== */
+// Reaching the goal is not the end of the story. The next job is keeping it off, and that is why she stays.
+function cardGoal(s){
+  const g = s.goal, dots = [[6, 6, 14], [20, 20, 9], [34, 2, 12], [50, 14, 16], [64, 0, 10], [78, 18, 13], [92, 4, 9], [13, 30, 8], [70, 30, 8], [42, 30, 7]];
+  return `<div class="confetti" aria-hidden="true">${dots.map(([x, y, r], i) => `<i style="left:${x}%;top:${y}px;width:${r}px;height:${r}px;animation-delay:${i * 70}ms" class="${i % 3 === 0 ? 'g' : i % 3 === 1 ? 'w' : ''}"></i>`).join('')}</div>
+    <p class="k">Goal reached</p><h1 id="lead" tabindex="-1"><span class="hero-num">${fmt(g.kg)}kg</span><span class="hero-cap">down. You did it.</span></h1>
+    <div class="viz"><div class="db"><span>Weight</span><span class="track" role="img" aria-label="${START_KG}kg at the start, ${fmt(g.nowKg)}kg now. Your goal was ${fmt(g.goalKg)}kg."><b style="left:8%;width:84%"></b><i class="a" style="left:92%"></i><i class="b" style="left:8%"></i></span><span><span class="quiet">${START_KG} →</span> ${fmt(g.nowKg)}kg</span></div>
+      <p class="quiet" style="margin-top:10px">Your goal was ${fmt(g.goalKg)}kg.</p></div>
+    <p class="lede" style="margin-top:16px">Now we help you keep it off.</p>`;
 }
 
 /* ===================== Card 2. The biggest change ===================== */
@@ -550,7 +569,8 @@ function patternChips(s){
 const patternViz = p => p.slice(1).map(([l, x]) => `<div class="prow"><span class="quiet">${l}</span>${x}</div>`).join('');
 function cardPattern(s, kicker){
   if (s.data !== 'rich'){ const empty = metrics(s).filter(m => m.empty);
-    return `<p class="k">Next month could show</p><h1 class="lead" id="lead" tabindex="-1">${state.qDone ? 'More of you.' : 'A lot more of you.'}</h1><div class="tiles">${empty.slice(0, 4).map(m => tile(m, s)).join('')}</div><p class="quiet" style="margin-top:12px">${state.qDone ? 'A weigh-in each week adds the rest.' : 'A few taps at the end fill these in.'}</p>`; }
+    if (!empty.length) return `<p class="k">From what you told June</p><h1 class="lead" id="lead" tabindex="-1">All filled in.</h1><div class="tiles">${metrics(s).filter(m => m.isNew).slice(-4).map(m => tile(m, s)).join('')}</div><p class="quiet" style="margin-top:12px">Next month shows how each one has moved.</p>`;
+    return `<p class="k">Next month could show</p><h1 class="lead" id="lead" tabindex="-1">${state.qDone ? 'More of you.' : 'A lot more of you.'}</h1><div class="tiles">${empty.slice(0, 4).map(m => tile(m, s)).join('')}</div>${state.qDone ? '<p class="quiet" style="margin-top:12px">The rest fills in as you log it.</p>' : `<div class="junesays"><p><b>Quicker with June.</b> Say it in one sentence and we’ll fill it in for you.</p><button class="btn" data-act="qsay-go" style="margin-top:12px">${MIC}Talk to June</button></div><p class="quiet" style="margin-top:12px;text-align:center">Or add them yourself at the end.</p>`}`; }
   const p = pattern(s);
   return `<p class="k">${kicker || 'Something you might not have noticed'}</p><h1 class="lead" id="lead" tabindex="-1">${p[0]}</h1>${patternChips(s)}<div class="viz">${patternViz(p)}</div>`;
 }
@@ -607,19 +627,19 @@ function tip(s){
   if (m.sleep < 6.5) return ['Sleep is short', 'A regular bedtime tends to help appetite too.'];
   return null;
 }
-// The month ahead on one line: a tick for each weekly dose, a dot for each scheduled date. Dates only, no predictions.
-function ahead(s){
-  const span = 35, at = d => (d / span * 100).toFixed(1), rev = s.concern ? null : s.stage === 'plateau' ? 12 : 9;
-  const doses = [3, 10, 17, 24, 31];
-  return `<div class="ahead" role="img" aria-label="The next five weeks: a dose each Thursday${rev ? `, a review in ${rev} days` : ''}, and your next order.">
-    <div class="line">${doses.map(d => `<i class="dose" style="left:${at(d)}%"></i>`).join('')}${rev ? `<i class="ev" style="left:${at(rev)}%"></i>` : ''}<i class="ev order" style="left:100%"></i><i class="now"></i></div>
-    <div class="ends quiet"><span>Today</span><span>${NEXT_ORDER[state.monthIdx % NEXT_ORDER.length]}</span></div>
-    <p class="quiet legend"><i class="dose"></i>Dose day, each Thursday</p></div>`;
-}
+// The last card looks forward. Close to her goal and on pace, it leads with the goal. Otherwise she chooses what next month's report opens with: curious, her call, and a reason to come back. Dates stay small.
+const WATCH = [['energy', 'Energy'], ['sleep', 'Sleep'], ['strength', 'Strength'], ['clothes', 'How my clothes fit'], ['food noise', 'Food noise'], ['any', 'Surprise me']];
 function cardNext(s){
-  const t = s.concern ? null : tip(s);
-  const h = 'Coming up.';
-  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1>${ahead(s)}<ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Talk to my care team') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
+  const t = s.concern ? null : tip(s), g = s.goal;
+  // One date only: the next thing that changes her treatment. Order shipping lives in the app, not in a story about her month.
+  const first = nextSteps(s)[0], dates = s.concern ? '' : `<div class="card rows" style="margin-top:14px"><div class="kv"><span>${first[1]}</span><span>${first[0]}</span></div></div>`;
+  const tipCard = t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : '';
+  if (g && g.close) return `<p class="k">What’s next</p><h1 id="lead" tabindex="-1"><span class="hero-num">${g.left}kg</span><span class="hero-cap">to your goal</span></h1>
+    <div class="viz"><div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div><p class="quiet" style="margin-top:12px">About ${g.weeks} weeks at the pace you’re going.</p></div>${dates}${tipCard}`;
+  const w = state.watch;
+  return `<p class="k">What’s next</p><h1 class="lead sm" id="lead" tabindex="-1">What should we watch for you next month?</h1>
+    <div class="opts" style="margin-top:14px">${WATCH.map(([k, l]) => `<button class="opt" data-act="watch" data-v="${k}" aria-pressed="${w === k}">${l}</button>`).join('')}</div>
+    ${w ? `<p class="lede" style="margin-top:14px" role="status">${w === 'any' ? 'Next month opens with whatever moved most.' : `Next month opens with your ${w}.`}</p>` : ''}${dates}${tipCard}${s.concern ? helpBtn('Talk to my care team') : ''}`;
 }
 
 /* ===================== Card 5. Is it worth it? ===================== */
@@ -636,10 +656,16 @@ function pageWorth(s, full){
 /* ===================== Last card, when we need more data. One question at a time ===================== */
 function pageQuestion(s){
   if (state.qDone) return `<p class="k">Thank you</p><h1 class="lead" id="lead" tabindex="-1">Your report is updated.</h1><p class="lede">${s.concern ? 'Your care team can see your answers.' : s.data === 'rich' ? 'Next month’s will stay accurate.' : 'Next month’s will have more of you in it.'}</p>`;
+  // Tap through, or tell June all three in one breath. Most people do a bit of both. (Scripted.)
+  if (state.qSay === 'listening') return `<p class="k">June is listening</p><h1 class="lead sm" id="lead" tabindex="-1" aria-live="polite">“Appetite’s much smaller, no side effects, more energy. I’m sleeping about seven hours, walking six thousand steps, and my waist is 96.”</h1>`;
+  if (state.qSay === 'confirm') return `<p class="k">Here’s what June heard</p><h1 class="lead sm" id="lead" tabindex="-1">Is this right?</h1>
+    <div class="card rows" style="margin-top:14px">${HEARD.map(([l, , , v]) => `<div class="kv"><span>${l}</span><span>${v}</span></div>`).join('')}</div>
+    <button class="btn" data-act="qsay-ok">That’s right</button><button class="link" data-act="qsay-no" style="display:block;margin:6px auto 0">Tap my answers instead</button>`;
   const i = state.qi;
   if (i < QS.length){ const [k, text, opts] = QS[i];
     return `<p class="k">Question ${i + 1} of ${QS.length} · ${s.concern ? 'so your care team has the full picture' : s.data === 'rich' ? 'your monthly check-in' : 'your answers update your report'}</p><h1 class="lead sm" id="lead" tabindex="-1">${text}</h1>
-      <div class="opts col">${opts.map(([v, l]) => `<button class="opt" data-act="q" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`; }
+      <div class="opts col">${opts.map(([v, l]) => `<button class="opt" data-act="q" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>
+      <p class="or"><span>or</span></p><button class="btn soft" data-act="qsay" style="margin-top:0">${MIC}Tell June instead</button><p class="quiet" style="text-align:center;margin-top:8px">Say it once and June fills in everything.</p>`; }
   const w = state.q.weight, d = w ? +(w - START_KG).toFixed(1) : 0;
   return `<p class="k">Last one, if you’d like</p><h1 class="lead sm" id="lead" tabindex="-1">What’s your weight today?</h1>
     <div class="wt"><label class="sr-only" for="wt">Weight in kilograms</label><input id="wt" type="number" inputmode="decimal" min="40" max="250" step="0.1" placeholder="kg" value="${w || ''}"><span class="quiet">kg</span></div>
@@ -687,30 +713,30 @@ function sheet(s){
 
 /* ===================== Render ===================== */
 function lock(s){
-  const line = s.stall ? 'Come and see your month.' : s.risk || s.slow ? 'A consistent month. Come and see.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
+  const line = s.goal && s.goal.reached ? 'You reached your goal. Come and see your month!' : s.stall ? 'Come and see your month.' : s.risk || s.slow ? 'A consistent month. Come and see.' : s.stage === 'plateau' ? 'You’re holding your progress. Come and see your month.' : 'You’re making progress. Come and see what’s changed!';
   return `<div class="lock"><p>Monday 16 ${s.month}</p><div class="time">7:42</div><button class="notif" data-act="open"><span class="who"><i aria-hidden="true">J</i>June<span>now</span></span><b>Your ${s.month} report is ready</b>${line}</button></div>`;
 }
 function goalStrip(s){
   const g = s.goal; if (!g) return '';
-  if (g.reached) return `<div class="card goalrow"><span>Your goal</span><span class="quiet">Reached</span></div>`;
+  if (g.reached) return `<div class="card goal"><p class="k">Goal reached</p><p class="big">You did it. ${fmt(g.kg)}kg down.</p><p>Now we help you keep it off.</p></div>`;
   return `<div class="card ${g.close ? 'goal' : ''}"><div class="goalrow"><span>${g.close ? `<b>${g.left}kg</b> to your goal` : 'Your goal'}</span><span class="quiet">${g.close ? `about ${g.weeks} weeks` : `${g.pc}%`}</span></div><div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div></div>`;
 }
 // A care team note only appears when there is something for them to say: a concern they are following up.
-const pageFns = () => { const s = sc(); return (richOn(s) ? [cardLead, cardChange, cardFar] : [cardLead, cardChange, cardPattern]).concat(s.concern ? [cardNote] : [], [cardNext], asks() ? [pageQuestion] : []); };
-const pageNames = () => { const s = sc(); return (richOn(s) ? ['Something new', 'Biggest change', 'How far'] : ['Headline', 'Detail', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
+const pageFns = () => { const s = sc(); return (s.goal && s.goal.reached ? [cardGoal] : []).concat(richOn(s) ? [cardLead, cardChange, cardFar] : [cardLead, cardChange, cardPattern]).concat(s.concern ? [cardNote] : [], [cardNext], asks() ? [pageQuestion] : []); };
+const pageNames = () => { const s = sc(); return (s.goal && s.goal.reached ? ['Goal'] : []).concat(richOn(s) ? ['Something new', 'Biggest change', 'How far'] : ['Headline', 'Detail', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
 function story(s){
   const fns = pageFns(), names = pageNames(), i = Math.min(state.page, fns.length - 1), body = fns[i](s);
   const tint = i === 0 ? (leadText(s).warm ? 'amber' : 'lilac') : '';
   const last = i === fns.length - 1, skip = last && asks() && !state.qDone;
   return `<div class="story ${tint}"><div class="segs" role="progressbar" aria-valuemin="1" aria-valuemax="${fns.length}" aria-valuenow="${i + 1}" aria-label="Card ${i + 1} of ${fns.length}: ${names[i]}">${fns.map((p, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
     <button class="close" data-act="close" aria-label="Close the report">×</button>
-    <main class="pg" id="screen">${body}</main>
+    <main class="pg" id="screen">${i === 0 && state.watchPrev ? `<p class="chips" style="margin-bottom:10px"><span class="chip">You asked us to watch your ${state.watchPrev}</span></p>` : ''}${body}</main>
     <div class="nav ${last ? '' : 'has-skip'}"><button class="btn soft" data-act="back" ${i === 0 ? 'disabled' : ''}>Back</button><button class="btn" data-act="next">${skip ? 'Skip to full report' : last ? 'See your full report' : 'Next'}</button>${last ? '' : '<button class="link" data-act="full">Skip to full report</button>'}</div></div>${sheet(s)}${tileSheet(s)}`;
 }
 // Where the story lands: everything on one screen, to come back to during the month.
 function full(s){
   const t = leadText(s), has = s.data !== 'none', w = has ? `${fmt(s.pct)}%` : s.wPct !== null ? (s.wPct >= 0 ? `${fmt(s.wPct)}%` : `+${fmt(-s.wPct)}%`) : '';
-  const status = s.stall || s.slow || s.risk ? '' : s.below ? (s.stage === 'early' ? 'Early days' : '') : s.stage === 'plateau' ? 'Holding' : 'On track';
+  const status = s.stall || s.slow || s.risk ? '' : s.below ? (s.stage === 'early' ? 'Early days' : '') : s.stage === 'plateau' ? 'Holding' : '';
   const p = s.data === 'rich' ? pattern(s) : null, ms = metrics(s);
   return `<div class="story"><button class="close" data-act="close" aria-label="Close the report">×</button>
     <main class="pg full" id="screen">
@@ -732,13 +758,13 @@ function render(){
   const key = state.opened ? (state.full ? 'full' : state.page) : 'lock', old = $('#screen'), top = old && render._k === key ? old.scrollTop : 0;
   $('#app').innerHTML = !state.opened ? lock(s) : state.full ? full(s) : story(s);
   const scr = $('#screen'); if (scr) scr.scrollTop = top; render._k = key;
-  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; const off = k === 'goal' && !(state.stage === 'middle' && state.progress === 'on' && state.data !== 'none');
+  document.querySelectorAll('.seg-row[data-k]').forEach(el => { const k = el.dataset.k; const off = k === 'goal' && !(state.stage !== 'early' && state.progress === 'on' && state.data !== 'none');
     el.classList.toggle('wrap', k === 'progress');
     el.innerHTML = CONTROLS[k].map(([v, l]) => `<label ${off ? 'class="off"' : ''}><input type="radio" name="${k}" value="${v}" ${state[k] === v ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${l}</span></label>`).join(''); });
   const names = pageNames(); if (state.page > names.length - 1) state.page = names.length - 1;
   $('#pages').innerHTML = names.map((p, j) => `<button data-act="page" data-i="${j}" aria-pressed="${state.opened && !state.full && state.page === j}" title="${p}">${j + 1}</button>`).join('') + `<button data-act="full" aria-pressed="${state.opened && state.full}" title="The full report" style="flex:1.6">Full</button>`;
 }
-function freshVisit(){ state.q = {}; state.qi = 0; state.qDone = false; state.wPrompt = false; state.wOk = false; state.worth = null; state.chart = false; state.help = null; state.helpSent = null; state.tile = null; }
+function freshVisit(){ state.q = {}; state.qSay = null; state.qi = 0; state.qDone = false; state.wPrompt = false; state.wOk = false; state.worth = null; state.chart = false; state.help = null; state.helpSent = null; state.tile = null; }
 function openFull(){ state.opened = true; state.full = true; state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
 function go(i){ const n = pageFns().length; if (i >= n) return openFull(); state.opened = true; state.full = false; state.page = Math.max(0, Math.min(n - 1, i)); state.chart = false; render(); const l = $('#lead'); l && l.focus({ preventScroll: true }); }
 // Every answer is paid back straight away: the next page is built from it.
@@ -747,7 +773,7 @@ function finish(){ state.qDone = true; state.wPrompt = false; state.page = pageF
 function nextMonth(){
   const did = state.qDone, up = { none: 'light', light: 'rich', rich: 'rich' }[state.data];
   if (did) state.data = up;
-  state.monthIdx++; freshVisit(); state.opened = false; state.full = false; state.page = 0; render();
+  const watched = state.watch; state.monthIdx++; freshVisit(); state.watchPrev = watched && watched !== 'any' ? watched : null; state.watch = null; state.opened = false; state.full = false; state.page = 0; render();
   { const mo = MONTHS[state.monthIdx % MONTHS.length]; toast(did ? `${mo} report: her answers made it richer` : state.data === 'rich' ? `${mo} report` : `${mo} report: no answers, so nothing new`); }
 }
 function closeHelp(){ state.help = null; state.tile = null; render(); const b = $('[data-act="help"]') || $('#lead'); b && b.focus({ preventScroll: true }); }
@@ -770,6 +796,11 @@ document.addEventListener('click', e => {
     case 'tile': state.tile = el.dataset.k; render(); $('.x').focus(); break;
     case 'ask': case 'add': if (asks() && !state.qDone) go(pageFns().length - 1); else toast('Log it once in the app and it appears here next month'); break;
     case 'q': state.q[el.dataset.k] = v; state.qi++; if (state.qi === QS.length && state.data !== 'none') finish(); else { render(); const b = $('.pg .opt') || $('#wt'); b && b.focus({ preventScroll: true }); } break;
+    case 'qsay-go': state.page = pageFns().length - 1; // then listen, exactly as on the questions card
+    case 'qsay': state.qSay = 'listening'; render(); setTimeout(() => { if (state.qSay === 'listening'){ state.qSay = 'confirm'; render(); const b = $('[data-act="qsay-ok"]'); b && b.focus({ preventScroll: true }); } }, 1600); break;
+    case 'qsay-ok': HEARD.forEach(([, k, v]) => state.q[k] = v); state.qSay = null; state.qi = QS.length; if (state.data !== 'none') finish(); else { render(); const b = $('#wt'); b && b.focus({ preventScroll: true }); } break;
+    case 'qsay-no': state.qSay = null; render(); { const b = $('.pg .opt'); b && b.focus({ preventScroll: true }); } break;
+    case 'watch': state.watch = state.watch === v ? null : v; render(); { const b = $(`[data-act="watch"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); } break;
     case 'w-ok': state.wOk = true; finish(); break;
     case 'w-fix': state.wPrompt = false; render(); $('#wt').focus(); $('#wt').select(); break;
     case 'qdone': if (wImplausible(state.q.weight) && !state.wOk){ state.wPrompt = true; render(); const c = $('.wcheck button'); c && c.focus(); } else finish(); break;
