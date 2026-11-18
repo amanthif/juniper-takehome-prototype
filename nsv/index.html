@@ -309,7 +309,7 @@ function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('sh
 const plot = a => { const max = Math.max(1, ...a); return `<div class="plot" aria-hidden="true">${a.map(v => `<span><i style="bottom:${Math.round(v / max * 46)}px"></i></span>`).join('')}</div>`; };
 // Her own weight over time, as one small line. No band, no target.
 function spark(d){
-  const W = 300, H = 36, max = Math.max(...d.pts, .1), n = d.pts.length - 1, X = i => 6 + (W - 12) * i / n, Y = v => 6 + (H - 12) * (1 - v / max);
+  const W = 300, H = 36, max = Math.max(...d.pts, .1), n = d.pts.length - 1, X = i => 6 + (W - 12) * i / n, Y = v => 6 + (H - 12) * (v / max);
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${fmt(d.lost)}% of your body weight lost so far." style="width:100%;display:block;margin-top:10px"><path d="${d.pts.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('')}" fill="none" stroke="var(--berry)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${X(n)}" cy="${Y(d.pts[n]).toFixed(1)}" r="5" fill="var(--green)" stroke="#fff" stroke-width="2.5"/></svg>`;
 }
 

@@ -368,7 +368,7 @@ const SC = {
       { w: 13, t: 'Below expected range at full dose', s: 'Weigh-ins', k: 'warn' },
       { w: 14, t: 'Asked June “is this normal?”', s: 'June chat, AI-summarised', k: 'warn' },
     ],
-    notif: ['You’ve done everything right', 'Your results haven’t matched your effort. Let’s look at why.'],
+    notif: ['You’ve done everything right', 'I’d like your prescriber to take a proper look at your plan.'],
     say: { def: { t: 'My appetite’s about the same as before. No new medications. I’m a bit stuck, to be honest.', answers: { appetite: 'same', meds: 'no', feel: 'stuck' },
       reply: 'Thank you. That’s useful for your prescriber. Feeling stuck is understandable after this much effort.' } },
     opener: ['Hi Sarah, it’s June.', 'You’ve done everything right. Every dose and every step up, on schedule.', 'You shouldn’t have to wait and wonder, so I’d like a prescriber to take a proper look at your plan.'],
@@ -486,17 +486,20 @@ function doseAt(w){
 }
 function todayScreen(){
   const s = S(), w = state.week, sc = state.scenario, dose = doseAt(w);
-  // The same home screen as Non-Scale Victories. Nothing on it tells her anything is off.
+  // The same home screen as Non-Scale Victories. Nothing on it tells her anything is off: the expected range lives on our side of the screen, never hers.
   const lg = state.logged || {}, quiet = sc === 'drift' && w >= 8 && !state.logged;
-  const lead = state.logged ? ['Thanks. That’s logged.', 'June saved it for you, so there’s nothing to fill in.'] : quiet ? ['A slow start is normal while your dose is increasing.', 'Nothing new since your last visit.']
+  const lead = state.logged ? ['Thanks. That’s logged.', 'June saved it for you, so there’s nothing to fill in.'] : quiet ? ['Change builds while your dose is increasing.', 'Nothing new since your last visit.']
     : sc === 'noresp' && w >= 4 ? [`You’ve stepped up to ${dose}mg.`, 'Right on schedule. Each step brings you closer to your full dose.']
     : [w > 1 ? `You haven’t missed a dose in ${w} weeks.` : 'You’ve taken your first dose.', `You’re on ${dose}mg, right on schedule.`];
-  const weighed = w <= s.lastWeigh || !!lg.weight, b = band(w), lost = lg.weight ? (92 - QUICK.kg) / 92 * 100 : -s.pct(w), lo = -b.lo, hi = -b.hi, max = Math.max(hi * 1.35, 1), pc = v => Math.max(0, Math.min(100, v / max * 100)).toFixed(1);
-  const status = !weighed ? 'No weigh-in this week' : lost >= lo || w <= 2 ? `On track for week ${w}` : w < 9 ? 'Early days' : 'Holding';
+  const weighed = w <= s.lastWeigh || !!lg.weight, lost = lg.weight ? (92 - QUICK.kg) / 92 * 100 : -s.pct(w);
+  const pts = []; for (let i = 0; i <= Math.min(w, s.lastWeigh); i++) pts.push(-s.pct(i)); if (lg.weight) pts.push(lost);
+  const status = !weighed ? 'No weigh-in this week' : pts.length < 2 || pts[pts.length - 1] - pts[pts.length - 2] > .08 ? 'Down this week' : 'Steady this week';
+  const SW = 300, SH = 36, mx = Math.max(...pts, .1), n = Math.max(pts.length - 1, 1), sx = i => 6 + (SW - 12) * i / n, sy = v => 6 + (SH - 12) * (v / mx);
+  const spark = `<svg viewBox="0 0 ${SW} ${SH}" role="img" aria-label="${status}" style="width:100%;display:block;margin-top:10px"><path d="${pts.map((v, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join('')}" fill="none" stroke="#CFC3F5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${sx(pts.length - 1).toFixed(1)}" cy="${sy(pts[pts.length - 1]).toFixed(1)}" r="5" fill="#1E3B2C" stroke="#fff" stroke-width="2.5"/></svg>`;
   return `<main class="screen" id="screen">${floatbar()}<div class="pad">
     <h2 class="hello">Hey Sarah</h2>
     <div class="hero"><p class="k">Week ${w}</p><p class="big">${lead[0]}</p><p>${lead[1]}</p></div>
-    <div class="card"><div class="kv"><span>Weight</span><span>${status}</span></div>${weighed ? `<div class="range" role="img" aria-label="${status}"><s style="left:${pc(lo)}%;width:${pc(hi - lo)}%"></s><u style="left:${pc(lost)}%"></u></div>` : `<button class="btn soft" data-act="quick" style="margin-top:14px">${I.mic}<span style="margin-left:8px">Tell June instead</span></button>`}</div>
+    <div class="card"><div class="kv"><span>Weight</span><span>${status}</span></div>${weighed ? spark : `<button class="btn soft" data-act="quick" style="margin-top:14px">${I.mic}<span style="margin-left:8px">Tell June instead</span></button>`}</div>
     ${sc === 'dose' && w >= 4 ? `<div class="card"><p>Ready for 5mg?</p><p class="small muted">Step up whenever you feel ready.</p><button class="btn sm soft" data-act="todo">Not yet</button></div>` : ''}
     <div class="card"><div class="kv"><span>Next dose</span><span>Thursday · ${dose}mg</span></div></div>
     <div class="card"><div class="kv"><span>Steps</span><span>4,312 of 4,000</span></div><div class="kv"><span>Protein</span><span>Log a meal</span></div><div class="kv"><span>Water</span><span>Log water</span></div></div>
