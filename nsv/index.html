@@ -118,6 +118,15 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .opts{display:flex;flex-wrap:wrap;gap:8px}
 .opt{border:1.5px solid var(--line);background:var(--card);border-radius:99px;min-height:44px;padding:0 14px;cursor:pointer}
 .opt[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.mic{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;border:0;background:var(--green);color:#fff;cursor:pointer;margin:14px auto 6px}
+.or{display:flex;align-items:center;gap:12px;color:var(--quiet);font-size:13px;margin:12px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.lrow{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.glasses{display:flex;gap:4px;margin:8px -4px 0}
+.glasses button{flex:1;height:44px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+.glasses i{width:22px;height:26px;border-radius:4px 4px 9px 9px;border:2px solid var(--berry);background:none}
+.glasses [aria-pressed="true"] i{background:var(--berry)}
+.opt.sm{min-height:40px;font-size:13px;padding:0 12px}
 .said{font-family:var(--serif);font-size:22px;color:var(--green);line-height:1.25}
 
 /* lock screen */
@@ -208,8 +217,9 @@ const CONTROLS = {
 };
 // Data the current app already collects. Switch off to see fewer wins: nothing is invented.
 const LOGS = [['appetite', 'Appetite'], ['side', 'Side effects'], ['waist', 'Waist'], ['habits', 'Protein']];
-const APPETITE = ['Very low. Rarely hungry.', 'Low. Full quickly.', 'Balanced. Hungry when expected, full when you’ve had enough.', 'High. Hungry between meals.', 'Very high. Hungry most of the time.'];
-const SIDE_CHIPS = ['Nausea', 'Constipation', 'Headaches', 'Fatigue', 'Reflux', 'Other'];
+// The quick dump: when we know little, she can tell June about her week in one breath, or tap what's true. Each answer becomes a win straight away.
+const DUMP = [['appetite', 'Less hungry'], ['sideNone', 'No side effects'], ['sideSome', 'Some side effects'], ['clothes', 'Clothes looser'], ['energy', 'More energy']];
+const HEARD = ['appetite', 'sideNone', 'clothes'];
 const PRESETS = [
   ['Start', { stage: 'w6', scale: 'flat', range: 'in', have: ['side'] }],
   ['Slow week', { stage: 'w6', scale: 'flat', range: 'in', have: ['appetite', 'side'] }],
@@ -218,12 +228,12 @@ const PRESETS = [
   ['Stall', { stage: 'w22', scale: 'flat', range: 'below', have: ['side'] }],
 ];
 // Which wins lead in each phase. A down week always leads with weight.
-const PRIORITY = { inc: ['weight', 'appetite', 'side', 'course', 'habits', 'waist'], steady: ['weight', 'waist', 'habits', 'appetite', 'course', 'side'], plateau: ['kept', 'waist', 'habits', 'course', 'appetite', 'side'] };
+const PRIORITY = { inc: ['weight', 'appetite', 'side', 'clothes', 'energy', 'course', 'habits', 'waist'], steady: ['weight', 'waist', 'clothes', 'habits', 'energy', 'appetite', 'course', 'side'], plateau: ['kept', 'waist', 'clothes', 'habits', 'energy', 'course', 'appetite', 'side'] };
 const TREND = { appetite: [2, 3, 3, 4, 4, 5, 5, 5], sideInc: [2, 3, 3, 2, 4, 3, 2, 1], sideSteady: [3, 2, 2, 1, 1, 0, 1, 0], protein: [2, 3, 3, 4, 4, 5, 4, 5] };
 
 /* ===================== State ===================== */
 const initial = () => ({ tab: 'today', stage: 'w6', scale: 'flat', range: 'in', stale: 'new', have: { appetite: true, side: true, waist: false, habits: false },
-  ans: {}, just: [], slide: 0, apl: 3, chips: [], say: null, sayChips: [], kg: false, step: 'trigger', sheet: null, sent: false });
+  ans: {}, just: [], slide: 0, pick: [], water: 3, meals: [], newWin: null, say: null, sayChips: [], kg: false, step: 'trigger', sheet: null, sent: false });
 const STEPS = [['trigger', 'Trigger'], ['home', 'Today'], ['detail', 'Detail'], ['checkin', 'Question'], ['outcome', 'Outcome']];
 let state = initial();
 const fmt = n => n.toFixed(1).replace(/\.0$/, '');
@@ -237,7 +247,6 @@ function model(){
   const flatWeeks = stall ? 6 : plateau ? 8 : flat ? 1 : 0, phase = plateau ? 'plateau' : st.phase, wk = Math.min(8, st.week);
   const pts = []; for (let w = 0; w <= st.week; w++) pts.push(+(lost * mid(Math.min(w, st.week - flatWeeks)) / mid(st.week - flatWeeks)).toFixed(2));
   const all = [], now = k => state.ans[k] !== undefined;
-  const expect = `We’d expect ${lo} to ${hi}% by week ${st.week}.`;
 
   all.push(st.phase === 'inc'
     ? { id: 'course', title: `You’ve stepped up to ${st.dose}.`, sub: 'Right on schedule. Each step brings you closer to your full dose.', more: `You haven’t missed a dose in ${st.week} weeks.`, from: 'your treatment tracker' }
@@ -257,31 +266,39 @@ function model(){
     ? { id: 'side', title: 'No side effects this week.', sub: 'Your body is getting used to this dose.', from: 'your answer today' }
     : { id: 'side', noted: true, title: `${sl.join(', ')} this week.`, sub: 'This is common on a new dose and usually eases. Your care team can see it.', from: 'your answer today' });
 
+  if (state.ans.clothes) all.push({ id: 'clothes', title: 'Your clothes feel looser.', sub: 'Your body often changes before the scale shows it.', from: 'your answer today' });
+  if (state.ans.energy) all.push({ id: 'energy', title: 'You have more energy.', sub: 'A change you can feel, whatever the scale says.', from: 'your answer today' });
+  // Today's logs count too: reaching a goal becomes a win the moment she taps it.
+  if (state.water >= GLASSES) all.push({ id: 'water', title: 'You reached your water goal today.', sub: 'It helps with side effects like headaches and constipation.', from: 'your log today' });
+  if (proteinToday() >= PROTEIN_GOAL) all.push({ id: 'protein', title: 'You reached your protein goal today.', sub: 'Protein helps you keep muscle while you lose weight.', from: 'your log today' });
   if (state.have.habits) all.push({ id: 'habits', title: 'You reached your protein goal on 5 days.', sub: 'Protein helps you keep muscle while you lose weight.', from: 'your daily goals', plot: TREND.protein.slice(-wk), plotL: 'Days on your protein goal, each week' });
   if (state.have.waist) all.push({ id: 'waist', title: `Your waist is down ${st.waist[state.range]} cm.`, sub: 'Waist often changes before the scale does.', from: 'your waist measurements' });
 
-  if (!below && !flat) all.push({ id: 'weight', title: `You’ve lost ${fmt(lost)}% of your body weight.`, sub: `That’s where we’d expect you to be at week ${st.week}.`, more: expect, from: 'your weigh-ins' });
+  if (!below && !flat) all.push({ id: 'weight', title: `You’ve lost ${fmt(lost)}% of your body weight.`, sub: 'Steady progress, week on week.', from: 'your weigh-ins' });
   // Down this week but still under the range: a real win, never the lead.
-  if (below && !flat) all.push({ id: 'weight', late: true, title: 'The scale is down this week.', sub: 'It’s moving the right way.', more: `You’re at ${fmt(lost)}%. ${expect}`, from: 'your weigh-ins' });
-  if (plateau) all.push({ id: 'kept', title: 'You’ve held your weight for 8 weeks.', sub: 'You reached your range, and you’re staying in it.', more: `You’re at ${fmt(lost)}%. ${expect}`, from: 'your weigh-ins' });
+  if (below && !flat) all.push({ id: 'weight', late: true, title: 'The scale is down this week.', sub: 'It’s moving the right way.', more: `You’re at ${fmt(lost)}% so far.`, from: 'your weigh-ins' });
+  if (plateau) all.push({ id: 'kept', title: 'You’ve held your weight for 8 weeks.', sub: 'Keeping it off is the result now.', more: `You’re at ${fmt(lost)}% and holding.`, from: 'your weigh-ins' });
 
   const order = PRIORITY[phase], rank = w => { const i = order.indexOf(w.id); return w.late ? 50 : i < 0 ? 99 : i; };
   all.sort((x, y) => rank(x) - rank(y));
   const wins = all.filter(w => !w.noted), noted = all.filter(w => w.noted);
   const noLogs = !state.have.appetite && !state.have.side;
-  const qKey = (stall ? ['side', 'appetite'] : ['appetite', 'side']).find(k => !state.have[k] && !now(k)) || null;
-  const status = stall ? 'Holding' : plateau ? 'Holding steady' : below ? (st.phase === 'inc' ? 'Early days' : 'Moving') : st.phase === 'inc' ? `On track for week ${st.week}` : 'Where we’d expect';
+  // Information-sparse = we have no appetite logs or no side-effect logs, and she hasn't told us yet. Only then do we ask.
+  const sparse = (!state.have.appetite && !now('appetite')) || (!state.have.side && !now('side'));
+  const ask = DUMP.map(x => x[0]).filter(k => k === 'appetite' ? !state.have.appetite && !now('appetite') : k.startsWith('side') ? !state.have.side && !now('side') : k === 'clothes' ? !state.have.waist && !state.ans.clothes : !state.ans.energy);
+  // The weight line describes her own week. It never places her against a range.
+  const status = stall ? 'Holding' : plateau ? 'Holding steady' : flat ? 'Steady this week' : 'Down this week';
   const phaseMsg = plateau ? 'Holding your weight is the goal now.' : st.phase === 'inc' ? 'Change builds while your dose is increasing.' : 'Change keeps building at a steady dose.';
   const next = plateau ? 'Eight weeks at this weight means the change has lasted.' : st.next;
   const kgLost = START_KG * lost / 100;
-  return { ...st, below, flat, lost, lo, hi, stall, plateau, flatWeeks, phase, pts, wins, noted, noLogs, qKey, status, phaseMsg, next, sidePlot, kgLost, kgNow: START_KG - kgLost, expect, slow: state.stage === 'w12' && lost < 5 };
+  return { ...st, below, flat, lost, lo, hi, stall, plateau, flatWeeks, phase, pts, wins, noted, noLogs, sparse, ask, status, phaseMsg, next, sidePlot, kgLost, kgNow: START_KG - kgLost, slow: state.stage === 'w12' && lost < 5 };
 }
-// A weekly check-in from June. The message is always the same: things are moving, even when the scale is not.
+// The notification comes from June. The message is always the same: things are moving, even when the scale is not.
 function notification(d){
-  const t = `Your week ${d.week} check-in`, n = d.wins.length;
-  if (d.stall) return [t, 'You haven’t missed a dose. We’re here if you need us.'];
-  if (d.plateau) return [t, 'You’re holding your progress. Come and see your week.'];
-  return [t, n > 1 ? `${n} things moved this week. Come and see.` : 'Something moved this week. Come and see.'];
+  const n = d.wins.length;
+  if (d.stall) return ['We’re here if you need us', 'You haven’t missed a dose. Come and see your week.'];
+  if (d.plateau) return ['8 weeks at your new weight', 'You’re holding your progress. Come and see your week.'];
+  return [n > 1 ? `${n} things moved this week` : 'Something moved this week', d.flat ? 'You’re progressing, even when the scale is quiet. Come and see.' : 'You’re progressing. Come and see what moved.'];
 }
 /* What we'd measure (no real analytics): today_opened + which win led · win_tapped · weight_opened · question_answered · care_team_tapped */
 function track(){}
@@ -290,60 +307,72 @@ function track(){}
 const $ = q => document.querySelector(q);
 function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2400); }
 const plot = a => { const max = Math.max(1, ...a); return `<div class="plot" aria-hidden="true">${a.map(v => `<span><i style="bottom:${Math.round(v / max * 46)}px"></i></span>`).join('')}</div>`; };
-// A dot on a bar: where she is against where we'd expect her to be.
-function rangeBar(d){
-  const max = Math.max(d.hi * 1.35, d.lost * 1.1), p = v => (v / max * 100).toFixed(1);
-  return `<span class="range" role="img" aria-label="${fmt(d.lost)}% lost. ${d.expect}"><s style="left:${p(d.lo)}%;width:${p(d.hi - d.lo)}%"></s><u style="left:${p(d.lost)}%"></u></span>`;
+// Her own weight over time, as one small line. No band, no target.
+function spark(d){
+  const W = 300, H = 36, max = Math.max(...d.pts, .1), n = d.pts.length - 1, X = i => 6 + (W - 12) * i / n, Y = v => 6 + (H - 12) * (1 - v / max);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${fmt(d.lost)}% of your body weight lost so far." style="width:100%;display:block;margin-top:10px"><path d="${d.pts.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('')}" fill="none" stroke="var(--berry)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${X(n)}" cy="${Y(d.pts[n]).toFixed(1)}" r="5" fill="var(--green)" stroke="#fff" stroke-width="2.5"/></svg>`;
 }
 
 /* ===================== Today ===================== */
 function hero(d){
-  if (d.stall) return `<div class="hero stall"><p class="k">Week ${d.week} check-in</p><p class="big" id="lead" tabindex="-1">You’re doing your part.</p>
+  if (d.stall) return `<div class="hero stall"><p class="k">Week ${d.week}</p><p class="big" id="lead" tabindex="-1">You’re doing your part.</p>
     <p class="sub">Every dose taken, and you’re ${fmt(d.lost)}% down so far. If you’d like a hand with anything, your care team is one tap away.</p>
     ${state.sent ? `<p class="sub" style="margin-top:14px;font-weight:500">Sent. Dr Lee usually replies within a day.</p>` : `<button class="btn" data-act="care">Talk to my care team</button>`}</div>`;
-  if (state.stale === 'same') return `<div class="hero" style="padding-bottom:20px"><p class="k">Week ${d.week} check-in</p><p class="big" id="lead" tabindex="-1">${d.phaseMsg}</p><p class="sub">Nothing new since your last visit. Your wins are in Progress.</p></div>`;
-  const i = Math.min(state.slide, d.wins.length - 1), w = d.wins[i], fresh = state.just.includes(w.id);
+  if (state.stale === 'same') return `<div class="hero" style="padding-bottom:20px"><p class="k">Week ${d.week}</p><p class="big" id="lead" tabindex="-1">${d.phaseMsg}</p><p class="sub">Nothing new since your last visit. Your wins are in Progress.</p></div>`;
+  const i = Math.min(state.slide, d.wins.length - 1), w = d.wins[i], fresh = state.just.includes(w.id) || state.newWin === w.id;
   return `<div class="hero ${fresh ? 'new' : ''}" id="hero"><button class="tap" data-act="next" aria-label="${w.title} ${d.wins.length > 1 ? 'Show the next one.' : ''}">
-      <span class="k" style="display:block">${fresh ? 'Just added' : `Week ${d.week} check-in`}</span><span class="big" style="display:block" id="lead">${w.title}</span><span class="sub" style="display:block">${d.noLogs && w.id === 'course' ? 'Change often starts before the scale shows it.' : w.sub}</span></button>
+      <span class="k" style="display:block">${fresh ? 'Just added' : 'Where you’re winning this week'}</span><span class="big" style="display:block" id="lead">${w.title}</span><span class="sub" style="display:block">${d.noLogs && w.id === 'course' ? 'Change often starts before the scale shows it.' : w.sub}</span></button>
     ${w.plot ? `<div class="hplot">${plot(w.plot)}<p class="quiet">${w.plotL}</p></div>` : ''}
     <div class="herofoot"><div class="dots" role="group" aria-label="Your wins">${d.wins.length > 1 ? d.wins.map((x, j) => `<button data-act="slide" data-i="${j}" aria-current="${j === i}" aria-label="Win ${j + 1} of ${d.wins.length}"><i></i></button>`).join('') : ''}</div><button class="link" data-act="win" data-id="${w.id}">See more</button></div></div>`;
 }
+const MIC = '<svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const dumpLabel = k => DUMP.find(x => x[0] === k)[1];
 function question(d){
   if (state.just.length){ const any = d.wins.some(w => state.just.includes(w.id)); return `<div class="card" id="ci" role="status"><p>${any ? 'Thanks. That’s added to your wins.' : d.stall ? 'Thanks. Your care team will see this.' : 'Thanks. We’ll ask again next week.'}</p></div>`; }
-  if (!d.qKey) return '';
+  if (!d.sparse) return '';
   let body;
-  if (state.say === 'listening') body = `<p class="quiet">Listening</p><p class="said" aria-live="polite">“I’m getting full a lot faster, and I haven’t felt sick at all this week.”</p>`;
-  else if (state.say === 'confirm') body = `<p class="q">Here’s what we heard.</p><div class="opts">${state.sayChips.map(k => `<button class="opt" aria-pressed="true" data-act="say-x" data-k="${k}" aria-label="Remove">${k === 'appetite' ? 'Appetite: low' : 'No side effects'} ×</button>`).join('')}</div>
+  if (state.say === 'listening') body = `<p class="quiet">June is listening</p><p class="said" aria-live="polite">“I’m getting full a lot faster, no nausea this week, and my jeans are looser.”</p>`;
+  else if (state.say === 'confirm') body = `<p class="q">Here’s what June heard.</p><div class="opts">${state.sayChips.map(k => `<button class="opt" aria-pressed="true" data-act="say-x" data-k="${k}" aria-label="Remove ${dumpLabel(k)}">${dumpLabel(k)} ×</button>`).join('')}</div>
       <button class="btn" data-act="say-ok" ${state.sayChips.length ? '' : 'disabled'}>That’s right</button>`;
-  else if (d.qKey === 'appetite') body = `<p class="q">How has your appetite been?</p><input class="slider" id="apl" type="range" min="1" max="5" step="1" value="${state.apl}" aria-label="Appetite, from very low to very high">
-      <div class="ends quiet"><span>Very low</span><span>Very high</span></div><p style="margin-top:12px" id="aplv">${APPETITE[state.apl - 1]}</p><button class="btn" data-act="ci-app">Save</button>`;
-  else body = `<p class="q">Any side effects this week?</p><div class="opts"><button class="opt" data-act="chip" data-v="none" aria-pressed="${state.chips.includes('none')}">None</button>${SIDE_CHIPS.map(c => `<button class="opt" data-act="chip" data-v="${c}" aria-pressed="${state.chips.includes(c)}">${c}</button>`).join('')}</div>
-      <button class="btn" data-act="ci-side" ${state.chips.length ? '' : 'disabled'}>Save</button>`;
-  return `<div class="card" id="ci">${body}${state.say ? '' : `<button class="link" data-act="say" style="display:block;margin:6px auto 0">or talk to June</button>`}</div>`;
+  else body = `<p class="q">Tell June about your week</p><p class="quiet">A few seconds. It fills in your wins.</p>
+      <button class="mic" data-act="say" aria-label="Hold to talk to June">${MIC}</button><p class="quiet" style="text-align:center">Hold to talk</p>
+      <p class="or"><span>or</span></p><p class="quiet" style="margin-bottom:8px">Tap what’s true</p><div class="opts">${d.ask.map(k => `<button class="opt" data-act="pick" data-v="${k}" aria-pressed="${state.pick.includes(k)}">${dumpLabel(k)}</button>`).join('')}</div>
+      <button class="btn" data-act="dump-save" ${state.pick.length ? '' : 'disabled'}>Save</button>`;
+  return `<div class="card" id="ci">${body}</div>`;
+}
+// Logging is one tap: tap a glass, tap a meal, or tell June what you ate.
+const MEALS = [['b', 'Breakfast', 20], ['l', 'Lunch', 30], ['d', 'Dinner', 30], ['s', 'Snack', 10]], PROTEIN_GOAL = 80, GLASSES = 8;
+const proteinToday = () => MEALS.filter(m => state.meals.includes(m[0])).reduce((a, m) => a + m[2], 0);
+function quickLog(){
+  const g = proteinToday();
+  return `<div class="card" id="log"><div class="kv"><span>Steps</span><span>4,312 of 4,000</span></div>
+    <div class="lrow"><div class="kv"><span>Water</span><span>${state.water} of ${GLASSES} glasses</span></div>
+      <div class="glasses" role="group" aria-label="Water today">${Array.from({ length: GLASSES }, (_, i) => `<button data-act="water" data-i="${i + 1}" aria-pressed="${i < state.water}" aria-label="${i + 1} glass${i ? 'es' : ''}"><i></i></button>`).join('')}</div></div>
+    <div class="lrow"><div class="kv"><span>Protein</span><span>${g ? `${g} of ${PROTEIN_GOAL}g` : 'Tap a meal'}</span></div>
+      <div class="opts" style="margin-top:10px">${MEALS.map(([k, l]) => `<button class="opt sm" data-act="meal" data-v="${k}" aria-pressed="${state.meals.includes(k)}">${l}</button>`).join('')}</div>
+      <button class="link" data-act="meal-say" style="display:block;margin:6px auto -8px">or tell June what you ate</button></div></div>`;
 }
 function today(d){
   const q = question(d);
   return `<h1 class="hello">Hey Sarah</h1>${hero(d)}${d.noLogs && !d.stall ? q : ''}
-    <button class="card tap" data-act="weight"><span class="kv"><span>Weight</span><span>${d.status}</span></span>${rangeBar(d)}${d.flat && !d.stall && !d.plateau ? '<span class="quiet" style="display:block;margin-top:12px">Steady this week. The scale tends to follow, and it takes a little patience.</span>' : ''}</button>
+    <button class="card tap" data-act="weight"><span class="kv"><span>Weight</span><span>${d.status}</span></span>${spark(d)}${d.flat && !d.stall && !d.plateau ? '<span class="quiet" style="display:block;margin-top:8px">The scale tends to follow, and it takes a little patience.</span>' : ''}</button>
     ${d.noLogs && !d.stall ? '' : q}
     <div class="card" id="outcome"><div class="kv"><span>Next dose</span><span>Thursday · ${d.dose}</span></div>${d.stall ? '' : `<p class="quiet" style="margin-top:10px">${d.next}</p>`}</div>
-    <div class="card"><div class="kv"><span>Steps</span><span>4,312 of 4,000</span></div><div class="kv"><span>Protein</span><span>Log a meal</span></div><div class="kv"><span>Water</span><span>Log water</span></div></div>`;
+    ${quickLog()}`;
 }
 
 /* ===================== Progress ===================== */
 function chart(d){
-  const W = 320, H = 140, pl = 28, pr = 10, pt = 10, pb = 22, xs = d.week, ymax = Math.ceil((range(xs).hi + 2) / 5) * 5;
+  const W = 320, H = 140, pl = 28, pr = 10, pt = 10, pb = 22, xs = d.week, ymax = Math.max(5, Math.ceil((d.lost + 1) / 5) * 5);
   const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax);
   const steps = []; for (let w = 0; w <= xs; w += Math.max(1, Math.round(xs / 30))) steps.push(w); if (steps[steps.length - 1] !== xs) steps.push(xs);
-  const band = steps.map(w => `${X(w).toFixed(1)},${Y(range(w).hi).toFixed(1)}`).concat(steps.slice().reverse().map(w => `${X(w).toFixed(1)},${Y(range(w).lo).toFixed(1)}`)).join(' ');
   const col = 'var(--green)';
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${fmt(d.lost)}% lost. ${d.expect}" style="width:100%;display:block;margin-top:14px">
-    <polygon points="${band}" fill="var(--berry)" opacity=".6"/>
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${fmt(d.lost)}% of your body weight lost, week by week." style="width:100%;display:block;margin-top:14px">
     <path d="${d.pts.map((v, w) => `${w ? 'L' : 'M'}${X(w).toFixed(1)},${Y(v).toFixed(1)}`).join('')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
     <circle cx="${X(xs)}" cy="${Y(d.pts[d.pts.length - 1])}" r="6" fill="${col}" stroke="#fff" stroke-width="3"/>
     <text x="${pl}" y="${H - 4}" font-size="11" fill="#5B655F">Start</text><text x="${W - pr}" y="${H - 4}" font-size="11" fill="#5B655F" text-anchor="end">Week ${xs}</text>
     <text x="${pl - 6}" y="${Y(ymax) + 4}" font-size="11" fill="#5B655F" text-anchor="end">${ymax}%</text><text x="${pl - 6}" y="${Y(0) + 4}" font-size="11" fill="#5B655F" text-anchor="end">0</text></svg>
-    <p class="quiet" style="margin-top:6px">The shaded band is where we’d expect you to be.</p>`;
+`;
 }
 function progress(d){
   const rows = d.wins.map(w => `<button class="win" data-act="win" data-id="${w.id}">${w.title}</button>`).concat(d.noted.map(w => `<button class="win noted" data-act="win" data-id="${w.id}">${w.title}</button>`));
@@ -352,8 +381,8 @@ function progress(d){
     <div class="card"><div class="kv"><span>Week ${d.week}</span><span>${d.phase === 'inc' ? 'Dose increasing' : 'Steady dose'}</span></div>
       <ol class="steps" style="padding:0;margin-bottom:0" aria-label="Your dose steps">${DOSES.map((x, i) => `<li class="${i < d.doseIdx ? 'done' : i === d.doseIdx ? 'here' : ''}">${x} mg</li>`).join('')}</ol></div>
     <h2 class="h2">${d.stall ? 'What’s going well' : 'What moved this week'}</h2><div class="card">${rows.join('')}</div>
-    <h2 class="h2" id="wsec">Weight</h2><div class="card"><p>${fmt(d.lost)}% of your body weight lost.</p><p class="quiet">${d.expect} ${d.status}.</p>${chart(d)}
-      ${d.slow ? `<p style="margin-top:12px">Under 5% at week 12 is common. In a large trial, 9 in 10 people with a slow start went on to lose 5% or more.</p><p class="quiet">SURMOUNT-1 trial analysis, 2024.</p>` : ''}
+    <h2 class="h2" id="wsec">Weight</h2><div class="card"><p>${fmt(d.lost)}% of your body weight lost.</p><p class="quiet">${d.status}.</p>${chart(d)}
+      ${d.slow ? `<p style="margin-top:12px">Change keeps building. In a large trial, 9 in 10 people who were under 5% at week 12 went on to lose 5% or more.</p><p class="quiet">SURMOUNT-1 trial analysis, 2024.</p>` : ''}
       <button class="link" data-act="kg" aria-expanded="${state.kg}">${state.kg ? 'Hide kilograms' : 'Show in kilograms'}</button>${state.kg ? `<p class="quiet">${d.kgNow.toFixed(1)} kg now. ${d.kgLost.toFixed(1)} kg less than when you started.</p>` : ''}</div>
     <h2 class="h2">Your logs</h2>${trend('appetite', 'Appetite', TREND.appetite.slice(-Math.min(8, d.week)), 'Days at balanced or lower, each week')}${trend('side', 'Side effects', d.sidePlot, 'Days with side effects, each week')}`;
 }
@@ -389,23 +418,38 @@ function render(){
 }
 
 /* ===================== Flow ===================== */
-function freshVisit(){ state.ans = {}; state.just = []; state.slide = 0; state.chips = []; state.apl = 3; state.say = null; state.sheet = null; state.sent = false; state.kg = false; }
+function freshVisit(){ state.ans = {}; state.newWin = null; state.just = []; state.slide = 0; state.pick = []; state.say = null; state.sheet = null; state.sent = false; state.kg = false; }
 function dataChanged(){ freshVisit(); if (state.step !== 'trigger') state.step = 'home'; render(); }
 const into = id => { const el = document.getElementById(id); el && el.scrollIntoView({ block: 'center' }); };
 // A new answer is paid back straight away: it becomes the card she's looking at.
 function logged(keys){
   state.just = keys; state.say = null; const d = model(); state.step = d.stall ? 'checkin' : 'outcome'; track('question_answered');
   const i = d.wins.findIndex(w => keys.includes(w.id)); if (i >= 0) state.slide = i;
-  render(); toast(i >= 0 ? 'Added to your wins' : 'Thanks, noted');
+  const n = d.wins.filter(w => keys.includes(w.id)).length;
+  render(); toast(n > 1 ? `${n} added to your wins` : n ? 'Added to your wins' : 'Thanks, noted');
   if (!d.stall && i >= 0){ $('#screen').scrollTop = 0; window.scrollTo(0, 0); }
 }
 // Jump to any step of the journey: Trigger → Today → Detail → Question → Outcome.
+// A log that reaches a goal is paid back straight away: it becomes the card at the top, without moving her from where she is.
+const hasWin = id => model().wins.some(w => w.id === id);
+function goalWin(id, had){
+  const i = model().wins.findIndex(w => w.id === id);
+  if (i >= 0 && !had){ state.newWin = id; state.slide = i; return true; }
+  if (i < 0 && state.newWin === id){ state.newWin = null; state.slide = 0; }
+  return false;
+}
+// One dump can fill several gaps at once.
+function applyDump(keys){
+  const ids = [];
+  keys.forEach(k => { if (k === 'appetite'){ state.ans.appetite = 2; ids.push('appetite'); } else if (k === 'sideNone'){ state.ans.side = []; ids.push('side'); } else if (k === 'sideSome'){ state.ans.side = ['Nausea']; ids.push('side'); } else { state.ans[k] = true; ids.push(k); } });
+  state.pick = []; logged(ids);
+}
 function goStep(k){
   if (k === 'trigger'){ freshVisit(); state.step = 'trigger'; state.tab = 'today'; return render(); }
   state.sheet = null; state.step = k; state.tab = 'today';
   const d = model();
   if (k === 'detail'){ if (d.stall) state.tab = 'progress'; else state.sheet = { type: 'win', id: d.wins[Math.min(state.slide, d.wins.length - 1)].id }; }
-  if (k === 'outcome'){ if (d.stall) state.sheet = { type: 'care' }; else if (d.qKey && !state.just.length){ state.ans[d.qKey] = d.qKey === 'appetite' ? 2 : []; logged([d.qKey]); return into('outcome'); } }
+  if (k === 'outcome'){ if (d.stall) state.sheet = { type: 'care' }; else if (d.sparse && !state.just.length){ applyDump(d.ask.filter(x => HEARD.includes(x))); return into('outcome'); } }
   render();
   if (k === 'home'){ $('#screen').scrollTop = 0; window.scrollTo(0, 0); }
   if (k === 'detail' && d.stall) into('wsec');
@@ -415,7 +459,6 @@ function goStep(k){
 let opener = null;
 function closeSheet(){ state.sheet = null; state.step = 'home'; render(); const b = opener && document.querySelector(opener); b && b.focus({ preventScroll: true }); }
 document.addEventListener('change', e => { const n = e.target.name; if (CONTROLS[n]){ state[n] = e.target.value; if (state.stage === 'w58') state.range = 'in'; dataChanged(); const r = document.querySelector(`input[name="${n}"]:checked`); r && r.focus(); } });
-document.addEventListener('input', e => { if (e.target.id === 'apl'){ state.apl = +e.target.value; $('#aplv').textContent = APPETITE[state.apl - 1]; } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sheet) closeSheet(); });
 // Swipe the lead card to see the next win.
 let sx = null;
@@ -436,12 +479,14 @@ document.addEventListener('click', e => {
     case 'win': opener = `[data-act="win"][data-id="${el.dataset.id}"]`; state.sheet = { type: 'win', id: el.dataset.id }; state.step = 'detail'; render(); $('.x').focus(); track('win_tapped'); break;
     case 'weight': state.tab = 'progress'; render(); into('wsec'); track('weight_opened'); break;
     case 'kg': state.kg = !state.kg; render(); $('[data-act="kg"]').focus({ preventScroll: true }); break;
-    case 'chip': { const v = el.dataset.v; state.chips = v === 'none' ? (state.chips.includes('none') ? [] : ['none']) : state.chips.filter(c => c !== 'none' && c !== v).concat(state.chips.includes(v) ? [] : [v]); render(); const b = document.querySelector(`[data-act="chip"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); break; }
-    case 'ci-app': state.ans.appetite = state.apl; logged(['appetite']); break;
-    case 'ci-side': state.ans.side = state.chips.filter(c => c !== 'none'); logged(['side']); break;
-    case 'say': state.say = 'listening'; state.sayChips = ['appetite', 'side'].filter(k => !state.have[k] && state.ans[k] === undefined); render(); setTimeout(() => { if (state.say === 'listening'){ state.say = 'confirm'; render(); const b = $('[data-act="say-ok"]'); b && b.focus({ preventScroll: true }); } }, 1500); break;
+    case 'pick': { const v = el.dataset.v, on = state.pick.includes(v); state.pick = state.pick.filter(c => c !== v && !(v.startsWith('side') && c.startsWith('side'))).concat(on ? [] : [v]); render(); const b = document.querySelector(`[data-act="pick"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); break; }
+    case 'water': { const i = +el.dataset.i, had = hasWin('water'); state.water = state.water === i ? i - 1 : i; const won = goalWin('water', had); render(); if (won) toast('Water goal reached. Added to your wins'); const b = document.querySelector(`[data-act="water"][data-i="${i}"]`); b && b.focus({ preventScroll: true }); break; }
+    case 'meal': { const v = el.dataset.v, had = hasWin('protein'); state.meals = state.meals.includes(v) ? state.meals.filter(m => m !== v) : state.meals.concat(v); const won = goalWin('protein', had); render(); if (won) toast('Protein goal reached. Added to your wins'); const b = document.querySelector(`[data-act="meal"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); break; }
+    case 'meal-say': { const m = MEALS.find(x => !state.meals.includes(x[0])); if (!m){ toast('Every meal is logged today'); break; } const had = hasWin('protein'); state.meals = state.meals.concat(m[0]); const won = goalWin('protein', had); render(); toast(won ? 'Protein goal reached. Added to your wins' : `June logged ${m[1].toLowerCase()}: about ${m[2]}g protein`); break; }
+    case 'dump-save': applyDump(state.pick.slice()); break;
+    case 'say': state.say = 'listening'; state.sayChips = model().ask.filter(k => HEARD.includes(k)); render(); setTimeout(() => { if (state.say === 'listening'){ state.say = 'confirm'; render(); const b = $('[data-act="say-ok"]'); b && b.focus({ preventScroll: true }); } }, 1500); break;
     case 'say-x': state.sayChips = state.sayChips.filter(k => k !== el.dataset.k); render(); break;
-    case 'say-ok': { const ks = state.sayChips.slice(); if (ks.includes('appetite')) state.ans.appetite = 2; if (ks.includes('side')) state.ans.side = []; logged(ks); break; }
+    case 'say-ok': applyDump(state.sayChips.slice()); break;
     case 'care': opener = '[data-act="care"]'; state.sheet = { type: 'care' }; state.step = 'outcome'; render(); $('.x').focus(); track('care_team_tapped'); break;
     case 'send': state.sent = true; render(); $('.x').focus(); break;
     case 'close': case 'scrim': closeSheet(); break;
