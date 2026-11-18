@@ -493,10 +493,10 @@ function leadText(s){
   if (s.stage === 'middle') return { big: pct, cap: 'down since you started', sub: `Where we’d expect at month ${s.n}.`, bar: true };
   return { big: '8 weeks', cap: `holding at ${pct} down`, sub: 'Holding steady is the result now.', bar: true };
 }
-// Weight is not the automatic hero. With full data and nothing to flag, the story opens on the change she can feel.
+// Weight is not the automatic hero. With full data and nothing to flag, the story opens on a link between two of her numbers: something only a month of data can show, and something the everyday home screen does not.
 const richOn = s => s.data === 'rich' && !s.concern && !s.below;
 function cardLead(s){
-  if (richOn(s)) return cardChange(s, `${s.month} · Month ${s.n}`);
+  if (richOn(s)) return cardPattern(s, `${s.month} · Month ${s.n}`);
   const t = leadText(s);
   if (t.warm) return `<p class="k">${s.month} · Month ${s.n}</p><h1 class="lead" id="lead" tabindex="-1">${t.warm}</h1><p class="lede">${t.fact}</p>${t.bar ? `<div class="viz">${rangeBar(s.pct, s.band, false)}</div>` : ''}${helpBtn(t.cta)}`;
   return `<p class="k">${s.month} · Month ${s.n}</p><h1 id="lead" tabindex="-1"><span class="hero-num">${t.big}</span><span class="hero-cap">${t.cap}</span></h1>
@@ -538,11 +538,11 @@ function patternChips(s){
   return `<p class="chips">${s.stage === 'early' ? delta('Nausea', v.side, 'days') + delta('Food noise', v.app, '') : s.stage === 'middle' ? delta('Sleep', v.sleep, 'min') + delta('Energy', v.energy, '') : '<span class="chip">Weight steady</span>' + delta('Waist', v.waist, 'cm')}</p>`;
 }
 const patternViz = p => p.slice(1).map(([l, x]) => `<div class="prow"><span class="quiet">${l}</span>${x}</div>`).join('');
-function cardPattern(s){
+function cardPattern(s, kicker){
   if (s.data !== 'rich'){ const empty = metrics(s).filter(m => m.empty);
     return `<p class="k">Next month could show</p><h1 class="lead" id="lead" tabindex="-1">${state.qDone ? 'More of you.' : 'A lot more of you.'}</h1><div class="tiles">${empty.slice(0, 4).map(m => tile(m, s)).join('')}</div><p class="quiet" style="margin-top:12px">${state.qDone ? 'A weigh-in each week adds the rest.' : 'A few taps at the end fill these in.'}</p>`; }
   const p = pattern(s);
-  return `<p class="k">Something you might not have noticed</p><h1 class="lead" id="lead" tabindex="-1">${p[0]}</h1>${patternChips(s)}<div class="viz">${patternViz(p)}</div>`;
+  return `<p class="k">${kicker || 'Something you might not have noticed'}</p><h1 class="lead" id="lead" tabindex="-1">${p[0]}</h1>${patternChips(s)}<div class="viz">${patternViz(p)}</div>`;
 }
 
 /* ===================== Card 4. A note from her care team ===================== */
@@ -677,8 +677,8 @@ function goalStrip(s){
   return `<div class="card ${g.close ? 'goal' : ''}"><div class="goalrow"><span>${g.close ? `<b>${g.left}kg</b> to your goal` : 'Your goal'}</span><span class="quiet">${g.close ? `about ${g.weeks} weeks` : `${g.pc}%`}</span></div><div class="range" role="img" aria-label="${g.pc} percent of the way to your goal"><s style="left:0;width:${g.pc}%"></s><u style="left:${g.pc}%"></u></div></div>`;
 }
 // A care team note only appears when there is something for them to say: a concern they are following up.
-const pageFns = () => { const s = sc(); return (richOn(s) ? [cardLead, cardPattern, cardFar] : [cardLead, cardChange, cardPattern]).concat(s.concern ? [cardNote] : [], [cardNext], asks() ? [pageQuestion] : []); };
-const pageNames = () => { const s = sc(); return (richOn(s) ? ['Biggest change', 'Something new', 'How far'] : ['Headline', 'Detail', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
+const pageFns = () => { const s = sc(); return (richOn(s) ? [cardLead, cardChange, cardFar] : [cardLead, cardChange, cardPattern]).concat(s.concern ? [cardNote] : [], [cardNext], asks() ? [pageQuestion] : []); };
+const pageNames = () => { const s = sc(); return (richOn(s) ? ['Something new', 'Biggest change', 'How far'] : ['Headline', 'Detail', 'Pattern']).concat(s.concern ? ['Care team'] : [], ['What’s next'], asks() ? ['Questions'] : []); };
 function story(s){
   const fns = pageFns(), names = pageNames(), i = Math.min(state.page, fns.length - 1), body = fns[i](s);
   const tint = i === 0 ? (leadText(s).warm ? 'amber' : 'lilac') : '';

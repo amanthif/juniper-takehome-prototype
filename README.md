@@ -32,7 +32,7 @@ Non-Scale Victories and the Monthly Report make real progress visible. The Pre-e
 
 ## Prototype: Monthly Progress Report (`/report/`)
 
-A monthly moment, a few days before renewal. A short story she taps through, one big number and one visual per card: her biggest change, a link between two of her numbers, how far she's come, and what's next. It lands on a one-screen report with a chart for every number, and every card can skip straight to it. Use the toggles on the left to change how much data we have, the stage and how she's progressing.
+A monthly moment, a few days before renewal. A short story she taps through, one big number and one visual per card: a link between two of her numbers, her biggest change, how far she's come, and what's next. It lands on a one-screen report with a chart for every number, and every card can skip straight to it. Use the toggles on the left to change how much data we have, the stage and how she's progressing.
 
 ## Prototype: Non-Scale Victories (`/nsv/`)
 
