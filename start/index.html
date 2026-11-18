@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guided Start · Prototype</title>
+<meta name="description" content="Working prototype: a guided start that rebalances what a new user expects from GLP-1 treatment, at the start and at each moment of doubt. Illustrative data only.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Design rules: one thing leads each screen · one accent (lilac) · three text sizes (22 serif, 15 body, 13 quiet) ·
+   plain words · we never tell her something is going wrong · her care team is always one tap away. */
+:root{
+  --page:#F1ECF2; --bg:#FAF5FB; --card:#FFFFFF; --ink:#1F2A24; --quiet:#5B655F; --line:#ECE5EE;
+  --green:#1E3B2C; --lilac:#EFE6F8; --lilac-ink:#7E52B8; --berry:#CFC3F5;
+  --serif:"Fraunces",Georgia,serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--lilac-ink);outline-offset:2px;border-radius:8px}
+p{margin:0}
+
+/* layout */
+.layout{display:grid;grid-template-columns:300px auto;gap:56px;justify-content:center;align-items:start;padding:24px}
+.stage{position:sticky;top:24px}
+.phone{width:390px;height:min(844px,calc(100vh - 48px));min-height:640px;background:#141816;border-radius:52px;padding:12px}
+.app{position:relative;height:100%;background:var(--bg);border-radius:40px;overflow:hidden;display:flex;flex-direction:column}
+
+/* controls */
+.demo{font-size:13.5px}
+.demo h1{font-family:var(--serif);font-weight:400;color:var(--green);font-size:24px;margin:0 0 18px}
+.demo summary{display:none}
+fieldset{border:0;padding:0;margin:0 0 14px}
+legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--quiet);margin-bottom:6px;padding:0}
+.seg-row{display:flex;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg-row button{flex:1 1 30%;display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:9px;font-weight:500;text-align:center;padding:0 6px;cursor:pointer;border:0;background:none;font-size:13px}
+.seg-row.two button{flex:1 1 45%}
+.seg-row button[aria-pressed="true"]{background:var(--green);color:#fff}
+.reset{background:none;border:0;color:var(--quiet);cursor:pointer;min-height:44px;padding:0;text-decoration:underline;text-underline-offset:3px}
+.foot{color:var(--quiet);font-size:12px}
+.foot+.foot{margin-top:8px}
+
+/* phone: shared */
+.screen{flex:1;overflow-y:auto;padding:44px 18px 24px}
+.quiet{color:var(--quiet);font-size:13px}
+.k{font-size:13px;font-weight:500;color:var(--lilac-ink)}
+.h{font-family:var(--serif);font-weight:400;color:var(--green);font-size:22px;line-height:1.2;margin:6px 0 8px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-top:10px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.kv span:last-child{color:var(--quiet);font-size:13px;text-align:right}
+.tap{display:block;width:100%;text-align:left;border:0;cursor:pointer}
+.tabbar{flex:none;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 4px 20px}
+.tab{flex:1;border:0;background:none;font-size:12px;color:var(--quiet);min-height:48px;cursor:pointer}
+.tab[aria-current="page"]{color:var(--green);font-weight:600}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border-radius:12px;border:0;font-weight:600;cursor:pointer;padding:0 16px;background:var(--green);color:#fff;margin-top:16px;text-decoration:none}
+.btn.soft{background:var(--lilac);color:var(--green)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.slider{width:100%;min-height:44px;accent-color:var(--lilac-ink);margin-top:4px}
+.ends{display:flex;justify-content:space-between;margin-top:-4px}
+.opt[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.opt.sm{min-height:36px;font-size:13px;padding:0 12px}
+.spans{justify-content:center;margin-top:6px}
+.exp{list-style:none;padding:0;margin:14px 0 0}
+.exp li{display:flex;gap:14px;align-items:center;background:#fff;border-radius:18px;padding:12px 14px;margin-top:8px}
+.exp .ic{flex:none;width:44px;height:44px;border-radius:50%;background:var(--lilac);color:var(--lilac-ink);display:grid;place-items:center;font-weight:600;font-size:13px}
+.exp b{display:block;font-weight:600}
+.read{margin-top:10px}
+.read .num{font-family:var(--serif);color:var(--green);font-size:44px;line-height:1.1;margin:6px 0 10px}
+.read .num small{font-size:22px;margin-right:8px}
+.read .num .quiet{font-family:var(--sans)}
+.kv.b{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.kv.b span:last-child{color:var(--ink);font-size:15px;font-weight:500}
+.sw,.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--berry);margin-right:8px;vertical-align:-1px}
+.sw.out,.lg i.out{opacity:.45}
+.lg{margin-top:8px}.lg i.out{margin-left:14px}
+.link{background:none;border:0;color:var(--lilac-ink);font-weight:500;cursor:pointer;min-height:44px;padding:0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts.col{flex-direction:column}
+.opt{border:1.5px solid var(--line);background:var(--card);border-radius:99px;min-height:44px;padding:0 14px;cursor:pointer;text-align:left}
+.opts.col .opt{border-radius:14px;min-height:52px;padding:0 16px}
+.q{font-weight:500;margin-bottom:12px}
+
+/* hero and the 12-week path */
+.hero{background:var(--lilac);border-radius:22px;padding:20px 18px 16px}
+.hero .sub{color:#3E4A44}
+.week{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:0 0 14px;display:flex;justify-content:space-between;align-items:baseline}
+.week small{font-family:var(--sans);font-size:13px;color:var(--quiet)}
+.path{display:flex;gap:10px;margin-top:18px}
+.path i{flex:1;height:8px;border-radius:4px;background:#fff}
+.path i.done{background:var(--berry)}
+.path i.here{background:var(--green)}
+.path-l{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;font-size:13px;color:var(--quiet)}
+.path-l .on{color:var(--green);font-weight:500}
+
+/* where she is against the typical range */
+.range{position:relative;height:8px;border-radius:4px;background:var(--line);margin-top:14px;display:block}
+.range s{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--berry)}
+.range u{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--green);border:3px solid var(--card)}
+
+/* milestones: finding her rhythm is something she does, never something the scale decides */
+.ms{list-style:none;padding:0;margin:12px 0 0}
+.ms li{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.ms li:last-child{padding-bottom:0}
+.ms li::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;border:2px solid #B9B1BD}
+.ms li.done::before{border-color:var(--green);background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3 3 6.5-7' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+.ms li span:last-child{margin-left:auto;color:var(--quiet);font-size:13px;text-align:right}
+.ms li.just{animation:fade .6s ease-out}
+@keyframes fade{from{opacity:.3}to{opacity:1}}
+.count{display:flex;gap:4px}
+.count i{width:18px;height:6px;border-radius:3px;background:var(--line)}
+.count i.on{background:var(--green)}
+
+/* sign-up story */
+.su{flex:1;display:flex;flex-direction:column;padding:40px 22px 18px;background:var(--lilac);overflow-y:auto}
+.su .h{font-size:22px;margin:8px 0 10px}
+.su .grow{flex:1;min-height:8px}
+.su .btn{position:sticky;bottom:0;flex:none}
+.su .viz{background:#fff;border-radius:18px;padding:14px 12px 10px;margin-top:18px}
+.ch{list-style:none;padding:0;margin:20px 0 0}
+.ch li{position:relative;padding:0 0 20px 30px}
+.ch li::before{content:"";position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;background:var(--green)}
+.ch li::after{content:"";position:absolute;left:6px;top:22px;bottom:2px;width:2px;background:var(--berry)}
+.ch li:last-child::after{display:none}
+.ch b{display:block;font-family:var(--serif);font-weight:400;color:var(--green);font-size:22px;line-height:1.2;margin:2px 0}
+
+/* dose steps and day bars */
+.steps{display:flex;margin:16px 0 0;padding:0}
+.steps li{flex:1;list-style:none;text-align:center;font-size:13px;color:var(--quiet);position:relative;padding-top:20px}
+.steps li::before{content:"";position:absolute;top:0;left:50%;margin-left:-6px;width:12px;height:12px;border-radius:50%;border:2px solid #B9B1BD;background:var(--card)}
+.steps li.done::before{background:var(--berry);border-color:var(--berry)}
+.steps li.here::before{background:var(--green);border-color:var(--green)}
+.steps li.here{color:var(--green);font-weight:500}
+.bars{display:flex;align-items:flex-end;gap:6px;height:64px;margin-top:16px}
+.bars i{flex:1;border-radius:5px;background:var(--berry);min-height:4px}
+.flag{background:var(--bg);border-radius:12px;padding:12px;font-size:13px;color:var(--quiet);margin-top:14px}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(20,24,22,.35);z-index:5;display:flex;align-items:flex-end}
+.sheet{background:var(--card);width:100%;border-radius:26px 26px 0 0;padding:22px 20px 28px;max-height:88%;overflow-y:auto;animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.sheet .big{font-family:var(--serif);color:var(--green);font-size:22px;line-height:1.2;margin:4px 44px 12px 0}
+.sheet p+p{margin-top:10px}
+.x{position:absolute;right:-6px;top:-8px;width:44px;height:44px;border-radius:50%;border:0;background:var(--bg);cursor:pointer;font-size:20px}
+.sheet-in{position:relative}
+
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1F2A24;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;max-width:calc(100vw - 32px);z-index:20}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){.sheet,.ms li.just{animation:none}}
+
+@media (max-width:860px){
+  .layout{display:block;padding:0}
+  .demo{padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+  .demo summary{display:flex;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
+  .demo h1{font-size:20px;margin:8px 0 14px}
+  .stage{position:static}
+  .phone{width:100%;height:auto;min-height:0;background:none;border-radius:0;padding:0}
+  .app{border-radius:0;height:auto;min-height:calc(100vh - 69px);min-height:calc(100dvh - 69px);overflow:visible}
+  .screen{overflow:visible;padding-top:24px}
+  .su{min-height:calc(100vh - 69px);min-height:calc(100dvh - 69px);padding-top:24px;overflow:visible}
+  .tabbar{position:sticky;bottom:0;z-index:4}
+  .scrim{position:fixed}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="demo" aria-label="Prototype controls">
+    <details id="demoDetails" open>
+      <summary>Controls</summary>
+      <h1>Guided Start</h1>
+      <fieldset><legend>Moment</legend><div class="seg-row" data-k="week"></div></fieldset>
+      <button class="reset" data-act="reset">Reset</button>
+      <p class="foot">Sarah is fictional. All data and ranges are illustrative.</p>
+      <p class="foot">The five milestones are a hypothesis. The real ones would come from which early behaviours separate users who renew from users who cancel.</p>
+    </details>
+  </aside>
+  <div class="stage"><div class="phone"><div class="app" id="app"></div></div></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================== Sample data (illustrative) ===================== */
+// Typical % of body weight lost by week of treatment: [week, low, high]. To be replaced with Juniper's own data.
+const RANGE = [[0, 0, 0], [4, 0.5, 2.5], [6, 1, 4], [12, 3, 7], [14, 3.8, 7.8], [20, 6, 10], [22, 7, 11], [30, 9, 14], [40, 11, 17], [58, 12, 20], [80, 12, 20]];
+const START_KG = 92;
+function range(w){ // in kilograms, for Sarah's starting weight
+  for (let i = 1; i < RANGE.length; i++){
+    const [w1, l1, h1] = RANGE[i], [w0, l0, h0] = RANGE[i - 1];
+    if (w <= w1){ const f = (w - w0) / (w1 - w0), k = START_KG / 100; return { lo: (l0 + (l1 - l0) * f) * k, hi: (h0 + (h1 - h0) * f) * k }; }
+  }
+  return { lo: 11, hi: 18.4 };
+}
+const mid = w => { const r = range(w); return (r.lo + r.hi) / 2; };
+// The range above is treated as one standard deviation either side of the average (about 2 in 3 people). Two standard deviations covers almost everyone (about 19 in 20).
+const wide = w => { const r = range(w), m = (r.lo + r.hi) / 2, sd = (r.hi - r.lo) / 2; return { lo: Math.max(0, m - 2 * sd), hi: m + 2 * sd }; };
+// Sarah's weight lost in kg, by week. It stays inside the typical range: if she drops below it, the Pre-emptive Check-In takes over.
+const SERIES = [[0, 0], [1, .3], [3, .9], [5, 1.6], [9, 3.2], [12, 4.4]];
+function lostAt(w){ const s = SERIES; for (let i = 1; i < s.length; i++) if (w <= s[i][0]){ const [a, x] = s[i - 1], [b, y] = s[i]; return x + (y - x) * (w - a) / (b - a); } return s[s.length - 1][1]; }
+const MOMENTS = [[0, 'Welcome'], [1, 'Week 1'], [3, 'Week 3'], [5, 'Week 5'], [9, 'Week 9'], [12, 'Week 12']];
+// Phases follow her dose, never the calendar: there is no week she can be early or late for.
+const CH = [
+  { r: 'Starter dose', t: 'Your body adjusts.', s: 'A starter dose, to get used to the medicine.', short: 'Starting' },
+  { r: 'Stepping up', t: 'Appetite changes first.', s: 'The scale tends to follow.', short: 'Stepping up' },
+  { r: 'Finding your dose', t: 'Change builds.', s: 'Your prescriber reviews your dose with you.', short: 'Finding your dose' },
+];
+const TIP = { 1: 'Pick a dose day and keep it.', 3: 'Tell us how you feel after your dose. One tap.', 5: 'First week on 5mg. Smaller meals help if nausea returns.', 9: 'Your dose review is Thursday. Tell us how it’s going.' };
+const NOTICED = ['Less hungry', 'Full sooner', 'Less food noise'];
+const ASK = [['weight', 'Is my weight on track?'], ['sick', 'I feel sick'], ['hungry', 'I’m still hungry'], ['dose', 'When does my dose go up?']];
+
+/* ===================== State ===================== */
+const initial = () => ({ week: 0, noticed: null, just: false, sheet: null, sent: false });
+let state = initial();
+const $ = q => document.querySelector(q);
+const fmt = n => n.toFixed(1).replace(/\.0$/, '');
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2400); }
+/* What we'd measure (no real analytics): expectation_picked · week_opened · question_tapped · noticed_answered · care_team_tapped · milestones_done by week 12 */
+
+/* ===================== Model ===================== */
+function model(){
+  const w = state.week, r = range(Math.max(w, 1)), lost = lostAt(w);
+  const ch = w <= 4 ? 0 : w <= 8 ? 1 : 2, dose = w < 5 ? '2.5' : w < 12 ? '5' : '7.5';
+  const noticed = (state.noticed && state.noticed !== 'no') || w >= 9;
+  const ms = [
+    ['First dose taken', w >= 1, ''],
+    ['Four doses on time', w >= 5, w >= 5 ? '' : `${Math.min(w, 4)} of 4`],
+    ['First step up', w >= 5, ''],
+    ['A change you’ve noticed', noticed, noticed ? (state.noticed && state.noticed !== 'no' ? state.noticed : 'Full sooner') : ''],
+    ['First dose review', w >= 12, w === 9 ? 'Thursday' : ''],
+  ];
+  return { w, r, lost, ch, dose, ms, done: ms.filter(m => m[1]).length };
+}
+
+/* ===================== Charts ===================== */
+// The typical range as two bands (about 2 in 3 people, and almost everyone), the average as a line, and her own weight once she has some.
+function chart(d, o = {}){
+  const xs = o.xs || 12, W = 320, H = 148, pl = 30, pr = 14, pt = 12, pb = 22, ymax = Math.ceil(wide(xs).hi + .5);
+  const X = w => pl + (W - pl - pr) * w / xs, Y = v => pt + (H - pt - pb) * (1 - v / ymax), P = (w, v) => `${X(w).toFixed(1)},${Y(v).toFixed(1)}`;
+  const wk = []; for (let w = 0; w <= xs; w++) wk.push(w);
+  const poly = f => wk.map(w => P(w, f(w).hi)).concat(wk.slice().reverse().map(w => P(w, f(w).lo))).join(' ');
+  const T = (x, y, t, a = 'middle') => `<text x="${x}" y="${y}" font-size="11" fill="#5B655F" text-anchor="${a}">${t}</text>`;
+  let line = '', mark = '';
+  if (d.w > 0 && !o.mark){ const pts = wk.filter(w => w <= d.w); line = `<path d="${pts.map((w, i) => `${i ? 'L' : 'M'}${P(w, lostAt(w))}`).join('')}" fill="none" stroke="var(--green)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(d.w)}" cy="${Y(d.lost)}" r="6" fill="var(--green)" stroke="#fff" stroke-width="3"/>`; }
+  if (o.mark){ const m = o.mark, a = wide(m), b = range(m);
+    mark = `<line x1="${X(m)}" y1="${Y(a.hi)}" x2="${X(m)}" y2="${Y(a.lo)}" stroke="var(--lilac-ink)" stroke-width="1.5" opacity=".45"/><line x1="${X(m)}" y1="${Y(b.hi)}" x2="${X(m)}" y2="${Y(b.lo)}" stroke="var(--lilac-ink)" stroke-width="4" stroke-linecap="round"/><circle cx="${X(m)}" cy="${Y(mid(m))}" r="6" fill="var(--green)" stroke="#fff" stroke-width="3"/>`; }
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label || `Weight lost by week against the typical range, to ${o.end || `week ${xs}`}.`}" style="width:100%;display:block">
+    <polygon points="${poly(wide)}" fill="var(--berry)" opacity=".3"/><polygon points="${poly(range)}" fill="var(--berry)" opacity=".65"/>
+    ${o.mark ? `<path d="${wk.map((w, i) => `${i ? 'L' : 'M'}${P(w, mid(w))}`).join('')}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="1 5" stroke-linecap="round"/>` : ''}${line}${mark}
+    ${T(pl, H - 4, 'Start', 'start')}${T(W - pr, H - 4, o.end || `Week ${xs}`, 'end')}${T(pl - 6, Y(ymax) + 4, `${ymax}kg`, 'end')}${T(pl - 6, Y(0) + 4, '0', 'end')}</svg>`;
+}
+const legend = '<p class="quiet lg"><i class="in"></i>About 2 in 3 people<i class="out"></i>Almost everyone</p>';
+function rangeBar(d){
+  const max = d.r.hi * 1.35, p = v => (v / max * 100).toFixed(1);
+  return `<span class="range" role="img" aria-label="${fmt(d.lost)}kg lost. Most people are between ${fmt(d.r.lo)} and ${fmt(d.r.hi)}kg at week ${d.w}."><s style="left:${p(d.r.lo)}%;width:${p(d.r.hi - d.r.lo)}%"></s><u style="left:${p(d.lost)}%"></u></span>`;
+}
+const path = d => `<div class="path" role="img" aria-label="Phase ${d.ch + 1} of 3: ${CH[d.ch].r}">${CH.map((c, i) => `<i class="${i < d.ch ? 'done' : i === d.ch ? 'here' : ''}"></i>`).join('')}</div>
+  <div class="path-l">${CH.map((c, i) => `<span class="${i === d.ch ? 'on' : ''}">${c.short}</span>`).join('')}</div>`;
+
+/* ===================== Welcome (after sign-up): what to expect in this phase, with no numbers and no dates ===================== */
+// We never ask her to name a number, and nothing here has a date she could be early or late for.
+function signup(d){
+  return `<div class="su"><p class="k">Congratulations, Sarah</p><h1 class="h" id="lead" tabindex="-1">You’re at the start of an exciting journey.</h1><p>Here’s what to expect in this first phase.</p>
+    <ul class="exp">
+      <li><span class="ic">2.5</span><span><b>A starter dose</b>Your body gets used to it.</span></li>
+      <li><span class="ic">${dotsIcon}</span><span><b>Appetite may start to shift</b>Often the first change.</span></li>
+      <li><span class="ic">${waveIcon}</span><span><b>Nausea can come and go</b>It usually eases as you adjust.</span></li>
+      <li><span class="ic">${scaleIcon}</span><span><b>The scale may move a little</b>Bigger changes come later.</span></li>
+    </ul>
+    <p class="quiet" style="margin-top:14px">Everyone’s path is different, and your care team is one tap away the whole way.</p>
+    <div class="grow"></div><button class="btn" data-act="start">Let’s start</button></div>`;
+}
+const dotsIcon = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="5" cy="12" r="3.2" fill="currentColor"/><circle cx="13" cy="12" r="2.4" fill="currentColor" opacity=".7"/><circle cx="20" cy="12" r="1.6" fill="currentColor" opacity=".45"/></svg>';
+const waveIcon = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 14c3-8 5-8 8 0s5 6 7 1 3-3 5-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const scaleIcon = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 8l6 4 5-2 7 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ===================== Home: one stage at a time ===================== */
+function hero(d){
+  const c = CH[d.ch];
+  if (d.w >= 12){
+    return `<div class="hero"><p class="k">${c.r} · ${d.dose}mg</p><h1 class="h" id="lead" tabindex="-1">You’ve found your rhythm.</h1>
+      <p class="sub">Every dose taken, your first step up, and your first dose review.</p>${path(d)}
+      <a class="btn" href="../report/">See your monthly report</a></div>`;
+  }
+  return `<div class="hero"><p class="k">${c.r} · ${d.dose}mg</p><h1 class="h" id="lead" tabindex="-1">${c.t}</h1><p class="sub">${c.s}</p>${path(d)}</div>`;
+}
+function noticedCard(d){
+  if (d.w < 3 || d.w >= 9) return '';
+  if (state.noticed) return `<div class="card" role="status"><p>${state.noticed === 'no' ? 'That’s okay. We’ll ask again next week.' : 'Thanks. That’s one of your five.'}</p></div>`;
+  return `<div class="card"><p class="q">Noticed anything different?</p><div class="opts">${NOTICED.map(n => `<button class="opt" data-act="noticed" data-v="${n}">${n}</button>`).join('')}<button class="opt" data-act="noticed" data-v="no">Not yet</button></div></div>`;
+}
+function home(d){
+  return `<p class="week">Hey Sarah</p>${hero(d)}
+    <button class="card tap" data-act="ask" data-v="weight"><span class="kv"><span>Weight</span><span>${fmt(d.lost)}kg so far</span></span></button>
+    ${noticedCard(d)}
+    <div class="card"><div class="kv"><span>${d.done === 5 ? 'Your rhythm' : 'Finding your rhythm'}</span><span class="count" role="img" aria-label="${d.done} of 5 done">${d.ms.map(m => `<i class="${m[1] ? 'on' : ''}"></i>`).join('')}</span></div>
+      <ul class="ms">${d.ms.map((m, i) => `<li class="${m[1] ? 'done' : ''} ${i === 3 && state.just ? 'just' : ''}"><span>${m[0]}</span><span>${m[2]}</span></li>`).join('')}</ul></div>
+    ${d.w < 12 ? `<div class="card"><p class="q">Something on your mind?</p><div class="opts">${ASK.map(([k, l]) => `<button class="opt" data-act="ask" data-v="${k}">${l}</button>`).join('')}</div>
+      <button class="link" data-act="june" style="display:block;margin:8px auto 0">or talk to June</button></div>
+    <div class="card"><div class="kv"><span>This week</span><span style="max-width:62%">${TIP[d.w]}</span></div></div>` : ''}
+    <button class="link" data-act="care" style="display:block;margin:10px auto 0">Talk to my care team</button>`;
+}
+
+/* ===================== Sheets: an answer at the moment of doubt ===================== */
+function sheet(d){
+  const sh = state.sheet; if (!sh) return '';
+  const steps = `<ol class="steps" aria-label="Your dose so far">${CH.map((l, i) => `<li class="${i < d.ch ? 'done' : i === d.ch ? 'here' : ''}">${['2.5mg', '5mg', 'Reviewed with you'][i]}</li>`).join('')}</ol>`;
+  const door = state.sent ? '<p class="quiet" style="margin-top:16px">Sent. Dr Lee usually replies within a day.</p>' : '<button class="btn soft" data-act="send">Talk to my care team</button>';
+  let body;
+  if (sh === 'care') body = state.sent ? `<p class="big" id="sh-t">Sent to your care team.</p><p>Dr Lee usually replies within a day. You’ll get a notification.</p><button class="btn soft" data-act="close">Done</button>`
+    : `<p class="big" id="sh-t">Talk to my care team</p><p>They can see your doses, your weigh-ins and what you’ve told us, so you don’t have to explain.</p><button class="btn" data-act="send">Send to Dr Lee</button>`;
+  else if (sh === 'june') body = `<p class="quiet" id="sh-t">June heard</p><p class="big">“Is it normal that I’m not as hungry at dinner?”</p><p>Yes. Appetite is usually the first thing to change, and dinner is often where people notice it.</p>
+    <button class="btn" data-act="noticed" data-v="Less hungry">Add it to my five</button>${door}`;
+  else if (sh === 'weight') body = `<p class="quiet" id="sh-t">Is my weight on track?</p><p class="big">Yes. You’re where most people are.</p>${chart(d)}${legend}
+    <p style="margin-top:12px">${fmt(d.lost)}kg so far. Everyone’s path is different, and yours sits where most people’s do.</p>${door}`;
+  else if (sh === 'sick') body = `<p class="quiet" id="sh-t">I feel sick</p><p class="big">It usually eases as your body adjusts.</p>
+    <div class="bars" role="img" aria-label="Nausea is usually strongest in the first days after a dose step, then eases.">${[5, 7, 4, 3, 2, 1, 1].map(v => `<i style="height:${v * 9}px"></i>`).join('')}</div><p class="quiet" style="margin-top:6px">Typical nausea after a dose step: strongest at first, then easing.</p>
+    <p style="margin-top:12px">Smaller meals and eating slowly help.</p>${door}<p class="flag">Severe stomach pain, vomiting that won’t stop, or trouble breathing? Call 000 or see a GP now.</p>`;
+  else if (sh === 'hungry') body = `<p class="quiet" id="sh-t">I’m still hungry</p><p class="big">That’s common at this stage.</p>${steps}
+    <p style="margin-top:14px">Appetite often shifts after a step up. Tell us at your review, because it helps your prescriber decide your dose.</p>${door}`;
+  else body = `<p class="quiet" id="sh-t">When does my dose go up?</p><p class="big">When your body is ready.</p>${steps}
+    <p style="margin-top:14px">Your prescriber reviews your dose with you. What you tell us is how they decide.</p>${door}`;
+  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="sheet-in"><button class="x" data-act="close" aria-label="Close">×</button>${body}</div></div></div>`;
+}
+
+/* ===================== Render ===================== */
+function render(){
+  const d = model(), prev = $('#screen'), keep = prev ? prev.scrollTop : 0;
+  $('#app').innerHTML = d.w === 0 ? signup(d) : `<main class="screen" id="screen">${home(d)}</main>
+    <nav class="tabbar" aria-label="App tabs">${['Today', 'Explore', 'Progress', 'Care', 'Shop'].map((n, i) => `<button class="tab" ${i ? '' : 'aria-current="page"'} data-act="todo">${n}</button>`).join('')}</nav>${sheet(d)}`;
+  const scr = $('#screen'); if (scr) scr.scrollTop = keep;
+  const seg = (k, items) => $(`.seg-row[data-k="${k}"]`).innerHTML = items.map(([v, l]) => `<button data-act="set" data-k="${k}" data-v="${v}" aria-pressed="${String(state[k]) === String(v)}">${l}</button>`).join('');
+  seg('week', MOMENTS);
+  state.just = false;
+}
+const toTop = () => { const s = $('#screen') || $('.su'); if (s) s.scrollTop = 0; window.scrollTo(0, 0); };
+function closeSheet(){ state.sheet = null; render(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.sheet) closeSheet(); });
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, v = el.dataset.v;
+  if (a === 'scrim' && e.target !== el) return;
+  switch (a){
+    case 'set': {
+      const k = el.dataset.k; state.sheet = null; state.sent = false;
+      if (k === 'week'){ state.week = +v; state.noticed = null; }
+      else state[k] = v;
+      render(); toTop(); const b = document.querySelector(`[data-act="set"][data-k="${k}"][data-v="${v}"]`); b && b.focus({ preventScroll: true }); break; }
+    case 'start': state.week = 1; render(); toTop(); $('#lead').focus({ preventScroll: true }); break;
+    case 'noticed': state.noticed = v; state.just = v !== 'no'; state.sheet = null; render(); toast(v === 'no' ? 'Thanks, noted' : 'Added to your five'); break;
+    case 'ask': state.sheet = v; render(); $('.x').focus(); break;
+    case 'june': state.sheet = 'june'; render(); $('.x').focus(); break;
+    case 'care': state.sheet = 'care'; render(); $('.x').focus(); break;
+    case 'send': state.sent = true; render(); $('.x').focus(); break;
+    case 'close': case 'scrim': closeSheet(); break;
+    case 'todo': toast('Not part of this prototype'); break;
+    case 'reset': state = initial(); render(); toTop(); break;
+  }
+});
+if (matchMedia('(max-width:860px)').matches) $('#demoDetails').open = false;
+render();
+</script>
+</body>
+</html>
