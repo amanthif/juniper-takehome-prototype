@@ -286,7 +286,7 @@ const SC = {
       { w: 8, t: 'Below range for 3 weeks, still on the starter dose', s: 'Weigh-ins & prescription', k: 'warn' },
     ],
     notif: ['A quick check-in', 'You’ve been really consistent. Can I ask a few things?'],
-    opener: ['Hi Sarah, it’s June.', 'You’ve been really consistent. Every dose, every weigh-in.', 'Your results are a little behind where we’d expect at week 8. There’s usually a simple reason. Can I ask a few things?'],
+    opener: ['Hi Sarah, it’s June.', 'You’ve been really consistent. Every dose, every weigh-in.', 'I’d like to make sure your dose is still the right one for you. Can I ask a few things?'],
     say: { def: { t: 'Honestly the nausea put me off stepping up. It’s better now, only some days. I thought I was doing fine.', answers: { why: 'nausea', nausea: 'some', feel: 'fine' },
       reply: 'Thank you. That’s really clear. It’s easier to fix this early.' } },
     qs: [
@@ -371,7 +371,7 @@ const SC = {
     notif: ['You’ve done everything right', 'Your results haven’t matched your effort. Let’s look at why.'],
     say: { def: { t: 'My appetite’s about the same as before. No new medications. I’m a bit stuck, to be honest.', answers: { appetite: 'same', meds: 'no', feel: 'stuck' },
       reply: 'Thank you. That’s useful for your prescriber. Feeling stuck is understandable after this much effort.' } },
-    opener: ['Hi Sarah, it’s June.', 'You’ve done everything right. Every dose and every step up, on schedule.', 'Your weight hasn’t moved the way we’d expect at your dose. You shouldn’t have to wait and wonder, so I’d like a prescriber to take a proper look.'],
+    opener: ['Hi Sarah, it’s June.', 'You’ve done everything right. Every dose and every step up, on schedule.', 'You shouldn’t have to wait and wonder, so I’d like a prescriber to take a proper look at your plan.'],
     qs: [
       { k: 'appetite', q: 'How’s your appetite compared with before you started?', o: [['same', 'About the same'], ['bit', 'A bit smaller'], ['much', 'Much smaller']],
         a: { same: 'That’s useful for your prescriber.', bit: 'Okay. Some change, but not much.', much: 'Good to know. That helps narrow it down.' } },
@@ -492,7 +492,7 @@ function todayScreen(){
     : sc === 'noresp' && w >= 4 ? [`You’ve stepped up to ${dose}mg.`, 'Right on schedule. Each step brings you closer to your full dose.']
     : [w > 1 ? `You haven’t missed a dose in ${w} weeks.` : 'You’ve taken your first dose.', `You’re on ${dose}mg, right on schedule.`];
   const weighed = w <= s.lastWeigh || !!lg.weight, b = band(w), lost = lg.weight ? (92 - QUICK.kg) / 92 * 100 : -s.pct(w), lo = -b.lo, hi = -b.hi, max = Math.max(hi * 1.35, 1), pc = v => Math.max(0, Math.min(100, v / max * 100)).toFixed(1);
-  const status = !weighed ? 'No weigh-in this week' : lost >= lo || w <= 2 ? `On track for week ${w}` : w < 9 ? 'A little under, common early on' : 'A little under where we’d expect';
+  const status = !weighed ? 'No weigh-in this week' : lost >= lo || w <= 2 ? `On track for week ${w}` : w < 9 ? 'Early days' : 'Holding';
   return `<main class="screen" id="screen">${floatbar()}<div class="pad">
     <h2 class="hello">Hey Sarah</h2>
     <div class="hero"><p class="k">Week ${w}</p><p class="big">${lead[0]}</p><p>${lead[1]}</p></div>
