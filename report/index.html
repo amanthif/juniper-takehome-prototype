@@ -274,10 +274,20 @@ legend{font-weight:600;font-size:11.5px;letter-spacing:.06em;text-transform:uppe
 .tl li .quiet{display:block}
 .tl li::before{content:"";position:absolute;left:0;top:4px;width:12px;height:12px;border-radius:50%;background:var(--berry)}
 .tl li:first-child::before{background:var(--green)}
+.tl li:last-child::before{background:var(--lilac-ink)}
 .tl li::after{content:"";position:absolute;left:5px;top:20px;bottom:0;width:2px;background:var(--line)}
 .tl li:last-child::after{display:none}
 .tl li:last-child{padding-bottom:6px}
 .tip b{font-weight:600}
+.ahead{background:#fff;border-radius:16px;padding:26px 22px 14px;margin-top:18px}
+.ahead .line{position:relative;height:2px;background:var(--line);margin:0 6px}
+.ahead .line i{position:absolute;top:50%;transform:translate(-50%,-50%)}
+.ahead .line .dose{width:3px;height:14px;border-radius:2px;background:var(--green);opacity:.45}
+.ahead .line .ev{width:14px;height:14px;border-radius:50%;background:var(--green);border:3px solid #fff;box-sizing:content-box}
+.ahead .line .ev.order{background:var(--lilac-ink)}
+.ahead .line .now{left:0;width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.ahead .ends{display:flex;justify-content:space-between;margin-top:14px}
+.ahead .legend{margin-top:8px}.ahead .legend i{display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--green);opacity:.45;margin-right:8px;vertical-align:-1px}
 .wcard .lbl+.db{margin-top:8px}
 .chip{flex:none;font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--lilac);color:var(--lilac-ink)}
 .chip.amber{background:var(--amber);color:var(--amber-ink)}
@@ -528,14 +538,14 @@ function pattern(s){
   const v = vals(s), stuck = s.below && s.stage !== 'early', flat = [s.pct, s.pct, s.pct, s.pct];
   if (stuck) return ['Your dose and weight this month.', ['Dose', mini(ser(s.dose, s.dose, 'step'), 'step', false, 300, 40, 'Dose')], ['Weight lost', mini(flat, 'line', false, 300, 40, 'Weight')]];
   if (s.slow) return ['Your appetite has changed.', ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')], ['Weight lost', mini(ser(s.pct - .6, s.pct, 'line'), 'line', false, 300, 40, 'Weight')]];
-  if (s.stage === 'early') return ['Nausea eased, and so did the food noise.', ['Nausea days', mini(ser(...v.side, 'bars'), 'bars', false, 300, 40, 'Nausea')], ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')]];
+  if (s.stage === 'early') return ['Less food noise, and more energy.', ['Food noise', mini(ser(...v.app, 'line'), 'line', false, 300, 40, 'Food noise')], ['Energy', mini(ser(...v.energy, 'bars'), 'bars', false, 300, 40, 'Energy')]];
   if (s.stage === 'middle') return ['You slept more, and had more energy.', ['Sleep', mini(ser(...v.sleep, 'line'), 'line', false, 300, 40, 'Sleep')], ['Energy', mini(ser(...v.energy, 'bars'), 'bars', false, 300, 40, 'Energy')]];
   return ['Weight steady, waist still shrinking.', ['Weight lost', mini(flat, 'line', false, 300, 40, 'Weight')], ['Waist', mini(ser(...v.waist, 'line'), 'line', false, 300, 40, 'Waist')]];
 }
 const delta = (l, [a, b], unit) => `<span class="chip">${l} ${b === a ? 'steady' : `${b > a ? '+' : '−'}${fmt(Math.abs(b - a) * (unit === 'min' ? 60 : 1))}${unit ? ' ' + unit : ''}`}</span>`;
 function patternChips(s){
   const v = vals(s); if (!richOn(s)) return '';
-  return `<p class="chips">${s.stage === 'early' ? delta('Nausea', v.side, 'days') + delta('Food noise', v.app, '') : s.stage === 'middle' ? delta('Sleep', v.sleep, 'min') + delta('Energy', v.energy, '') : '<span class="chip">Weight steady</span>' + delta('Waist', v.waist, 'cm')}</p>`;
+  return `<p class="chips">${s.stage === 'early' ? delta('Food noise', v.app, '') + delta('Energy', v.energy, '') : s.stage === 'middle' ? delta('Sleep', v.sleep, 'min') + delta('Energy', v.energy, '') : '<span class="chip">Weight steady</span>' + delta('Waist', v.waist, 'cm')}</p>`;
 }
 const patternViz = p => p.slice(1).map(([l, x]) => `<div class="prow"><span class="quiet">${l}</span>${x}</div>`).join('');
 function cardPattern(s, kicker){
@@ -597,10 +607,19 @@ function tip(s){
   if (m.sleep < 6.5) return ['Sleep is short', 'A regular bedtime tends to help appetite too.'];
   return null;
 }
+// The month ahead on one line: a tick for each weekly dose, a dot for each scheduled date. Dates only, no predictions.
+function ahead(s){
+  const span = 35, at = d => (d / span * 100).toFixed(1), rev = s.concern ? null : s.stage === 'plateau' ? 12 : 9;
+  const doses = [3, 10, 17, 24, 31];
+  return `<div class="ahead" role="img" aria-label="The next five weeks: a dose each Thursday${rev ? `, a review in ${rev} days` : ''}, and your next order.">
+    <div class="line">${doses.map(d => `<i class="dose" style="left:${at(d)}%"></i>`).join('')}${rev ? `<i class="ev" style="left:${at(rev)}%"></i>` : ''}<i class="ev order" style="left:100%"></i><i class="now"></i></div>
+    <div class="ends quiet"><span>Today</span><span>${NEXT_ORDER[state.monthIdx % NEXT_ORDER.length]}</span></div>
+    <p class="quiet legend"><i class="dose"></i>Dose day, each Thursday</p></div>`;
+}
 function cardNext(s){
   const t = s.concern ? null : tip(s);
   const h = 'Coming up.';
-  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1><ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Talk to my care team') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
+  return `<p class="k">What’s next</p><h1 class="lead" id="lead" tabindex="-1">${h}</h1>${ahead(s)}<ol class="tl">${nextSteps(s).map(([w, t]) => `<li><span class="quiet">${w}</span>${t}</li>`).join('')}</ol>${t ? `<div class="card tip"><p class="quiet">One thing to try</p><p><b>${t[0]}.</b> ${t[1]}</p></div>` : ''}${s.concern ? helpBtn('Talk to my care team') : '<p class="lede" style="margin-top:14px">See you next month.</p>'}`;
 }
 
 /* ===================== Card 5. Is it worth it? ===================== */
