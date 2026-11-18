@@ -288,14 +288,14 @@ const SC = {
     notif: ['A quick check-in', 'You’ve been really consistent. Can I ask a few things?'],
     opener: ['Hi Sarah, it’s June.', 'You’ve been really consistent. Every dose, every weigh-in.', 'I’d like to make sure your dose is still the right one for you. Can I ask a few things?'],
     say: { def: { t: 'Honestly the nausea put me off stepping up. It’s better now, only some days. I thought I was doing fine.', answers: { why: 'nausea', nausea: 'some', feel: 'fine' },
-      reply: 'Thank you. That’s really clear. It’s easier to fix this early.' } },
+      reply: 'Thank you. That’s really clear, and it helps your prescriber.' } },
     qs: [
       { k: 'why', q: 'What got in the way of stepping up?', o: [['nausea', 'The nausea put me off'], ['unsure', 'Wasn’t sure I should'], ['forgot', 'Forgot, or ran out']],
         a: { nausea: 'That makes sense. It’s the most common reason people stay on the starter dose.', unsure: 'That’s a fair question. It’s what your prescriber is for.', forgot: 'That happens. It’s easy to fix.' } },
       { k: 'nausea', q: 'How’s the nausea now?', o: [['most', 'Most days'], ['some', 'Some days'], ['rare', 'Rarely']],
         a: { most: 'I’m sorry, that sounds hard. There are ways to make the next step gentler.', some: 'Okay. Manageable, and worth planning around.', rare: 'Good. Your body has adjusted.' } },
       { k: 'feel', q: 'Honestly, how do you feel about your progress?', o: [['fine', 'I thought it was fine'], ['stuck', 'A bit stuck'], ['frus', 'Frustrated']],
-        a: { fine: 'That’s why we’re checking now. It’s easier to fix early.', stuck: 'Thanks for saying so. Let’s get you moving again.', frus: 'That’s fair. Let’s turn it into a plan today.' } },
+        a: { fine: 'Good. I’d just like to make sure you’re getting the most from it.', stuck: 'Thanks for saying so. Let’s get you moving again.', frus: 'That’s fair. Let’s turn it into a plan today.' } },
     ],
     route: () => 'prescriber',
     steps: a => [
