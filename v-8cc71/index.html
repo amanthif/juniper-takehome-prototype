@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Views</title>
+<style>
+body{margin:0;padding:32px 20px;background:#F1ECF2;color:#1F2A24;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto}
+h1{font-size:22px;font-weight:600;margin:0 0 4px}
+p{margin:0 0 16px;color:#5B655F;font-size:13px}
+.wrap{overflow-x:auto;background:#fff;border-radius:16px;padding:8px 12px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid #ECE5EE;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+th{font-size:12px;color:#5B655F;font-weight:600}
+td.z{color:#B9B1BD}
+td.t{font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <h1>Prototype views</h1>
+  <p id="note">Loading. One count per visitor per browser session. Days are Sydney time. This browser is now excluded from the counts.</p>
+  <div class="wrap"><table id="t"></table></div>
+</main>
+<script>
+(async function(){
+  try{ localStorage.setItem('pv-skip','1'); }catch(e){}
+  var NS='pv-8cc7136300', PAGES=[['hub','Hub'],['start','Guided Start'],['nsv','Non-Scale Victories'],['checkin','Check-In'],['report','Monthly report']], DAYS=7;
+  var fmt=function(d){return d.toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'});}, days=[];
+  for(var i=DAYS-1;i>=0;i--) days.push(fmt(new Date(Date.now()-i*864e5)));
+  var t=document.getElementById('t');
+  t.innerHTML='<tr><th>Page</th>'+days.map(function(d){return '<th>'+d.slice(5)+'</th>';}).join('')+'<th>All time</th></tr>'+PAGES.map(function(p){return '<tr><td>'+p[1]+'</td>'+days.map(function(d){return '<td id="'+p[0]+'-'+d+'" class="z">·</td>';}).join('')+'<td id="'+p[0]+'-total" class="z t">·</td></tr>';}).join('');
+  var keys=[]; PAGES.forEach(function(p){keys.push(p[0]+'-total');}); days.slice().reverse().forEach(function(d){PAGES.forEach(function(p){keys.push(p[0]+'-'+d);});});
+  for(var k=0;k<keys.length;k++){
+    var v=0; try{ var r=await fetch('https://abacus.jasoncameron.dev/get/'+NS+'/'+keys[k]); if(r.ok) v=(await r.json()).value||0; }catch(e){ v='?'; }
+    var c=document.getElementById(keys[k]); c.textContent=v; if(v) c.classList.remove('z');
+    await new Promise(function(res){setTimeout(res,380);});
+  }
+  document.getElementById('note').textContent='One count per visitor per browser session. Days are Sydney time. This browser is excluded from the counts.';
+})();
+</script>
+</body>
+</html>

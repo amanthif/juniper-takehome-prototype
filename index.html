@@ -43,5 +43,17 @@ h2{font-family:"Fraunces",Georgia,serif;font-weight:400;color:var(--brand);font-
   </div>
   <p class="foot">Built with Claude Code. Static HTML, no backend; the AI assistant’s replies are scripted.</p>
 </main>
+<script>
+/* Anonymous page-view count: one hit per browser session. No cookies, and nothing about the visitor is sent. */
+(function(){try{
+  var NS='pv-8cc7136300',P='hub';
+  if(!/github\.io$/.test(location.hostname))return;
+  if(/[?&]me=1/.test(location.search))localStorage.setItem('pv-skip','1');
+  if(localStorage.getItem('pv-skip')||sessionStorage.getItem('pv-'+P))return;
+  sessionStorage.setItem('pv-'+P,'1');
+  var d=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'}),u='https://abacus.jasoncameron.dev/hit/'+NS+'/';
+  [P+'-'+d,P+'-total'].forEach(function(k){fetch(u+k,{keepalive:true}).catch(function(){});});
+}catch(e){}})();
+</script>
 </body>
 </html>
